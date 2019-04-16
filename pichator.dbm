@@ -3,9 +3,9 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="79,12" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="15,11" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
-<role name="pichackator"
+<role name="pichator"
       inherit="true"
       login="true"
       encrypted="true"
@@ -25,12 +25,12 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 min-value="1" max-value="9223372036854775807"
 	 cache="1" cycle="false" sql-disabled="true">
 	<schema name="public"/>
-	<role name="pichackator"/>
+	<role name="pichator"/>
 </sequence>
 
 <table name="EMPLOYEE">
 	<schema name="public"/>
-	<role name="pichackator"/>
+	<role name="pichator"/>
 	<position x="740" y="420"/>
 	<column name="EMPID" not-null="true" identity-type="ALWAYS">
 		<type name="bigint" length="0"/>
@@ -57,12 +57,12 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 min-value="1" max-value="9223372036854775807"
 	 cache="1" cycle="false" sql-disabled="true">
 	<schema name="public"/>
-	<role name="pichackator"/>
+	<role name="pichator"/>
 </sequence>
 
 <table name="TIMETABLE">
 	<schema name="public"/>
-	<role name="pichackator"/>
+	<role name="pichator"/>
 	<position x="300" y="260"/>
 	<column name="MONDAY">
 		<type name="tsrange" length="0"/>
@@ -108,7 +108,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 
 <usertype name="PRESENCE_MODES" configuration="enumeration">
 	<schema name="public"/>
-	<role name="pichackator"/>
+	<role name="pichator"/>
 	<enumeration values="Doctor visit,Compensatory time off,Vacation,Sickday,Unpaid leave,Absence,Employer difficulties,Vacation 0.5,On call time,Sickness,Family member care,Personal trouble,Bussiness trip 4h-,Bussiness trip 4h+,Study,Training,Training -,Injury and disease from profession,Public benefit,Presence,Presence-"/>
 </usertype>
 
@@ -143,7 +143,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 
 <table name="PV">
 	<schema name="public"/>
-	<role name="pichackator"/>
+	<role name="pichator"/>
 	<position x="740" y="200"/>
 	<column name="PVID" not-null="true" identity-type="ALWAYS">
 		<type name="smallint" length="0"/>
@@ -204,8 +204,8 @@ CAUTION: Do not modify this file unless you know what you are doing.
 
 <table name="HELPER_VARIABLES">
 	<schema name="public"/>
-	<role name="pichackator"/>
-	<position x="1159" y="489"/>
+	<role name="pichator"/>
+	<position x="1160" y="480"/>
 	<column name="LAST_EKV_ID">
 		<type name="bigint" length="0"/>
 	</column>

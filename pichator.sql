@@ -4,9 +4,9 @@
 -- Project Site: pgmodeler.io
 -- Model Author: ---
 
--- object: pichackator | type: ROLE --
--- DROP ROLE IF EXISTS pichackator;
-CREATE ROLE pichackator WITH 
+-- object: pichator | type: ROLE --
+-- DROP ROLE IF EXISTS pichator;
+CREATE ROLE pichator WITH 
 	INHERIT
 	LOGIN
 	ENCRYPTED PASSWORD '********';
@@ -37,7 +37,7 @@ CREATE ROLE pichackator WITH
 -- 	NO CYCLE
 -- 	OWNED BY NONE;
 -- -- ddl-end --
--- ALTER SEQUENCE public."EMPLOYEE_UID_seq" OWNER TO pichackator;
+-- ALTER SEQUENCE public."EMPLOYEE_UID_seq" OWNER TO pichator;
 -- -- ddl-end --
 -- 
 -- object: public."EMPLOYEE" | type: TABLE --
@@ -47,11 +47,12 @@ CREATE TABLE public."EMPLOYEE"(
 	"FIRST_NAME" character varying NOT NULL,
 	"LAST_NAME" character varying NOT NULL,
 	"EKV_ID" smallint NOT NULL,
+	"EMP_NO" smallint NOT NULL,
 	CONSTRAINT "EMPLOYEE_pk" PRIMARY KEY ("EMPID")
 
 );
 -- ddl-end --
-ALTER TABLE public."EMPLOYEE" OWNER TO pichackator;
+ALTER TABLE public."EMPLOYEE" OWNER TO pichator;
 -- ddl-end --
 
 -- -- object: public."TIMETABLE_UID_seq" | type: SEQUENCE --
@@ -65,7 +66,7 @@ ALTER TABLE public."EMPLOYEE" OWNER TO pichackator;
 -- 	NO CYCLE
 -- 	OWNED BY NONE;
 -- -- ddl-end --
--- ALTER SEQUENCE public."TIMETABLE_UID_seq" OWNER TO pichackator;
+-- ALTER SEQUENCE public."TIMETABLE_UID_seq" OWNER TO pichator;
 -- -- ddl-end --
 -- 
 -- object: public."TIMETABLE" | type: TABLE --
@@ -83,7 +84,7 @@ CREATE TABLE public."TIMETABLE"(
 
 );
 -- ddl-end --
-ALTER TABLE public."TIMETABLE" OWNER TO pichackator;
+ALTER TABLE public."TIMETABLE" OWNER TO pichator;
 -- ddl-end --
 
 -- -- object: public."PRESENCE_UID_seq" | type: SEQUENCE --
@@ -105,7 +106,7 @@ ALTER TABLE public."TIMETABLE" OWNER TO pichackator;
 CREATE TYPE public."PRESENCE_MODES" AS
  ENUM ('Doctor visit','Compensatory time off','Vacation','Sickday','Unpaid leave','Absence','Employer difficulties','Vacation 0.5','On call time','Sickness','Family member care','Personal trouble','Bussiness trip 4h-','Bussiness trip 4h+','Study','Training','Training -','Injury and disease from profession','Public benefit','Presence','Presence-');
 -- ddl-end --
-ALTER TYPE public."PRESENCE_MODES" OWNER TO pichackator;
+ALTER TYPE public."PRESENCE_MODES" OWNER TO pichator;
 -- ddl-end --
 
 -- object: public."PRESENCE" | type: TABLE --
@@ -115,7 +116,9 @@ CREATE TABLE public."PRESENCE"(
 	"DATE" date NOT NULL,
 	"PRESENCE" boolean NOT NULL DEFAULT false,
 	"PRESENCE_MODE" public."PRESENCE_MODES" NOT NULL,
-	"PVID_PV" smallint NOT NULL
+	"PVID_PV" smallint NOT NULL,
+	CONSTRAINT "PRESENCE_pk" PRIMARY KEY ("PRESID")
+
 );
 -- ddl-end --
 ALTER TABLE public."PRESENCE" OWNER TO postgres;
@@ -131,7 +134,7 @@ CREATE TABLE public."PV"(
 
 );
 -- ddl-end --
-ALTER TABLE public."PV" OWNER TO pichackator;
+ALTER TABLE public."PV" OWNER TO pichator;
 -- ddl-end --
 
 -- object: "EMPLOYEE_fk" | type: CONSTRAINT --
@@ -153,6 +156,15 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE public."PRESENCE" ADD CONSTRAINT "PV_fk" FOREIGN KEY ("PVID_PV")
 REFERENCES public."PV" ("PVID") MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: public."HELPER_VARIABLES" | type: TABLE --
+-- DROP TABLE IF EXISTS public."HELPER_VARIABLES" CASCADE;
+CREATE TABLE public."HELPER_VARIABLES"(
+	"LAST_EKV_ID" bigint
+);
+-- ddl-end --
+ALTER TABLE public."HELPER_VARIABLES" OWNER TO pichator;
 -- ddl-end --
 
 
