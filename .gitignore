@@ -1,0 +1,9 @@
+__pycache__
+*.py[co]
+/build/
+/dist/
+*.egg*
+/*/static/vendor/
+/src/
+.vscode
+
