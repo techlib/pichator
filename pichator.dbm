@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+         Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.1" last-position="79,12" last-zoom="1"
+	 default-schema="public" default-owner="postgres">
+<role name="pichackator"
+      inherit="true"
+      login="true"
+      encrypted="true"
+      password="********">
+</role>
+
+<database name="pichackator" encoding="UTF8" lc-collate="en_US.UTF-8" lc-ctype="en_US.UTF-8" is-template="false" allow-conns="true">
+	<role name="postgres"/>
+	<tablespace name="pg_default"/>
+</database>
+
+<schema name="public" rect-visible="true" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<sequence name="EMPLOYEE_UID_seq"
+	 start="1" increment="1"
+	 min-value="1" max-value="9223372036854775807"
+	 cache="1" cycle="false" sql-disabled="true">
+	<schema name="public"/>
+	<role name="pichackator"/>
+</sequence>
+
+<table name="EMPLOYEE">
+	<schema name="public"/>
+	<role name="pichackator"/>
+	<position x="740" y="420"/>
+	<column name="EMPID" not-null="true" identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="FIRST_NAME" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="LAST_NAME" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="EKV_ID" not-null="true">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="EMP_NO" not-null="true">
+		<type name="smallint" length="0"/>
+	</column>
+	<constraint name="EMPLOYEE_pk" type="pk-constr" table="public.&quot;EMPLOYEE&quot;">
+		<columns names="EMPID" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="TIMETABLE_UID_seq"
+	 start="1" increment="1"
+	 min-value="1" max-value="9223372036854775807"
+	 cache="1" cycle="false" sql-disabled="true">
+	<schema name="public"/>
+	<role name="pichackator"/>
+</sequence>
+
+<table name="TIMETABLE">
+	<schema name="public"/>
+	<role name="pichackator"/>
+	<position x="300" y="260"/>
+	<column name="MONDAY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<column name="TUESDAY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<column name="WEDENSDAY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<column name="THURSDAY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<column name="FRIDAY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<column name="TIMEID" not-null="true" identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="VALIDITY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<constraint name="TIMETABLE_pk" type="pk-constr" table="public.&quot;TIMETABLE&quot;">
+		<columns names="TIMEID" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="PVID_PV" index="7"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="PV_fk" index="1"/>
+	</customidxs>
+</table>
+
+<sequence name="PRESENCE_UID_seq"
+	 start="1" increment="1"
+	 min-value="1" max-value="9223372036854775807"
+	 cache="1" cycle="false" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<usertype name="PRESENCE_MODES" configuration="enumeration">
+	<schema name="public"/>
+	<role name="pichackator"/>
+	<enumeration values="Doctor visit,Compensatory time off,Vacation,Sickday,Unpaid leave,Absence,Employer difficulties,Vacation 0.5,On call time,Sickness,Family member care,Personal trouble,Bussiness trip 4h-,Bussiness trip 4h+,Study,Training,Training -,Injury and disease from profession,Public benefit,Presence,Presence-"/>
+</usertype>
+
+<table name="PRESENCE">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1180" y="220"/>
+	<column name="PRESID" not-null="true" identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="DATE" not-null="true">
+		<type name="date" length="0"/>
+	</column>
+	<column name="PRESENCE" not-null="true" default-value="false">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="PRESENCE_MODE" not-null="true">
+		<type name="public.&quot;PRESENCE_MODES&quot;" length="0"/>
+	</column>
+	<constraint name="PRESENCE_pk" type="pk-constr" table="public.&quot;PRESENCE&quot;">
+		<columns names="PRESID" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="PVID_PV" index="4"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="PV_fk" index="0"/>
+	</customidxs>
+</table>
+
+<table name="PV">
+	<schema name="public"/>
+	<role name="pichackator"/>
+	<position x="740" y="200"/>
+	<column name="PVID" not-null="true" identity-type="ALWAYS">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="VALIDITY">
+		<type name="tsrange" length="0"/>
+	</column>
+	<constraint name="PV_pk" type="pk-constr" table="public.&quot;PV&quot;">
+		<columns names="PVID" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="EMPID_EMPLOYEE" index="2"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="EMPLOYEE_fk" index="0"/>
+	</customidxs>
+</table>
+
+<relationship name="EMPLOYEE_has_many_PV" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#bcedb6"
+	 src-table="public.&quot;EMPLOYEE&quot;"
+	 dst-table="public.&quot;PV&quot;"
+	 src-required="true" dst-required="false">
+	<label ref-type="src-label">
+		<position x="-7.3825" y="-21.275"/>
+	</label>
+</relationship>
+
+<relationship name="PV_has_many_TIMETABLE" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#94b1b3"
+	 src-table="public.&quot;PV&quot;"
+	 dst-table="public.&quot;TIMETABLE&quot;"
+	 src-required="true" dst-required="false">
+	<label ref-type="dst-label">
+		<position x="31.6944" y="-6.275"/>
+	</label>
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
+
+<relationship name="PV_has_many_PRESENCE" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#e9181f"
+	 src-table="public.&quot;PV&quot;"
+	 dst-table="public.&quot;PRESENCE&quot;"
+	 src-required="true" dst-required="false"/>
+
+<table name="HELPER_VARIABLES">
+	<schema name="public"/>
+	<role name="pichackator"/>
+	<position x="1159" y="489"/>
+	<column name="LAST_EKV_ID">
+		<type name="bigint" length="0"/>
+	</column>
+</table>
+
+</dbmodel>
