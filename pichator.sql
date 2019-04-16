@@ -40,19 +40,19 @@ CREATE ROLE pichator WITH
 -- ALTER SEQUENCE public."EMPLOYEE_UID_seq" OWNER TO pichator;
 -- -- ddl-end --
 -- 
--- object: public."EMPLOYEE" | type: TABLE --
--- DROP TABLE IF EXISTS public."EMPLOYEE" CASCADE;
-CREATE TABLE public."EMPLOYEE"(
-	"EMPID" bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
-	"FIRST_NAME" character varying NOT NULL,
-	"LAST_NAME" character varying NOT NULL,
-	"EKV_ID" smallint NOT NULL,
-	"EMP_NO" smallint NOT NULL,
-	CONSTRAINT "EMPLOYEE_pk" PRIMARY KEY ("EMPID")
+-- object: public.employee | type: TABLE --
+-- DROP TABLE IF EXISTS public.employee CASCADE;
+CREATE TABLE public.employee(
+	empid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
+	first_name character varying NOT NULL,
+	last_name character varying NOT NULL,
+	ekv_id smallint NOT NULL,
+	emp_no smallint NOT NULL,
+	CONSTRAINT employee_pk PRIMARY KEY (empid)
 
 );
 -- ddl-end --
-ALTER TABLE public."EMPLOYEE" OWNER TO pichator;
+ALTER TABLE public.employee OWNER TO pichator;
 -- ddl-end --
 
 -- -- object: public."TIMETABLE_UID_seq" | type: SEQUENCE --
@@ -69,22 +69,22 @@ ALTER TABLE public."EMPLOYEE" OWNER TO pichator;
 -- ALTER SEQUENCE public."TIMETABLE_UID_seq" OWNER TO pichator;
 -- -- ddl-end --
 -- 
--- object: public."TIMETABLE" | type: TABLE --
--- DROP TABLE IF EXISTS public."TIMETABLE" CASCADE;
-CREATE TABLE public."TIMETABLE"(
-	"MONDAY" tsrange,
-	"TUESDAY" tsrange,
-	"WEDENSDAY" tsrange,
-	"THURSDAY" tsrange,
-	"FRIDAY" tsrange,
-	"TIMEID" bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
-	"VALIDITY" tsrange,
-	"PVID_PV" smallint NOT NULL,
-	CONSTRAINT "TIMETABLE_pk" PRIMARY KEY ("TIMEID")
+-- object: public.timetable | type: TABLE --
+-- DROP TABLE IF EXISTS public.timetable CASCADE;
+CREATE TABLE public.timetable(
+	monday tsrange,
+	tuesday tsrange,
+	wedensday tsrange,
+	thursday tsrange,
+	friday tsrange,
+	timeid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
+	validity tsrange,
+	pvid_pv smallint NOT NULL,
+	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
 
 );
 -- ddl-end --
-ALTER TABLE public."TIMETABLE" OWNER TO pichator;
+ALTER TABLE public.timetable OWNER TO pichator;
 -- ddl-end --
 
 -- -- object: public."PRESENCE_UID_seq" | type: SEQUENCE --
@@ -101,70 +101,70 @@ ALTER TABLE public."TIMETABLE" OWNER TO pichator;
 -- ALTER SEQUENCE public."PRESENCE_UID_seq" OWNER TO postgres;
 -- -- ddl-end --
 -- 
--- object: public."PRESENCE_MODES" | type: TYPE --
--- DROP TYPE IF EXISTS public."PRESENCE_MODES" CASCADE;
-CREATE TYPE public."PRESENCE_MODES" AS
+-- object: public.presence_modes | type: TYPE --
+-- DROP TYPE IF EXISTS public.presence_modes CASCADE;
+CREATE TYPE public.presence_modes AS
  ENUM ('Doctor visit','Compensatory time off','Vacation','Sickday','Unpaid leave','Absence','Employer difficulties','Vacation 0.5','On call time','Sickness','Family member care','Personal trouble','Bussiness trip 4h-','Bussiness trip 4h+','Study','Training','Training -','Injury and disease from profession','Public benefit','Presence','Presence-');
 -- ddl-end --
-ALTER TYPE public."PRESENCE_MODES" OWNER TO pichator;
+ALTER TYPE public.presence_modes OWNER TO pichator;
 -- ddl-end --
 
--- object: public."PRESENCE" | type: TABLE --
--- DROP TABLE IF EXISTS public."PRESENCE" CASCADE;
-CREATE TABLE public."PRESENCE"(
-	"PRESID" bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
-	"DATE" date NOT NULL,
-	"PRESENCE" boolean NOT NULL DEFAULT false,
-	"PRESENCE_MODE" public."PRESENCE_MODES" NOT NULL,
-	"PVID_PV" smallint NOT NULL,
-	CONSTRAINT "PRESENCE_pk" PRIMARY KEY ("PRESID")
-
-);
--- ddl-end --
-ALTER TABLE public."PRESENCE" OWNER TO postgres;
--- ddl-end --
-
--- object: public."PV" | type: TABLE --
--- DROP TABLE IF EXISTS public."PV" CASCADE;
-CREATE TABLE public."PV"(
-	"PVID" smallint NOT NULL GENERATED ALWAYS AS IDENTITY ,
-	"VALIDITY" tsrange,
-	"EMPID_EMPLOYEE" bigint NOT NULL,
-	CONSTRAINT "PV_pk" PRIMARY KEY ("PVID")
+-- object: public.presence | type: TABLE --
+-- DROP TABLE IF EXISTS public.presence CASCADE;
+CREATE TABLE public.presence(
+	presid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
+	date date NOT NULL,
+	presence boolean NOT NULL DEFAULT false,
+	presence_mode public.presence_modes NOT NULL,
+	pvid_pv smallint NOT NULL,
+	CONSTRAINT presence_pk PRIMARY KEY (presid)
 
 );
 -- ddl-end --
-ALTER TABLE public."PV" OWNER TO pichator;
+ALTER TABLE public.presence OWNER TO postgres;
 -- ddl-end --
 
--- object: "EMPLOYEE_fk" | type: CONSTRAINT --
--- ALTER TABLE public."PV" DROP CONSTRAINT IF EXISTS "EMPLOYEE_fk" CASCADE;
-ALTER TABLE public."PV" ADD CONSTRAINT "EMPLOYEE_fk" FOREIGN KEY ("EMPID_EMPLOYEE")
-REFERENCES public."EMPLOYEE" ("EMPID") MATCH FULL
-ON DELETE RESTRICT ON UPDATE CASCADE;
--- ddl-end --
+-- object: public.pv | type: TABLE --
+-- DROP TABLE IF EXISTS public.pv CASCADE;
+CREATE TABLE public.pv(
+	pvid smallint NOT NULL GENERATED ALWAYS AS IDENTITY ,
+	validity tsrange,
+	empid_employee bigint NOT NULL,
+	CONSTRAINT pv_pk PRIMARY KEY (pvid)
 
--- object: "PV_fk" | type: CONSTRAINT --
--- ALTER TABLE public."TIMETABLE" DROP CONSTRAINT IF EXISTS "PV_fk" CASCADE;
-ALTER TABLE public."TIMETABLE" ADD CONSTRAINT "PV_fk" FOREIGN KEY ("PVID_PV")
-REFERENCES public."PV" ("PVID") MATCH FULL
-ON DELETE RESTRICT ON UPDATE CASCADE;
--- ddl-end --
-
--- object: "PV_fk" | type: CONSTRAINT --
--- ALTER TABLE public."PRESENCE" DROP CONSTRAINT IF EXISTS "PV_fk" CASCADE;
-ALTER TABLE public."PRESENCE" ADD CONSTRAINT "PV_fk" FOREIGN KEY ("PVID_PV")
-REFERENCES public."PV" ("PVID") MATCH FULL
-ON DELETE RESTRICT ON UPDATE CASCADE;
--- ddl-end --
-
--- object: public."HELPER_VARIABLES" | type: TABLE --
--- DROP TABLE IF EXISTS public."HELPER_VARIABLES" CASCADE;
-CREATE TABLE public."HELPER_VARIABLES"(
-	"LAST_EKV_ID" bigint
 );
 -- ddl-end --
-ALTER TABLE public."HELPER_VARIABLES" OWNER TO pichator;
+ALTER TABLE public.pv OWNER TO pichator;
+-- ddl-end --
+
+-- object: employee_fk | type: CONSTRAINT --
+-- ALTER TABLE public.pv DROP CONSTRAINT IF EXISTS employee_fk CASCADE;
+ALTER TABLE public.pv ADD CONSTRAINT employee_fk FOREIGN KEY (empid_employee)
+REFERENCES public.employee (empid) MATCH FULL
+ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: pv_fk | type: CONSTRAINT --
+-- ALTER TABLE public.timetable DROP CONSTRAINT IF EXISTS pv_fk CASCADE;
+ALTER TABLE public.timetable ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
+REFERENCES public.pv (pvid) MATCH FULL
+ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: pv_fk | type: CONSTRAINT --
+-- ALTER TABLE public.presence DROP CONSTRAINT IF EXISTS pv_fk CASCADE;
+ALTER TABLE public.presence ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
+REFERENCES public.pv (pvid) MATCH FULL
+ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: public.helper_variables | type: TABLE --
+-- DROP TABLE IF EXISTS public.helper_variables CASCADE;
+CREATE TABLE public.helper_variables(
+	last_ekv_id bigint
+);
+-- ddl-end --
+ALTER TABLE public.helper_variables OWNER TO pichator;
 -- ddl-end --
 
 

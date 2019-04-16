@@ -28,27 +28,27 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<role name="pichator"/>
 </sequence>
 
-<table name="EMPLOYEE">
+<table name="employee">
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="740" y="420"/>
-	<column name="EMPID" not-null="true" identity-type="ALWAYS">
+	<column name="empid" not-null="true" identity-type="ALWAYS">
 		<type name="bigint" length="0"/>
 	</column>
-	<column name="FIRST_NAME" not-null="true">
+	<column name="first_name" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
-	<column name="LAST_NAME" not-null="true">
+	<column name="last_name" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
-	<column name="EKV_ID" not-null="true">
+	<column name="ekv_id" not-null="true">
 		<type name="smallint" length="0"/>
 	</column>
-	<column name="EMP_NO" not-null="true">
+	<column name="emp_no" not-null="true">
 		<type name="smallint" length="0"/>
 	</column>
-	<constraint name="EMPLOYEE_pk" type="pk-constr" table="public.&quot;EMPLOYEE&quot;">
-		<columns names="EMPID" ref-type="src-columns"/>
+	<constraint name="employee_pk" type="pk-constr" table="public.employee">
+		<columns names="empid" ref-type="src-columns"/>
 	</constraint>
 </table>
 
@@ -60,41 +60,41 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<role name="pichator"/>
 </sequence>
 
-<table name="TIMETABLE">
+<table name="timetable">
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="300" y="260"/>
-	<column name="MONDAY">
+	<column name="monday">
 		<type name="tsrange" length="0"/>
 	</column>
-	<column name="TUESDAY">
+	<column name="tuesday">
 		<type name="tsrange" length="0"/>
 	</column>
-	<column name="WEDENSDAY">
+	<column name="wedensday">
 		<type name="tsrange" length="0"/>
 	</column>
-	<column name="THURSDAY">
+	<column name="thursday">
 		<type name="tsrange" length="0"/>
 	</column>
-	<column name="FRIDAY">
+	<column name="friday">
 		<type name="tsrange" length="0"/>
 	</column>
-	<column name="TIMEID" not-null="true" identity-type="ALWAYS">
+	<column name="timeid" not-null="true" identity-type="ALWAYS">
 		<type name="bigint" length="0"/>
 	</column>
-	<column name="VALIDITY">
+	<column name="validity">
 		<type name="tsrange" length="0"/>
 	</column>
-	<constraint name="TIMETABLE_pk" type="pk-constr" table="public.&quot;TIMETABLE&quot;">
-		<columns names="TIMEID" ref-type="src-columns"/>
+	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
+		<columns names="timeid" ref-type="src-columns"/>
 	</constraint>
 
 	<customidxs object-type="column">
-		<object name="PVID_PV" index="7"/>
+		<object name="pvid_pv" index="7"/>
 	</customidxs>
 
 	<customidxs object-type="constraint">
-		<object name="PV_fk" index="1"/>
+		<object name="pv_fk" index="1"/>
 	</customidxs>
 </table>
 
@@ -106,84 +106,84 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<role name="postgres"/>
 </sequence>
 
-<usertype name="PRESENCE_MODES" configuration="enumeration">
+<usertype name="presence_modes" configuration="enumeration">
 	<schema name="public"/>
 	<role name="pichator"/>
 	<enumeration values="Doctor visit,Compensatory time off,Vacation,Sickday,Unpaid leave,Absence,Employer difficulties,Vacation 0.5,On call time,Sickness,Family member care,Personal trouble,Bussiness trip 4h-,Bussiness trip 4h+,Study,Training,Training -,Injury and disease from profession,Public benefit,Presence,Presence-"/>
 </usertype>
 
-<table name="PRESENCE">
+<table name="presence">
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="1180" y="220"/>
-	<column name="PRESID" not-null="true" identity-type="ALWAYS">
+	<column name="presid" not-null="true" identity-type="ALWAYS">
 		<type name="bigint" length="0"/>
 	</column>
-	<column name="DATE" not-null="true">
+	<column name="date" not-null="true">
 		<type name="date" length="0"/>
 	</column>
-	<column name="PRESENCE" not-null="true" default-value="false">
+	<column name="presence" not-null="true" default-value="false">
 		<type name="boolean" length="0"/>
 	</column>
-	<column name="PRESENCE_MODE" not-null="true">
-		<type name="public.&quot;PRESENCE_MODES&quot;" length="0"/>
+	<column name="presence_mode" not-null="true">
+		<type name="public.presence_modes" length="0"/>
 	</column>
-	<constraint name="PRESENCE_pk" type="pk-constr" table="public.&quot;PRESENCE&quot;">
-		<columns names="PRESID" ref-type="src-columns"/>
+	<constraint name="presence_pk" type="pk-constr" table="public.presence">
+		<columns names="presid" ref-type="src-columns"/>
 	</constraint>
 
 	<customidxs object-type="column">
-		<object name="PVID_PV" index="4"/>
+		<object name="pvid_pv" index="4"/>
 	</customidxs>
 
 	<customidxs object-type="constraint">
-		<object name="PV_fk" index="0"/>
+		<object name="pv_fk" index="1"/>
 	</customidxs>
 </table>
 
-<table name="PV">
+<table name="pv">
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="740" y="200"/>
-	<column name="PVID" not-null="true" identity-type="ALWAYS">
+	<column name="pvid" not-null="true" identity-type="ALWAYS">
 		<type name="smallint" length="0"/>
 	</column>
-	<column name="VALIDITY">
+	<column name="validity">
 		<type name="tsrange" length="0"/>
 	</column>
-	<constraint name="PV_pk" type="pk-constr" table="public.&quot;PV&quot;">
-		<columns names="PVID" ref-type="src-columns"/>
+	<constraint name="pv_pk" type="pk-constr" table="public.pv">
+		<columns names="pvid" ref-type="src-columns"/>
 	</constraint>
 
 	<customidxs object-type="column">
-		<object name="EMPID_EMPLOYEE" index="2"/>
+		<object name="empid_employee" index="2"/>
 	</customidxs>
 
 	<customidxs object-type="constraint">
-		<object name="EMPLOYEE_fk" index="0"/>
+		<object name="employee_fk" index="1"/>
 	</customidxs>
 </table>
 
-<relationship name="EMPLOYEE_has_many_PV" type="rel1n"
+<relationship name="employee_has_many_pv" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
 	 custom-color="#bcedb6"
-	 src-table="public.&quot;EMPLOYEE&quot;"
-	 dst-table="public.&quot;PV&quot;"
+	 src-table="public.employee"
+	 dst-table="public.pv"
 	 src-required="true" dst-required="false">
 	<label ref-type="src-label">
 		<position x="-7.3825" y="-21.275"/>
 	</label>
 </relationship>
 
-<relationship name="PV_has_many_TIMETABLE" type="rel1n"
+<relationship name="pv_has_many_timetable" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
 	 custom-color="#94b1b3"
-	 src-table="public.&quot;PV&quot;"
-	 dst-table="public.&quot;TIMETABLE&quot;"
+	 src-table="public.pv"
+	 dst-table="public.timetable"
 	 src-required="true" dst-required="false">
 	<label ref-type="dst-label">
 		<position x="31.6944" y="-6.275"/>
@@ -193,20 +193,20 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</label>
 </relationship>
 
-<relationship name="PV_has_many_PRESENCE" type="rel1n"
+<relationship name="pv_has_many_presence" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
 	 custom-color="#e9181f"
-	 src-table="public.&quot;PV&quot;"
-	 dst-table="public.&quot;PRESENCE&quot;"
+	 src-table="public.pv"
+	 dst-table="public.presence"
 	 src-required="true" dst-required="false"/>
 
-<table name="HELPER_VARIABLES">
+<table name="helper_variables">
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="1160" y="480"/>
-	<column name="LAST_EKV_ID">
+	<column name="last_ekv_id">
 		<type name="bigint" length="0"/>
 	</column>
 </table>
