@@ -1,8 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -tt
+# -*- coding: utf-8 -*-
 
 from datetime import date, datetime
 from sqlalchemy import and_
 
+__all__ = ['Poller']
 
 class Poller:
     def __init__(self, pich_db):
