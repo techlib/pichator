@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="15,11" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="14,10" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -12,7 +12,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
       password="********">
 </role>
 
-<database name="pichackator" encoding="UTF8" lc-collate="en_US.UTF-8" lc-ctype="en_US.UTF-8" is-template="false" allow-conns="true">
+<database name="pichator" encoding="UTF8" lc-collate="en_US.UTF-8" lc-ctype="en_US.UTF-8" is-template="false" allow-conns="true">
 	<role name="postgres"/>
 	<tablespace name="pg_default"/>
 </database>
