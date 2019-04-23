@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="14,10" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="211,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -126,21 +126,27 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="740" y="200"/>
-	<column name="pvid" not-null="true">
+	<column name="pvid">
 		<type name="decimal" length="0"/>
-	</column>
-	<column name="validity">
-		<type name="tsrange" length="0"/>
 	</column>
 	<column name="occupancy" not-null="true">
 		<type name="decimal" length="0"/>
 	</column>
+	<column name="department" not-null="true">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="uid" not-null="true" identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="validity" not-null="true">
+		<type name="tsrange" length="0"/>
+	</column>
 	<constraint name="pv_pk" type="pk-constr" table="public.pv">
-		<columns names="pvid" ref-type="src-columns"/>
+		<columns names="uid" ref-type="src-columns"/>
 	</constraint>
 
 	<customidxs object-type="column">
-		<object name="emp_no_employee" index="2"/>
+		<object name="emp_no_employee" index="1"/>
 	</customidxs>
 
 	<customidxs object-type="constraint">
@@ -166,11 +172,17 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 dst-table="public.pv"
 	 src-required="true" dst-required="false"/>
 
+<table name="dept_val">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="788" y="528"/>
+</table>
+
 <relationship name="pv_has_many_presence" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
-	 custom-color="#550f4a"
+	 custom-color="#8e567b"
 	 src-table="public.pv"
 	 dst-table="public.presence"
 	 src-required="true" dst-required="false"/>
@@ -179,7 +191,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
-	 custom-color="#2a8b41"
+	 custom-color="#04a684"
 	 src-table="public.pv"
 	 dst-table="public.timetable"
 	 src-required="true" dst-required="false"/>
