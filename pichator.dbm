@@ -32,9 +32,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="740" y="420"/>
-	<column name="empid" not-null="true" identity-type="ALWAYS">
-		<type name="bigint" length="0"/>
-	</column>
 	<column name="first_name" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
@@ -48,7 +45,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="smallint" length="0"/>
 	</column>
 	<constraint name="employee_pk" type="pk-constr" table="public.employee">
-		<columns names="empid" ref-type="src-columns"/>
+		<columns names="emp_no" ref-type="src-columns"/>
 	</constraint>
 </table>
 
@@ -88,14 +85,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
 		<columns names="timeid" ref-type="src-columns"/>
 	</constraint>
-
-	<customidxs object-type="column">
-		<object name="pvid_pv" index="7"/>
-	</customidxs>
-
-	<customidxs object-type="constraint">
-		<object name="pv_fk" index="1"/>
-	</customidxs>
 </table>
 
 <sequence name="PRESENCE_UID_seq"
@@ -131,14 +120,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<constraint name="presence_pk" type="pk-constr" table="public.presence">
 		<columns names="presid" ref-type="src-columns"/>
 	</constraint>
-
-	<customidxs object-type="column">
-		<object name="pvid_pv" index="4"/>
-	</customidxs>
-
-	<customidxs object-type="constraint">
-		<object name="pv_fk" index="1"/>
-	</customidxs>
 </table>
 
 <table name="pv">
@@ -154,53 +135,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<constraint name="pv_pk" type="pk-constr" table="public.pv">
 		<columns names="pvid" ref-type="src-columns"/>
 	</constraint>
-
-	<customidxs object-type="column">
-		<object name="empid_employee" index="2"/>
-	</customidxs>
-
-	<customidxs object-type="constraint">
-		<object name="employee_fk" index="1"/>
-	</customidxs>
 </table>
-
-<relationship name="employee_has_many_pv" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#bcedb6"
-	 src-table="public.employee"
-	 dst-table="public.pv"
-	 src-required="true" dst-required="false">
-	<label ref-type="src-label">
-		<position x="-7.3825" y="-21.275"/>
-	</label>
-</relationship>
-
-<relationship name="pv_has_many_timetable" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#94b1b3"
-	 src-table="public.pv"
-	 dst-table="public.timetable"
-	 src-required="true" dst-required="false">
-	<label ref-type="dst-label">
-		<position x="31.6944" y="-6.275"/>
-	</label>
-	<label ref-type="name-label">
-		<position x="0" y="0"/>
-	</label>
-</relationship>
-
-<relationship name="pv_has_many_presence" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#e9181f"
-	 src-table="public.pv"
-	 dst-table="public.presence"
-	 src-required="true" dst-required="false"/>
 
 <table name="helper_variables">
 	<schema name="public"/>
@@ -210,5 +145,32 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="bigint" length="0"/>
 	</column>
 </table>
+
+<relationship name="employee_has_many_pv" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#a498ee"
+	 src-table="public.employee"
+	 dst-table="public.pv"
+	 src-required="true" dst-required="false"/>
+
+<relationship name="pv_has_many_timetable" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#30b20e"
+	 src-table="public.pv"
+	 dst-table="public.timetable"
+	 src-required="true" dst-required="false"/>
+
+<relationship name="pv_has_many_presence" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#70180e"
+	 src-table="public.pv"
+	 dst-table="public.presence"
+	 src-required="true" dst-required="false"/>
 
 </dbmodel>

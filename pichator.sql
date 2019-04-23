@@ -15,9 +15,9 @@ CREATE ROLE pichator WITH
 
 -- Database creation must be done outside a multicommand file.
 -- These commands were put in this file only as a convenience.
--- -- object: pichackator | type: DATABASE --
--- -- DROP DATABASE IF EXISTS pichackator;
--- CREATE DATABASE pichackator
+-- -- object: pichator | type: DATABASE --
+-- -- DROP DATABASE IF EXISTS pichator;
+-- CREATE DATABASE pichator
 -- 	ENCODING = 'UTF8'
 -- 	LC_COLLATE = 'en_US.UTF-8'
 -- 	LC_CTYPE = 'en_US.UTF-8'
@@ -43,12 +43,11 @@ CREATE ROLE pichator WITH
 -- object: public.employee | type: TABLE --
 -- DROP TABLE IF EXISTS public.employee CASCADE;
 CREATE TABLE public.employee(
-	empid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	first_name character varying NOT NULL,
 	last_name character varying NOT NULL,
 	ekv_id smallint NOT NULL,
 	emp_no smallint NOT NULL,
-	CONSTRAINT employee_pk PRIMARY KEY (empid)
+	CONSTRAINT employee_pk PRIMARY KEY (emp_no)
 
 );
 -- ddl-end --
@@ -129,7 +128,7 @@ ALTER TABLE public.presence OWNER TO postgres;
 CREATE TABLE public.pv(
 	pvid smallint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	validity tsrange,
-	empid_employee bigint NOT NULL,
+	emp_no_employee smallint NOT NULL,
 	CONSTRAINT pv_pk PRIMARY KEY (pvid)
 
 );
@@ -137,10 +136,19 @@ CREATE TABLE public.pv(
 ALTER TABLE public.pv OWNER TO pichator;
 -- ddl-end --
 
+-- object: public.helper_variables | type: TABLE --
+-- DROP TABLE IF EXISTS public.helper_variables CASCADE;
+CREATE TABLE public.helper_variables(
+	last_ekv_id bigint
+);
+-- ddl-end --
+ALTER TABLE public.helper_variables OWNER TO pichator;
+-- ddl-end --
+
 -- object: employee_fk | type: CONSTRAINT --
 -- ALTER TABLE public.pv DROP CONSTRAINT IF EXISTS employee_fk CASCADE;
-ALTER TABLE public.pv ADD CONSTRAINT employee_fk FOREIGN KEY (empid_employee)
-REFERENCES public.employee (empid) MATCH FULL
+ALTER TABLE public.pv ADD CONSTRAINT employee_fk FOREIGN KEY (emp_no_employee)
+REFERENCES public.employee (emp_no) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
 -- ddl-end --
 
@@ -156,15 +164,6 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE public.presence ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
 REFERENCES public.pv (pvid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
--- ddl-end --
-
--- object: public.helper_variables | type: TABLE --
--- DROP TABLE IF EXISTS public.helper_variables CASCADE;
-CREATE TABLE public.helper_variables(
-	last_ekv_id bigint
-);
--- ddl-end --
-ALTER TABLE public.helper_variables OWNER TO pichator;
 -- ddl-end --
 
 
