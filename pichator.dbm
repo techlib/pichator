@@ -79,12 +79,17 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="timeid" not-null="true" identity-type="ALWAYS">
 		<type name="bigint" length="0"/>
 	</column>
-	<column name="validity">
-		<type name="tsrange" length="0"/>
-	</column>
 	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
 		<columns names="timeid" ref-type="src-columns"/>
 	</constraint>
+
+	<customidxs object-type="column">
+		<object name="uid_pv" index="6"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="pv_fk" index="1"/>
+	</customidxs>
 </table>
 
 <sequence name="PRESENCE_UID_seq"

@@ -96,7 +96,7 @@ class Poller:
                 </soap:Envelope>
                 """
 
-        response = requests.post(url, data=body,  headers=headers)
+        response = requests.post(url, data=body, headers=headers)
         if response.code == 200:
             return response.content
         else:
