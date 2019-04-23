@@ -8,8 +8,8 @@ import requests
 
 __all__ = ['Poller']
 class Passage:
-    def __init__(self, ID, date):
-        self.ID = ID
+    def __init__(self, UID, date):
+        self.UID = UID
         self.date = date
 
 class Poller:
@@ -22,26 +22,24 @@ class Poller:
         '''
         poll EKV and save processed information to DB
         '''
-        today = date.today()
         passages = []
-        last_ID = self.pich_db.helpler_variables.one().last_ekv_id
-        response = self.get_history(last_ID)
+        last_id = self.pich_db.helpler_variables.one().last_ekv_id
+        response = self.get_history(last_id)
         response_tree = ET.parse(response)
         root = response_tree.getroot()
-        max_id = 0
         for record in root.iter('AssetHistoryEntry'):
             pass_date = datetime(record.find('Time').text).date()
-            pass_ID = record.find('UID').text
-            pass_UID = int(record.find('ID').text)
-            if today == pass_date and not '_' in pass_ID:
-                max_id = max([max_id, pass_UID])
-                passages.append(Passage(pass_ID, pass_date))
-        self.pich_db.helpler_variables.update().values(last_ekv_id = max_id)
+            pass_uid = record.find('UID').text
+            pass_id = int(record.find('ID').text)
+            if not '_' in pass_uid:
+                last_id = pass_id
+                passages.append(Passage(pass_uid, pass_date))
+        self.pich_db.helpler_variables.update().values(last_ekv_id = last_id)
         missing = self.pich_db.session.query(self.pich_db.employee).join(
-            self.pich_db.presence).filter_by(and_(Date=today, Presence=False)).fetchall()
+            self.pich_db.presence).filter_by(and_(Presence=False)).fetchall()
         for employee in missing:
             for passage in passages:
-                if employee.EKV_ID == passage.ID:
+                if employee.EKV_ID == passage.UID:
                     day = datetime(passage.date).weekday()
                     timetables = self.pich_db.session.query(self.pich_db.employee, self.pich_db.pv, self.pich_db.timetable).join(
                         self.pich_db.pv).join(self.pich_db.timetable).filter_by(Empid=employee.EMPID).fetchall()
@@ -49,8 +47,8 @@ class Poller:
                         timetable_days = [timetable.MONDAY, timetable.TUESDAY,
                                           timetable.WEDENSDAY, timetable.THURSDAY, timetable.FRIDAY, timetable.SATURDAY, timetable.SUNDAY]
                         shift = timetable_days[day]
-                        if today in timetable.validity:
-                            self.pich_db.presence.filter_by(and_(PVID_PV=timetable.pvid, Date=today)).update(
+                        if passage.date in timetable.validity:
+                            self.pich_db.presence.filter_by(and_(PVID_PV=timetable.pvid, Date=passage.date)).update(
                             ).values(Presence=True, Presence_mode='Presence' if shift >= 6 else 'Presence-')
         self.pich_db.commit()
 

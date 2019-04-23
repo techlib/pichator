@@ -62,7 +62,7 @@ if __name__ == '__main__':
         db = SQLSoup(engine, session=session)
 
         # Prepare the manager that runs in an exclusive thread.
-        manager = Manager(token, db)
+        manager = Manager(db)
 
         # Prepare the website that will get exposed to the users.
         site = make_site(manager, debug=http_debug)
