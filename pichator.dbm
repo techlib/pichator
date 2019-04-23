@@ -126,15 +126,26 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="740" y="200"/>
-	<column name="pvid" not-null="true" identity-type="ALWAYS">
-		<type name="smallint" length="0"/>
+	<column name="pvid" not-null="true">
+		<type name="decimal" length="0"/>
 	</column>
 	<column name="validity">
 		<type name="tsrange" length="0"/>
 	</column>
+	<column name="occupancy" not-null="true">
+		<type name="decimal" length="0"/>
+	</column>
 	<constraint name="pv_pk" type="pk-constr" table="public.pv">
 		<columns names="pvid" ref-type="src-columns"/>
 	</constraint>
+
+	<customidxs object-type="column">
+		<object name="emp_no_employee" index="2"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="employee_fk" index="0"/>
+	</customidxs>
 </table>
 
 <table name="helper_variables">
@@ -155,22 +166,22 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 dst-table="public.pv"
 	 src-required="true" dst-required="false"/>
 
-<relationship name="pv_has_many_timetable" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#30b20e"
-	 src-table="public.pv"
-	 dst-table="public.timetable"
-	 src-required="true" dst-required="false"/>
-
 <relationship name="pv_has_many_presence" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
-	 custom-color="#70180e"
+	 custom-color="#550f4a"
 	 src-table="public.pv"
 	 dst-table="public.presence"
+	 src-required="true" dst-required="false"/>
+
+<relationship name="pv_has_many_timetable" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#2a8b41"
+	 src-table="public.pv"
+	 dst-table="public.timetable"
 	 src-required="true" dst-required="false"/>
 
 </dbmodel>

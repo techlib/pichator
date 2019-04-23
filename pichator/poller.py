@@ -13,8 +13,9 @@ class Passage:
         self.date = date
 
 class Poller:
-    def __init__(self, pich_db, ekv_user, ekv_pass):
+    def __init__(self, pich_db, elanor_db, ekv_user, ekv_pass):
         self.pich_db = pich_db
+        self.elanor_db = elanor_db
         self.ekv_user = ekv_user
         self.ekv_pass = ekv_pass
 
@@ -35,14 +36,14 @@ class Poller:
                 last_id = pass_id
                 passages.append(Passage(pass_uid, pass_date))
         self.pich_db.helpler_variables.update().values(last_ekv_id = last_id)
-        missing = self.pich_db.session.query(self.pich_db.employee).join(
-            self.pich_db.presence).filter_by(and_(Presence=False)).fetchall()
-        for employee in missing:
+        missing = self.pich_db.session.query(self.pich_db.pv, self.pich_db.presence, self.pich_db.employee).join(
+            self.pich_db.presence).join(self.pich_db.employee).filter_by(and_(Presence=False)).fetchall()
+        for pv in missing:
             for passage in passages:
-                if employee.EKV_ID == passage.UID:
+                if pv.ekv_id == passage.UID:
                     day = datetime(passage.date).weekday()
                     timetables = self.pich_db.session.query(self.pich_db.employee, self.pich_db.pv, self.pich_db.timetable).join(
-                        self.pich_db.pv).join(self.pich_db.timetable).filter_by(Empid=employee.EMPID).fetchall()
+                        self.pich_db.pv).join(self.pich_db.timetable).filter_by(pv_fk=pv.pvid).fetchall()
                     for timetable in timetables:
                         timetable_days = [timetable.MONDAY, timetable.TUESDAY,
                                           timetable.WEDENSDAY, timetable.THURSDAY, timetable.FRIDAY, timetable.SATURDAY, timetable.SUNDAY]

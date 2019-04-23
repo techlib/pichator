@@ -78,7 +78,7 @@ CREATE TABLE public.timetable(
 	friday tsrange,
 	timeid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	validity tsrange,
-	pvid_pv smallint NOT NULL,
+	pvid_pv decimal NOT NULL,
 	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
 
 );
@@ -115,7 +115,7 @@ CREATE TABLE public.presence(
 	date date NOT NULL,
 	presence boolean NOT NULL DEFAULT false,
 	presence_mode public.presence_modes NOT NULL,
-	pvid_pv smallint NOT NULL,
+	pvid_pv decimal NOT NULL,
 	CONSTRAINT presence_pk PRIMARY KEY (presid)
 
 );
@@ -126,9 +126,10 @@ ALTER TABLE public.presence OWNER TO postgres;
 -- object: public.pv | type: TABLE --
 -- DROP TABLE IF EXISTS public.pv CASCADE;
 CREATE TABLE public.pv(
-	pvid smallint NOT NULL GENERATED ALWAYS AS IDENTITY ,
+	pvid decimal NOT NULL,
 	validity tsrange,
 	emp_no_employee smallint NOT NULL,
+	occupancy decimal NOT NULL,
 	CONSTRAINT pv_pk PRIMARY KEY (pvid)
 
 );
@@ -153,15 +154,15 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: pv_fk | type: CONSTRAINT --
--- ALTER TABLE public.timetable DROP CONSTRAINT IF EXISTS pv_fk CASCADE;
-ALTER TABLE public.timetable ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
+-- ALTER TABLE public.presence DROP CONSTRAINT IF EXISTS pv_fk CASCADE;
+ALTER TABLE public.presence ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
 REFERENCES public.pv (pvid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: pv_fk | type: CONSTRAINT --
--- ALTER TABLE public.presence DROP CONSTRAINT IF EXISTS pv_fk CASCADE;
-ALTER TABLE public.presence ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
+-- ALTER TABLE public.timetable DROP CONSTRAINT IF EXISTS pv_fk CASCADE;
+ALTER TABLE public.timetable ADD CONSTRAINT pv_fk FOREIGN KEY (pvid_pv)
 REFERENCES public.pv (pvid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
 -- ddl-end --
