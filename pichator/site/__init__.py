@@ -87,11 +87,11 @@ def make_site(db, manager, access_model, debug=False):
         nonlocal has_privilege
         return flask.render_template('graph.html', **locals())
 
-    @app.route('/changes')
+    @app.route('/timetable')
     @authorized_only('admin')
     def display_changes():
         nonlocal has_privilege
-        return flask.render_template('changes.html', **locals())
+        return flask.render_template('timetable.html', **locals())
 
     @app.route('/detail', defaults={'dept': None})
     @app.route('/detail/<dept>')

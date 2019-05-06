@@ -77,7 +77,6 @@ CREATE TABLE public.timetable(
 	thursday tsrange,
 	friday tsrange,
 	timeid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
-	validity tsrange,
 	uid_pv bigint NOT NULL,
 	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
 
@@ -153,15 +152,6 @@ ALTER TABLE public.helper_variables OWNER TO pichator;
 ALTER TABLE public.pv ADD CONSTRAINT employee_fk FOREIGN KEY (emp_no_employee)
 REFERENCES public.employee (emp_no) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
--- ddl-end --
-
--- object: public.dept_val | type: TABLE --
--- DROP TABLE IF EXISTS public.dept_val CASCADE;
-CREATE TABLE public.dept_val(
-
-);
--- ddl-end --
-ALTER TABLE public.dept_val OWNER TO postgres;
 -- ddl-end --
 
 -- object: pv_fk | type: CONSTRAINT --

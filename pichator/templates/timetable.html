@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Úprava pracovní doby{% endblock %}
+
+{% block content %}
+
+{% block scripts %}
+<script>
+
+</script>
+{% endblock %}
+
+<div class='container-fluid'>
+    <div class='row-buffer-top-md'>
+        <div class='col-md-7'>
+            <h2>PV: </h2>
+            <select name="PVs" id="PVs"></select>
+            <h2 name='<Occupancy'>Úvazek: </h2>
+            <h2 name='Dept'>Oddělení: </h2>
+            <div>
+                Po: <input type='text' name='Mon'><br>
+                Út: <input type='text' name='Tue'><br>
+                St: <input type='text' name='Wed'><br>
+                Čt: <input type='text' name='Thu'><br>
+                Pá: <input type='text' name='Fri'><br>
+            </div>
+
+    </div>
+</div>
+
+{% endblock %}

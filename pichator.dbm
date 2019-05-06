@@ -177,12 +177,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 dst-table="public.pv"
 	 src-required="true" dst-required="false"/>
 
-<table name="dept_val">
-	<schema name="public"/>
-	<role name="postgres"/>
-	<position x="788" y="528"/>
-</table>
-
 <relationship name="pv_has_many_presence" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
