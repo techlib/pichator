@@ -93,8 +93,7 @@ def make_site(db, manager, access_model, debug=False):
         nonlocal has_privilege
         return flask.render_template('timetable.html', **locals())
 
-    @app.route('/detail', defaults={'dept': None})
-    @app.route('/detail/<dept>')
+    @app.route('/timetable_data/emp_no')
     @authorized_only('admin')
     def show_detail(dept):
         nonlocal has_privilege
