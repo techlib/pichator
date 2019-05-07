@@ -47,6 +47,7 @@ CREATE TABLE public.employee(
 	last_name character varying NOT NULL,
 	ekv_id smallint NOT NULL,
 	emp_no smallint NOT NULL,
+	username character varying NOT NULL,
 	CONSTRAINT employee_pk PRIMARY KEY (emp_no)
 
 );
@@ -166,6 +167,11 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE public.timetable ADD CONSTRAINT pv_fk FOREIGN KEY (uid_pv)
 REFERENCES public.pv (uid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: timetable_uq | type: CONSTRAINT --
+-- ALTER TABLE public.timetable DROP CONSTRAINT IF EXISTS timetable_uq CASCADE;
+ALTER TABLE public.timetable ADD CONSTRAINT timetable_uq UNIQUE (uid_pv);
 -- ddl-end --
 
 

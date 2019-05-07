@@ -7,9 +7,6 @@
 
 {% block scripts %}
 <script>
-    function showLoadingImg() {
-
-    }
     timetable = []
 
     function load_data() {
@@ -17,7 +14,6 @@
         //reload data and refresh textfields
         $.ajax({
             'url': '/timetable_data/' + emp_no,
-            'beforeSend': showLoadingImg
         }).fail(function () {
             //#TODO display error
         }).always(function () {

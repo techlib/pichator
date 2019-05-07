@@ -89,15 +89,17 @@ def make_site(db, manager, access_model, debug=False):
 
     @app.route('/timetable')
     @authorized_only('admin')
-    def display_changes():
+    @pass_user_info
+    def show_timetable(uid, username):
         nonlocal has_privilege
+        emp_no = manager.get_emp_no(username)
         return flask.render_template('timetable.html', **locals())
 
-    @app.route('/timetable_data/emp_no')
+    @app.route('/timetable_data/<emp_no>')
     @authorized_only('admin')
-    def show_detail(dept):
+    def get_timetables_data(emp_no):
         nonlocal has_privilege
-        return flask.render_template('details.html', **locals())
+        return flask.jsonify(manager.get_timetables(emp_no))
 
     @app.route('/recounted_occupancy')
     @authorized_only('admin')

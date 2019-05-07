@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="211,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="210,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -44,6 +44,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="emp_no" not-null="true">
 		<type name="smallint" length="0"/>
 	</column>
+	<column name="username" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
 	<constraint name="employee_pk" type="pk-constr" table="public.employee">
 		<columns names="emp_no" ref-type="src-columns"/>
 	</constraint>
@@ -82,14 +85,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
 		<columns names="timeid" ref-type="src-columns"/>
 	</constraint>
-
-	<customidxs object-type="column">
-		<object name="uid_pv" index="6"/>
-	</customidxs>
-
-	<customidxs object-type="constraint">
-		<object name="pv_fk" index="1"/>
-	</customidxs>
 </table>
 
 <sequence name="PRESENCE_UID_seq"
@@ -186,11 +181,11 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 dst-table="public.presence"
 	 src-required="true" dst-required="false"/>
 
-<relationship name="pv_has_many_timetable" type="rel1n"
+<relationship name="timetable_has_one_pv" type="rel11"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
-	 custom-color="#04a684"
+	 custom-color="#8b38c9"
 	 src-table="public.pv"
 	 dst-table="public.timetable"
 	 src-required="true" dst-required="false"/>
