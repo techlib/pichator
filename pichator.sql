@@ -45,10 +45,10 @@ CREATE ROLE pichator WITH
 CREATE TABLE public.employee(
 	first_name character varying NOT NULL,
 	last_name character varying NOT NULL,
-	ekv_id smallint NOT NULL,
-	emp_no smallint NOT NULL,
+	emp_no smallint,
 	username character varying NOT NULL,
-	CONSTRAINT employee_pk PRIMARY KEY (emp_no)
+	uid bigint NOT NULL,
+	CONSTRAINT employee_pk PRIMARY KEY (uid)
 
 );
 -- ddl-end --
@@ -69,21 +69,13 @@ ALTER TABLE public.employee OWNER TO pichator;
 -- ALTER SEQUENCE public."TIMETABLE_UID_seq" OWNER TO pichator;
 -- -- ddl-end --
 -- 
--- object: public.timetable | type: TABLE --
--- DROP TABLE IF EXISTS public.timetable CASCADE;
-CREATE TABLE public.timetable(
-	monday tsrange,
-	tuesday tsrange,
-	wedensday tsrange,
-	thursday tsrange,
-	friday tsrange,
-	timeid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
-	uid_pv bigint NOT NULL,
-	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
-
-);
+-- object: public.timerange | type: TYPE --
+-- DROP TYPE IF EXISTS public.timerange CASCADE;
+CREATE TYPE public.timerange AS
+RANGE (
+SUBTYPE = time);
 -- ddl-end --
-ALTER TABLE public.timetable OWNER TO pichator;
+ALTER TYPE public.timerange OWNER TO pichator;
 -- ddl-end --
 
 -- -- object: public."PRESENCE_UID_seq" | type: SEQUENCE --
@@ -116,6 +108,9 @@ CREATE TABLE public.presence(
 	presence boolean NOT NULL DEFAULT false,
 	presence_mode public.presence_modes NOT NULL,
 	uid_pv bigint NOT NULL,
+	"from" time NOT NULL,
+	"to" time NOT NULL,
+	source character varying NOT NULL,
 	CONSTRAINT presence_pk PRIMARY KEY (presid)
 
 );
@@ -126,12 +121,12 @@ ALTER TABLE public.presence OWNER TO postgres;
 -- object: public.pv | type: TABLE --
 -- DROP TABLE IF EXISTS public.pv CASCADE;
 CREATE TABLE public.pv(
-	pvid decimal,
-	emp_no_employee smallint NOT NULL,
+	pvid character varying,
 	occupancy decimal NOT NULL,
 	department smallint NOT NULL,
 	uid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	validity tsrange NOT NULL,
+	uid_employee bigint NOT NULL,
 	CONSTRAINT pv_pk PRIMARY KEY (uid)
 
 );
@@ -142,17 +137,11 @@ ALTER TABLE public.pv OWNER TO pichator;
 -- object: public.helper_variables | type: TABLE --
 -- DROP TABLE IF EXISTS public.helper_variables CASCADE;
 CREATE TABLE public.helper_variables(
-	last_ekv_id bigint
+	key character varying,
+	value character varying
 );
 -- ddl-end --
 ALTER TABLE public.helper_variables OWNER TO pichator;
--- ddl-end --
-
--- object: employee_fk | type: CONSTRAINT --
--- ALTER TABLE public.pv DROP CONSTRAINT IF EXISTS employee_fk CASCADE;
-ALTER TABLE public.pv ADD CONSTRAINT employee_fk FOREIGN KEY (emp_no_employee)
-REFERENCES public.employee (emp_no) MATCH FULL
-ON DELETE RESTRICT ON UPDATE CASCADE;
 -- ddl-end --
 
 -- object: pv_fk | type: CONSTRAINT --
@@ -160,6 +149,23 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE public.presence ADD CONSTRAINT pv_fk FOREIGN KEY (uid_pv)
 REFERENCES public.pv (uid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: public.timetable | type: TABLE --
+-- DROP TABLE IF EXISTS public.timetable CASCADE;
+CREATE TABLE public.timetable(
+	monday public.timerange,
+	tuesday public.timerange,
+	wedensday public.timerange,
+	thursday public.timerange,
+	friday public.timerange,
+	timeid bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
+	uid_pv bigint NOT NULL,
+	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
+
+);
+-- ddl-end --
+ALTER TABLE public.timetable OWNER TO pichator;
 -- ddl-end --
 
 -- object: pv_fk | type: CONSTRAINT --
@@ -172,6 +178,13 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 -- object: timetable_uq | type: CONSTRAINT --
 -- ALTER TABLE public.timetable DROP CONSTRAINT IF EXISTS timetable_uq CASCADE;
 ALTER TABLE public.timetable ADD CONSTRAINT timetable_uq UNIQUE (uid_pv);
+-- ddl-end --
+
+-- object: employee_fk | type: CONSTRAINT --
+-- ALTER TABLE public.pv DROP CONSTRAINT IF EXISTS employee_fk CASCADE;
+ALTER TABLE public.pv ADD CONSTRAINT employee_fk FOREIGN KEY (uid_employee)
+REFERENCES public.employee (uid) MATCH FULL
+ON DELETE RESTRICT ON UPDATE CASCADE;
 -- ddl-end --
 
 

@@ -6,4 +6,4 @@ __pycache__
 /*/static/vendor/
 /src/
 .vscode
-
+*prod.ini

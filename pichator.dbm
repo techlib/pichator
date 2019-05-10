@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="210,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="57,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -38,17 +38,17 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="last_name" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
-	<column name="ekv_id" not-null="true">
-		<type name="smallint" length="0"/>
-	</column>
-	<column name="emp_no" not-null="true">
+	<column name="emp_no">
 		<type name="smallint" length="0"/>
 	</column>
 	<column name="username" not-null="true">
 		<type name="character varying" length="0"/>
 	</column>
+	<column name="uid" not-null="true">
+		<type name="bigint" length="0"/>
+	</column>
 	<constraint name="employee_pk" type="pk-constr" table="public.employee">
-		<columns names="emp_no" ref-type="src-columns"/>
+		<columns names="uid" ref-type="src-columns"/>
 	</constraint>
 </table>
 
@@ -60,32 +60,11 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<role name="pichator"/>
 </sequence>
 
-<table name="timetable">
+<usertype name="timerange" configuration="range">
 	<schema name="public"/>
 	<role name="pichator"/>
-	<position x="300" y="260"/>
-	<column name="monday">
-		<type name="tsrange" length="0"/>
-	</column>
-	<column name="tuesday">
-		<type name="tsrange" length="0"/>
-	</column>
-	<column name="wedensday">
-		<type name="tsrange" length="0"/>
-	</column>
-	<column name="thursday">
-		<type name="tsrange" length="0"/>
-	</column>
-	<column name="friday">
-		<type name="tsrange" length="0"/>
-	</column>
-	<column name="timeid" not-null="true" identity-type="ALWAYS">
-		<type name="bigint" length="0"/>
-	</column>
-	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
-		<columns names="timeid" ref-type="src-columns"/>
-	</constraint>
-</table>
+	<type name="time" length="0"/>
+</usertype>
 
 <sequence name="PRESENCE_UID_seq"
 	 start="1" increment="1"
@@ -111,15 +90,26 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="date" not-null="true">
 		<type name="date" length="0"/>
 	</column>
-	<column name="presence" not-null="true" default-value="false">
-		<type name="boolean" length="0"/>
-	</column>
 	<column name="presence_mode" not-null="true">
 		<type name="public.presence_modes" length="0"/>
+	</column>
+	<column name="arrival" not-null="true">
+		<type name="time" length="0"/>
+	</column>
+	<column name="departure" not-null="true">
+		<type name="time" length="0"/>
 	</column>
 	<constraint name="presence_pk" type="pk-constr" table="public.presence">
 		<columns names="presid" ref-type="src-columns"/>
 	</constraint>
+
+	<customidxs object-type="column">
+		<object name="uid_employee" index="5"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="employee_fk" index="1"/>
+	</customidxs>
 </table>
 
 <table name="pv">
@@ -127,7 +117,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<role name="pichator"/>
 	<position x="740" y="200"/>
 	<column name="pvid">
-		<type name="decimal" length="0"/>
+		<type name="character varying" length="0"/>
 	</column>
 	<column name="occupancy" not-null="true">
 		<type name="decimal" length="0"/>
@@ -144,42 +134,55 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<constraint name="pv_pk" type="pk-constr" table="public.pv">
 		<columns names="uid" ref-type="src-columns"/>
 	</constraint>
-
-	<customidxs object-type="column">
-		<object name="emp_no_employee" index="1"/>
-	</customidxs>
-
-	<customidxs object-type="constraint">
-		<object name="employee_fk" index="0"/>
-	</customidxs>
 </table>
 
 <table name="helper_variables">
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="1160" y="480"/>
-	<column name="last_ekv_id">
-		<type name="bigint" length="0"/>
+	<column name="key">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="value">
+		<type name="character varying" length="0"/>
 	</column>
 </table>
 
-<relationship name="employee_has_many_pv" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#a498ee"
-	 src-table="public.employee"
-	 dst-table="public.pv"
-	 src-required="true" dst-required="false"/>
+<table name="timetable">
+	<schema name="public"/>
+	<role name="pichator"/>
+	<position x="300" y="260"/>
+	<column name="monday">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="tuesday">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="wedensday">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="thursday">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="friday">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="timeid" not-null="true" identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
+	</column>
+	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
+		<columns names="timeid" ref-type="src-columns"/>
+	</constraint>
 
-<relationship name="pv_has_many_presence" type="rel1n"
-	 src-col-pattern="{sc}_{st}"
-	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
-	 src-fk-pattern="{st}_fk"
-	 custom-color="#8e567b"
-	 src-table="public.pv"
-	 dst-table="public.presence"
-	 src-required="true" dst-required="false"/>
+	<customidxs object-type="column">
+		<object name="uid_pv" index="6"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="pv_fk" index="1"/>
+		<object name="timetable_uq" index="2"/>
+	</customidxs>
+</table>
 
 <relationship name="timetable_has_one_pv" type="rel11"
 	 src-col-pattern="{sc}_{st}"
@@ -188,6 +191,24 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	 custom-color="#8b38c9"
 	 src-table="public.pv"
 	 dst-table="public.timetable"
+	 src-required="true" dst-required="false"/>
+
+<relationship name="employee_has_many_pv" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#81fe0e"
+	 src-table="public.employee"
+	 dst-table="public.pv"
+	 src-required="true" dst-required="false"/>
+
+<relationship name="employee_has_many_presence" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#bd778d"
+	 src-table="public.employee"
+	 dst-table="public.presence"
 	 src-required="true" dst-required="false"/>
 
 </dbmodel>

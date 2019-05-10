@@ -19,7 +19,7 @@ from twisted.python import log
 from getopt import gnu_getopt
 from sys import argv, stderr
 
-from pichator import Pichator, Manager, make_site, Poller
+from pichator import Pichator, Manager, make_site, Ekv
 
 # Data are accessed through SQLSoup, using SQLAlchemy.
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -29,7 +29,8 @@ from sqlsoup import SQLSoup
 from configparser import ConfigParser
 
 import os
-os.environ["NLS_LANG"] = "CZECH_CZECH REPUBLIC.AL32UTF8"
+# Uncomment to use Czech language with oracle database
+# os.environ["NLS_LANG"] = "CZECH_CZECH REPUBLIC.AL32UTF8"
 
 if __name__ == '__main__':
     def do_start(config):
