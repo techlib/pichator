@@ -3,6 +3,8 @@
 
 __all__ = ['Ekv']
 
+from datetime import datetime
+from twisted.python import log
 
 class Ekv:
     def __init__(self, db):
@@ -16,11 +18,7 @@ class Ekv:
                 WHERE [AssetUID]='I1.{ID}'
                 AND [Time] between '{ms_date} 00:00:00' and '{ms_date} 23:59:59'
                 '''
-        try:
-            return self.db.execute(query).one()[0]
-        except:
-            self.db.connect()
-            return self.db.execute(query).one()[0]
+        return self.db.execute(query).fetchall()[0][0]
 
     def get_departure(self, date, ID):
         ms_date = date.strftime("%Y-%m-%d")
@@ -30,8 +28,6 @@ class Ekv:
                 WHERE [AssetUID]='I1.{ID}'
                 AND [Time] between '{ms_date} 00:00:00' and '{ms_date} 23:59:59'
                 '''
-        try:
-            return self.db.execute(query).one()[0]
-        except:
-            self.db.connect()
-            return self.db.execute(query).one()[0]
+        return self.db.execute(query).fetchall()[0][0]
+
+

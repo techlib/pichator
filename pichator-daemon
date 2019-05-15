@@ -19,7 +19,9 @@ from twisted.python import log
 from getopt import gnu_getopt
 from sys import argv, stderr
 
-from pichator import Pichator, Manager, make_site, Ekv
+from pichator import Manager, make_site, Ekv, AccessModel, Elanor
+
+from datetime import datetime
 
 # Data are accessed through SQLSoup, using SQLAlchemy.
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -38,16 +40,18 @@ if __name__ == '__main__':
         log.startLogging(stderr)
 
         # Read database iniuration options.
-        db_url = config.get('database', 'url')
+        pg_url = config.get('postgres', 'url')
+        ekv_url = config.get('ekv','url')
+        elanor_url = config.get('elanor', 'url')
 
         # Read website configuration options.
         http_debug = config.getboolean('http', 'debug', fallback=False)
         http_host = config.get('http', 'host', fallback='localhost')
         http_port = config.getint('http', 'port', fallback=5000)
         http_pool = config.getint('http', 'pool_size', fallback=4)
-
-        # Read authentication options
-        token = config.get('authentication', 'token')
+        
+        # Read role mappings.
+        access_model = AccessModel(config.items('access'))
 
         # Extract manager options, sans the pool_size we handle here.
         manager_opts = dict(config.items('manager'))
@@ -57,16 +61,32 @@ if __name__ == '__main__':
         reactor.suggestThreadPoolSize(manager_pool)
 
         # Prepare database connection with table reflection.
-        engine = create_engine(db_url, isolation_level='SERIALIZABLE')
-        session = scoped_session(sessionmaker(
-            autocommit=False, autoflush=False))
-        db = SQLSoup(engine, session=session)
+        #pg_engine = create_engine(pg_url, isolation_level='SERIALIZABLE')
+        #pg_session = scoped_session(sessionmaker(
+        #    autocommit=False, autoflush=False))
+        #pg_db = SQLSoup(pg_engine, session=pg_session)
+        pg_db = SQLSoup(pg_url)
+        
+        #ekv_engine = create_engine(ekv_url, isolation_level='SERIALIZABLE')
+        #ekv_session = scoped_session(sessionmaker(
+        #    autocommit=False, autoflush=False))
+        #ekv_db = SQLSoup(ekv_engine, session=ekv_session)
+        ekv_db = SQLSoup(ekv_url)
+        
+        #elanor_engine = create_engine(elanor_url)
+        #elanor_session = scoped_session(sessionmaker(
+        #    autocommit=False, autoflush=False))
+        #elanor_db = SQLSoup(elanor_engine, session=elanor_session)
+        elanor_db = SQLSoup(elanor_url)
+
 
         # Prepare the manager that runs in an exclusive thread.
-        manager = Manager(db)
+        manager = Manager(pg_db)
+        ekv = Ekv(ekv_db)
+        elanor = Elanor(elanor_db)
 
         # Prepare the website that will get exposed to the users.
-        site = make_site(manager, debug=http_debug)
+        site = make_site(manager, access_model, debug=http_debug)
 
         # Prepare WSGI site with a separate thread pool.
         pool = ThreadPool(http_pool, http_pool, 'http')
@@ -75,7 +95,10 @@ if __name__ == '__main__':
 
         # Bind the website to it's address.
         reactor.listenTCP(http_port, site, interface=http_host)
-
+        
+        # Schedule to call manager sync from ekv
+        reactor.callLater(0,manager.sync, date=datetime.now().date(), source=ekv, src_name='ekv', elanor=elanor)
+        
         # Run the Twisted reactor until the user terminates us.
         reactor.run()
 
@@ -83,7 +106,7 @@ if __name__ == '__main__':
         pool.stop()
 
     def do_help(*args, **kwargs):
-        print('Usage: pichator-daemon [--config=config/pichator.ini]')
+        print('Usage: pichator-daemon [--config=config/pichator-prod.ini]')
         print('Runs the pichator-daemon with given configuration.')
         print('')
         print('OPTIONS:')
@@ -95,13 +118,13 @@ if __name__ == '__main__':
         print('Report bugs at <http://github.com/techlib/pichator>.')
 
     def do_version(*args, **kwargs):
-        print('matrixator (NTK) 1')
+        print('pichator (NTK) 1')
 
     # Parse command line arguments.
     opts, args = gnu_getopt(argv, 'hVc:', ['help', 'version', 'config='])
 
     action = do_start
-    config_path = 'config/pichator.ini'
+    config_path = 'config/pichator-prod.ini'
 
     for k, v in opts:
         if k in ('--help', '-h'):

@@ -22,7 +22,7 @@ import os
 import re
 
 
-def make_site(db, manager, access_model, debug=False):
+def make_site(manager, access_model, debug=False):
     app = flask.Flask('.'.join(__name__.split('.')[:-1]))
     app.secret_key = os.urandom(16)
     app.debug = debug
@@ -55,7 +55,7 @@ def make_site(db, manager, access_model, debug=False):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             uid = flask.request.headers.get('X-User-Id', '0')
-            username = flask.request.headers.get('X-Full-Name', 'Someone')
+            username = flask.request.headers.get('X-Full-Name', 'brabemi')
 
             kwargs.update({
                 'uid': int(uid),
@@ -103,7 +103,7 @@ def make_site(db, manager, access_model, debug=False):
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
-        manager.db.rollback()
+        manager.pich_db.rollback()
 
     return app
 
