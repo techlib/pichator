@@ -166,6 +166,7 @@ CREATE TABLE public.timetable(
 	friday public.timerange,
 	timeid bigint NOT NULL DEFAULT nextval('public.timetable_timeid_seq'::regclass),
 	uid_pv bigint NOT NULL,
+	validity daterange NOT NULL,
 	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
 
 );
@@ -185,11 +186,6 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE public.timetable ADD CONSTRAINT pv_fk FOREIGN KEY (uid_pv)
 REFERENCES public.pv (uid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
--- ddl-end --
-
--- object: timetable_uq | type: CONSTRAINT --
--- ALTER TABLE public.timetable DROP CONSTRAINT IF EXISTS timetable_uq CASCADE;
-ALTER TABLE public.timetable ADD CONSTRAINT timetable_uq UNIQUE (uid_pv);
 -- ddl-end --
 
 

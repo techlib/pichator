@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="251,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="171,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -193,6 +193,9 @@ Jakub•Chalupa•952•jakubch•595067]]>
 	<column name="timeid" not-null="true" sequence="public.timetable_timeid_seq">
 		<type name="bigint" length="0"/>
 	</column>
+	<column name="validity" not-null="true">
+		<type name="daterange" length="0"/>
+	</column>
 	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
 		<columns names="timeid" ref-type="src-columns"/>
 	</constraint>
@@ -203,7 +206,6 @@ Jakub•Chalupa•952•jakubch•595067]]>
 
 	<customidxs object-type="constraint">
 		<object name="pv_fk" index="1"/>
-		<object name="timetable_uq" index="2"/>
 	</customidxs>
 </table>
 
@@ -216,11 +218,11 @@ Jakub•Chalupa•952•jakubch•595067]]>
 	 dst-table="public.pv"
 	 src-required="true" dst-required="false"/>
 
-<relationship name="timetable_has_one_pv" type="rel11"
+<relationship name="pv_has_many_timetable" type="rel1n"
 	 src-col-pattern="{sc}_{st}"
 	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
 	 src-fk-pattern="{st}_fk"
-	 custom-color="#8b38c9"
+	 custom-color="#56281f"
 	 src-table="public.pv"
 	 dst-table="public.timetable"
 	 src-required="true" dst-required="false"/>

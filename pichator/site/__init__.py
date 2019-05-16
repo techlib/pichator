@@ -81,19 +81,28 @@ def make_site(manager, access_model, debug=False):
     def unauthorized(e):
         return flask.render_template('forbidden.html')
 
+    @app.errorhandler(ImATeapot.code)
+    def imateapot(e):
+        return flask.render_template('teapot.html')
+
     @app.route('/')
     @authorized_only('admin')
     def index():
         nonlocal has_privilege
         return flask.render_template('graph.html', **locals())
 
-    @app.route('/timetable')
+    @app.route('/timetable', methods=['GET', 'POST'])
     @authorized_only('user')
     @pass_user_info
     def show_timetable(uid, username):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
-        return flask.render_template('timetable.html', **locals())
+        if flask.request.method == 'GET':
+            return flask.render_template('timetable.html', **locals())
+        else:
+            data_dict = flask.request.form.to_dict()
+            manager.set_timetables(data_dict)
+            return flask.render_template('timetable.html', **locals())
 
     @app.route('/timetable_data/<emp_no>')
     @authorized_only('admin')

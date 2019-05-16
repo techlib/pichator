@@ -32,13 +32,11 @@
     }
 
     function on_select_pv() {
-        if($('#pvs')[0].length == 1){
+        if ($('#pvs')[0].length == 1) {
             i = 0;
-        }
-        else{
+        } else {
             i = $('#pvs')[0].selectedIndex;
         }
-        console.log(timetable)
         $('#occupancy').html('Úvazek: ' + timetable[i].occupancy);
         $('#dept').html('Oddělení: ' + timetable[i].department);
         $('#monF')[0].value = timetable[i].days[0];
@@ -61,16 +59,17 @@
 <div class='container-fluid'>
     <div class='row-buffer-top-md'>
         <div class='col-md-7'>
-            <h2>PV: </h2>
-            <select id="pvs" onchange="on_select_pv()"></select>
-            <h2 id='occupancy'></h2>
-            <h2 id='dept'></h2>
-            <form id='timetable-form'>
-                Po: <input type='time' id='monF' >  <b>-</b>  <input type='time' id='monT' ><br><br>
-                Út: <input type='time' id='tueF' >  <b>-</b>  <input type='time' id='tueT' ><br><br>
-                St: <input type='time' id='wedF' >  <b>-</b>  <input type='time' id='wedT' ><br><br>
-                Čt: <input type='time' id='thuF' >  <b>-</b>  <input type='time' id='thuT' ><br><br>
-                Pá: <input type='time' id='friF' >  <b>-</b>  <input type='time' id='friT' ><br><br>
+            <form id='timetable-form' method='post'>
+                <div class='row-md-7'>
+                    <b>PV</b>: <select name='pvs' id="pvs" onchange="on_select_pv()"></select>
+                    <b id='occupancy'></b>
+                    <b id='dept'></b><br><br>
+                </div>
+                Po: <input type='time' name='monF' id='monF'> <b>-</b> <input type='time' name='monT' id='monT'><br><br>
+                Út: <input type='time' name='tueF' id='tueF'> <b>-</b> <input type='time' name='tueT' id='tueT'><br><br>
+                St: <input type='time' name='wedF' id='wedF'> <b>-</b> <input type='time' name='wedT' id='wedT'><br><br>
+                Čt: <input type='time' name='thuF' id='thuF'> <b>-</b> <input type='time' name='thuT' id='thuT'><br><br>
+                Pá: <input type='time' name='friF' id='friF'> <b>-</b> <input type='time' name='friT' id='friT'><br><br>
                 <button type='submit' class='btn btn-success submit-btn'>Uložit</button>
                 <button id='btn-cancel' class='btn btn-warning' onclick='load_data();'>Zrušit</button>
             </form>
@@ -79,4 +78,4 @@
     </div>
 </div>
 
-    {% endblock %}
+{% endblock %}
