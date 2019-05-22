@@ -171,11 +171,12 @@ class Manager(object):
         return retval
 
     def get_attendance(self, uid, pvid, period, username):
+        WEEKDAYS = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
         retval = {'data': []}
-        per_year = period.split('-')[1]
-        per_month = period.split('-')[0]
+        per_year = int(period.split('-')[1])
+        per_month = int(period.split('-')[0])
         per_range = monthrange(per_year, per_month)
-        per_range_list = [i for i in range(per_range[0], per_range[1] + 1)]
+        per_range_list = [i for i in range(1, per_range[1] + 1)]
         pv_t = self.pich_db.pv
         emp_t = self.pich_db.employee
         pres_t = self.pich_db.presence
@@ -183,6 +184,8 @@ class Manager(object):
         emp_no = self.get_emp_no(username)
         uid = emp_t.filter(emp_t.emp_no == emp_no).one().uid
         pvs = pv_t.filter(pv_t.pvid == pvid).all()
+        uid_pv = ''
+        log.msg(f'pvs: {pvs}, pvid: {pvid}')
         for day in per_range_list:
             curr_time = ''
             day_date = date(per_year, per_month, day)
@@ -191,19 +194,30 @@ class Manager(object):
                 if day_date in pv.validity:
                     uid_pv = pv.uid
                     break
+            if not uid_pv:
+                return {'data':[]}
             timetables = time_t.filter(time_t.uid_pv == uid_pv).all()
             for timetable in timetables:
                 if day_date in timetable.validity:
                     curr_time = timetable
                     break
-            timetable_list = [curr_time.monday, curr_time.tuesday,
-                              curr_time.wedensday, curr_time.thursday, curr_time.friday]
+            if curr_time:                
+                timetable_list = [curr_time.monday, curr_time.tuesday,
+                                  curr_time.wedensday, curr_time.thursday, curr_time.friday, TimeRange('00:00', '00:00'), TimeRange('00:00', '00:00')]
+            else:
+                timetable_list = [TimeRange('00:00', '00:00')] * 7
             attend = pres_t.filter(
                 and_(pres_t.date == day_date, pres_t.uid_employee == uid)).first()
             if attend:
-                retval['data'].append({'day': f'{day}. ', 'start': attend.arrival, 'end': attend.departure,
+                retval['data'].append({'day': f'{day}. ', 'start': f'{attend.arrival}', 'end': f'{attend.departure}',
                                        'mode': attend.presence_mode, 'stamp': attend.food_stamp,
-                                       'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}'})
+                                       'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
+                                       'weekday': WEEKDAYS[weekday]})
+            else:
+                retval['data'].append({'day': f'{day}. ', 'start': '00:00', 'end': '00:00',
+                                       'mode': 'absence', 'stamp': 'False',
+                                       'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
+                                       'weekday': WEEKDAYS[weekday]})
         return retval
 
     def set_attendance(self, data):

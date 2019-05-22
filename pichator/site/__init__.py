@@ -129,7 +129,7 @@ def make_site(manager, access_model, debug=False):
         emp_no = manager.get_emp_no(username)
         return flask.jsonify(manager.get_pvs(emp_no, period))
 
-    @app.route('/attendence_data')
+    @app.route('/attendance_data')
     @authorized_only('admin')
     @pass_user_info
     def get_attendance_data(uid, username):
