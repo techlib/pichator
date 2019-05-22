@@ -215,7 +215,7 @@ class Manager(object):
                                        'weekday': WEEKDAYS[weekday]})
             else:
                 retval['data'].append({'day': f'{day}. ', 'start': '00:00', 'end': '00:00',
-                                       'mode': 'absence', 'stamp': 'False',
+                                       'mode': 'absence', 'stamp': False,
                                        'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                                        'weekday': WEEKDAYS[weekday]})
         return retval
@@ -227,8 +227,6 @@ class Manager(object):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee
         for employee in emp_t.all():
-            log.msg(
-                f'Processing employee {employee.first_name} {employee.last_name}')
             arriv = source.get_arrival(date, employee.uid)
             depart = source.get_departure(date, employee.uid)
             if not arriv:
@@ -236,9 +234,6 @@ class Manager(object):
             length = (depart - arriv).seconds / 3600
             presence_mode = 'Presence'
             food_stamp = length >= 6
-            log.msg(
-                f'''Current record: arrival: {arriv}, departure: {depart},
-                 length: {length}, presence_mode: {presence_mode}, food_stamp: {food_stamp}''')
             if not pres_t.filter(
                     and_(pres_t.uid_employee == employee.uid, pres_t.date == date)).first():
                 pres_t.insert(date=date, arrival=arriv.time(),
