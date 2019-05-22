@@ -12,10 +12,26 @@ from datetime import timedelta, datetime, date
 from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, ImATeapot
+from calendar import monthrange
 
 
 class TimeRange(Range):
-    pass
+    def len(self):
+        # Returns number of minutes in timerange
+        overflow = False
+        split_from = self.lower.split(':')
+        split_to = self.upper.split(':')
+        h_from = int(split_from[0])
+        m_from = int(split_from[1])
+        h_to = int(split_to[0])
+        m_to = int(split_to[1])
+        m_len = m_to - m_from
+        if m_len < 0:
+            m_len = 60 - m_len
+            overflow = True
+        h_len = h_to - h_from if not overflow else h_to - h_from - 1
+        total = h_len * 60 + m_len
+        return total if total < 6 * 60 else total - 30
 
 
 class TIMERANGE(postgresql.ranges.RangeOperators, sqltypes.UserDefinedType):
@@ -53,17 +69,32 @@ class Manager(object):
                 if today in work_rel.validity and today in tt.validity:
                     payload["data"].append({"PV": work_rel.pvid, "occupancy": str(work_rel.occupancy),
                                             "department": work_rel.department,
-                                            "days": [str(tt.monday.lower), str(tt.monday.upper), str(tt.tuesday.lower), str(tt.tuesday.upper),
-                                                     str(tt.wedensday.lower), str(
-                                                         tt.wedensday.upper), str(tt.thursday.lower),
-                                                     str(tt.thursday.upper), str(tt.friday.lower), str(tt.friday.upper)]})
+                                            "days": [tt.monday.lower.strftime('%H:%M'),
+                                                     tt.monday.upper.strftime(
+                                                         '%H:%M'),
+                                                     tt.tuesday.lower.strftime(
+                                                         '%H:%M'),
+                                                     tt.tuesday.upper.strftime(
+                                                         '%H:%M'),
+                                                     tt.wedensday.lower.strftime(
+                                                         '%H:%M'),
+                                                     tt.wedensday.upper.strftime(
+                                                         '%H:%M'),
+                                                     tt.thursday.lower.strftime(
+                                                         '%H:%M'),
+                                                     tt.thursday.upper.strftime(
+                                                         '%H:%M'),
+                                                     tt.friday.lower.strftime(
+                                                         '%H:%M'),
+                                                     tt.friday.upper.strftime('%H:%M')]})
             else:
                 if today in pv[1].validity:
-                    payload["data"].append({"PV": work_rel.pvid, "occupancy": str(
-                        pv[1].occupancy), "department": work_rel.department, "days": ['08:00', '16:30', '08:00',
-                                                                                   '16:30', '08:00', '16:30',
-                                                                                   '08:00', '16:30', '08:00',
-                                                                                   '16:30']})
+                    payload["data"].append({"PV": work_rel.pvid, "occupancy": str(pv[1].occupancy),
+                                            "department": work_rel.department,
+                                            "days": ['08:00', '16:30', '08:00',
+                                                     '16:30', '08:00', '16:30',
+                                                     '08:00', '16:30', '08:00',
+                                                     '16:30']})
         return payload
 
     def set_timetables(self, data):
@@ -73,11 +104,15 @@ class Manager(object):
         today = date.today()
         maxdate = date.max
         log.msg(f'data recieved: {data}')
+        if not (data['monF'] and data['monT'] and data['tueF'] and data['tueT'] and data['wedF'] and data['wedT'] and data['thuF'] and data['thuT'] and data['friF'] and data['friT']):
+            return False
         monday_v = TimeRange(data['monF'], data['monT'])
         tuesday_v = TimeRange(data['tueF'], data['tueT'])
         wedensday_v = TimeRange(data['wedF'], data['wedT'])
         thursday_v = TimeRange(data['thuF'], data['thuT'])
         friday_v = TimeRange(data['friF'], data['friT'])
+        hours_in_week = (monday_v.len() + tuesday_v.len() +
+                         wedensday_v.len() + thursday_v.len() + friday_v.len()) / 60
         validity_v = DateRange(today, maxdate)
         pvid_v = data['pvs']
         if not monday_v and tuesday_v and wedensday_v and thursday_v and friday_v and validity_v and pvid_v:
@@ -86,7 +121,10 @@ class Manager(object):
         for pv in pvs:
             if today in pv.validity:
                 valid_pv_uid = pv.uid
+                occupancy = pv.occupancy
                 break
+        if not hours_in_week == 40 * occupancy:
+            return False
         if not valid_pv_uid:
             raise ImATeapot
         pv_w_tt = self.pich_db.session().query(
@@ -101,13 +139,75 @@ class Manager(object):
                 break
 
         try:
-            timetable_t.insert(monday=monday_v, tuesday=tuesday_v, wedensday=wedensday_v,
-                               thursday=thursday_v, friday=friday_v, validity=validity_v, uid_pv=valid_pv_uid)
+            timetable_t.insert(monday=monday_v, tuesday=tuesday_v,
+                               wedensday=wedensday_v, thursday=thursday_v,
+                               friday=friday_v, validity=validity_v,
+                               uid_pv=valid_pv_uid)
             self.pich_db.commit()
+            return True
         except Exception as e:
             log.err(e)
             self.pich_db.rollback()
             raise ImATeapot
+
+    def get_pvs(self, emp_no, period):
+        retval = {'data': []}
+        per_range = monthrange(
+            int(period.split('-')[1]), int(period.split('-')[0]))
+        per_start = datetime.strptime(
+            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
+        per_end = datetime.strptime(
+            period + f'-{per_range[1]}', '%m-%Y-%d').date()
+        pv_t = self.pich_db.pv
+        emp_t = self.pich_db.employee
+        pvs = self.pich_db.session.query(emp_t,
+                                         pv_t).join(
+            pv_t).filter(emp_t.emp_no == emp_no).all()
+        for pv in pvs:
+            work_rel = pv[1]
+            if per_start in work_rel.validity or per_end in work_rel.validity:
+                retval['data'].append(
+                    {'PV': work_rel.pvid, 'dept': work_rel.department})
+        return retval
+
+    def get_attendance(self, uid, pvid, period, username):
+        retval = {'data': []}
+        per_year = period.split('-')[1]
+        per_month = period.split('-')[0]
+        per_range = monthrange(per_year, per_month)
+        per_range_list = [i for i in range(per_range[0], per_range[1] + 1)]
+        pv_t = self.pich_db.pv
+        emp_t = self.pich_db.employee
+        pres_t = self.pich_db.presence
+        time_t = self.pich_db.timetable
+        emp_no = self.get_emp_no(username)
+        uid = emp_t.filter(emp_t.emp_no == emp_no).one().uid
+        pvs = pv_t.filter(pv_t.pvid == pvid).all()
+        for day in per_range_list:
+            curr_time = ''
+            day_date = date(per_year, per_month, day)
+            weekday = day_date.weekday()
+            for pv in pvs:
+                if day_date in pv.validity:
+                    uid_pv = pv.uid
+                    break
+            timetables = time_t.filter(time_t.uid_pv == uid_pv).all()
+            for timetable in timetables:
+                if day_date in timetable.validity:
+                    curr_time = timetable
+                    break
+            timetable_list = [curr_time.monday, curr_time.tuesday,
+                              curr_time.wedensday, curr_time.thursday, curr_time.friday]
+            attend = pres_t.filter(
+                and_(pres_t.date == day_date, pres_t.uid_employee == uid)).first()
+            if attend:
+                retval['data'].append({'day': f'{day}. ', 'start': attend.arrival, 'end': attend.departure,
+                                       'mode': attend.presence_mode, 'stamp': attend.food_stamp,
+                                       'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}'})
+        return retval
+
+    def set_attendance(self, data):
+        pass
 
     def update_presence(self, date, source):
         pres_t = self.pich_db.presence
@@ -117,16 +217,20 @@ class Manager(object):
                 f'Processing employee {employee.first_name} {employee.last_name}')
             arriv = source.get_arrival(date, employee.uid)
             depart = source.get_departure(date, employee.uid)
+            if not arriv:
+                continue
             length = (depart - arriv).seconds / 3600
-            presence_mode = 'Presence' if length >= 6 else 'Presence-'
+            presence_mode = 'Presence'
+            food_stamp = length >= 6
             log.msg(
-                f'Current record: arrival: {arriv}, departure: {depart}, length: {length}, presence_mode: {presence_mode}')
+                f'''Current record: arrival: {arriv}, departure: {depart},
+                 length: {length}, presence_mode: {presence_mode}, food_stamp: {food_stamp}''')
             if not pres_t.filter(
                     and_(pres_t.uid_employee == employee.uid, pres_t.date == date)).first():
                 pres_t.insert(date=date, arrival=arriv.time(),
                               departure=depart.time(),
                               presence_mode=presence_mode,
-                              uid_employee=employee.uid)
+                              uid_employee=employee.uid, food_stamp=food_stamp)
 
             else:
                 presence_s = pres_t.filter(
@@ -160,11 +264,13 @@ class Manager(object):
                     lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
                 if not pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
-                                        pv_t.department == pv['department'], pv_t.validity == valid, pv_t.uid_employee == uid_emp)).first():
+                                        pv_t.department == pv['department'], pv_t.validity == valid,
+                                        pv_t.uid_employee == uid_emp)).first():
                     if pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
                                         pv_t.department == pv['department'], pv_t.uid_employee == uid_emp)).first():
                         pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
-                                         pv_t.department == pv['department'], pv_t.uid_employee == uid_emp)).one().update().values({'validity': valid})
+                                         pv_t.department == pv['department'], pv_t.uid_employee == uid_emp
+                                         )).one().update().values({'validity': valid})
                     else:
                         pv_t.insert(pvid=pv['pvid'], occupancy=pv['occupancy'],
                                     department=pv['department'], validity=valid, uid_employee=uid_emp)

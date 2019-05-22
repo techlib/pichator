@@ -7,71 +7,144 @@
 
 {% block scripts %}
 <script>
-    timetable = []
-
-    function load_data() {
+    $(document).ready(function () {
+        $('#pvs').selectpicker();
+        timetable = []
         emp_no = '{{ emp_no }}'
-        //reload data and refresh textfields
+        $('#pvs').on('changed.bs.select', function (e) {
+            if ($('#pvs')[0].length == 1) {
+                i = 0;
+            } else {
+                i = $('#pvs')[0].selectedIndex;
+            }
+            $('#occupancy')[0].value = timetable[i].occupancy;
+            $('#dept')[0].value = timetable[i].department;
+            $('#monF')[0].value = timetable[i].days[0];
+            $('#monT')[0].value = timetable[i].days[1];
+            $('#tueF')[0].value = timetable[i].days[2];
+            $('#tueT')[0].value = timetable[i].days[3];
+            $('#wedF')[0].value = timetable[i].days[4];
+            $('#wedT')[0].value = timetable[i].days[5];
+            $('#thuF')[0].value = timetable[i].days[6];
+            $('#thuT')[0].value = timetable[i].days[7];
+            $('#friF')[0].value = timetable[i].days[8];
+            $('#friT')[0].value = timetable[i].days[9];
+        })
         $.ajax({
-            'url': '/timetable_data/' + emp_no,
-        }).fail(function () {
-            //TODO display error
+            url: '/timetable_data',
         }).done(function (data) {
             timetable = data.data
             for (i = 0; i < timetable.length; i++) {
-                if (i == 0) {
-                    $('#pvs').append('<option value="' + timetable[i].PV + '" id="' + timetable[i].PV +
-                        '" selected="selected">' + timetable[i].PV + '</option>')
-                } else {
-                    $('#pvs').append('<option value="' + timetable[i].PV + '" id="' + timetable[i].PV +
-                        '">' + timetable[i].PV + '</option>')
-                }
+                $('#pvs').append('<option value="' + timetable[i].PV + '" id="' + timetable[i].PV +
+                    '">' + timetable[i].PV + '</option>')
             }
-            on_select_pv();
-        })
-    }
+            $('#pvs').selectpicker('refresh');
+            if ($('#pvs')[0].length == 1) {
+                i = 0;
+            } else {
+                i = $('#pvs')[0].selectedIndex;
+            }
 
-    function on_select_pv() {
-        if ($('#pvs')[0].length == 1) {
-            i = 0;
-        } else {
-            i = $('#pvs')[0].selectedIndex;
-        }
-        $('#occupancy').html('Úvazek: ' + timetable[i].occupancy);
-        $('#dept').html('Oddělení: ' + timetable[i].department);
-        $('#monF')[0].value = timetable[i].days[0];
-        $('#monT')[0].value = timetable[i].days[1];
-        $('#tueF')[0].value = timetable[i].days[2];
-        $('#tueT')[0].value = timetable[i].days[3];
-        $('#wedF')[0].value = timetable[i].days[4];
-        $('#wedT')[0].value = timetable[i].days[5];
-        $('#thuF')[0].value = timetable[i].days[6];
-        $('#thuT')[0].value = timetable[i].days[7];
-        $('#friF')[0].value = timetable[i].days[8];
-        $('#friT')[0].value = timetable[i].days[9];
-    }
-    $(document).ready(function () {
-        load_data()
+            $('#occupancy')[0].value = timetable[i].occupancy;
+            $('#dept')[0].value = timetable[i].department;
+            $('#monF')[0].value = timetable[i].days[0];
+            $('#monT')[0].value = timetable[i].days[1];
+            $('#tueF')[0].value = timetable[i].days[2];
+            $('#tueT')[0].value = timetable[i].days[3];
+            $('#wedF')[0].value = timetable[i].days[4];
+            $('#wedT')[0].value = timetable[i].days[5];
+            $('#thuF')[0].value = timetable[i].days[6];
+            $('#thuT')[0].value = timetable[i].days[7];
+            $('#friF')[0].value = timetable[i].days[8];
+            $('#friT')[0].value = timetable[i].days[9];
+        })
     })
 </script>
 {% endblock %}
 
 <div class='container-fluid'>
-    <div class='row-buffer-top-md'>
-        <div class='col-md-7'>
-            <form id='timetable-form' method='post'>
-                <div class='row-md-7'>
-                    <b>PV</b>: <select name='pvs' id="pvs" onchange="on_select_pv()"></select>
-                    <b id='occupancy'></b>
-                    <b id='dept'></b><br><br>
+    <div class='row buffer-top-md'>
+        <div class='col-md-8'>
+            <form id='timetable-form' method='post' class="form-inline">
+                <div class='row'>
+                    <div class='form-group col-sm-1'>
+                        <label for='pvs'>Číslo PV:</label>
+                        <select class='form-control' name='pvs' id='pvs'></select>
+                    </div>
+                    <div class='form-group col-sm-1'>
+                        <label for='occupancy'> Úvazek: </label>
+                        <input type='text' class='form-control' id='occupancy' name='occupancy' readonly>
+                    </div>
+                    <div class='form-group col-sm-1'>
+                        <label for='dept'> Oddělení: </label>
+                        <input type='text' class='form-control' id='dept' name='dept' readonly>
+                    </div>
                 </div>
-                Po: <input type='time' name='monF' id='monF'> <b>-</b> <input type='time' name='monT' id='monT'><br><br>
-                Út: <input type='time' name='tueF' id='tueF'> <b>-</b> <input type='time' name='tueT' id='tueT'><br><br>
-                St: <input type='time' name='wedF' id='wedF'> <b>-</b> <input type='time' name='wedT' id='wedT'><br><br>
-                Čt: <input type='time' name='thuF' id='thuF'> <b>-</b> <input type='time' name='thuT' id='thuT'><br><br>
-                Pá: <input type='time' name='friF' id='friF'> <b>-</b> <input type='time' name='friT' id='friT'><br><br>
-                <button type='submit' class='btn btn-success submit-btn'>Uložit</button>
-                <button id='btn-cancel' class='btn btn-warning' onclick='load_data();'>Zrušit</button>
+                    <br>
+                    <div class="row">
+                        <div class='input-group col-sm-1'>
+                            <label for='monF'>Pondělí od:</label>
+                            <input class='form-control' type='time' name='monF' id='monF'>
+                        </div>
+                        <div class='input-group col-sm-1'>
+                            <label for='monT'>Pondělí do:</label>
+                            <input class='form-control' type='time' name='monT' id='monT'>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='input-group col-sm-1'>
+                            <label for='tueF'>Úterý od:</label>
+                            <input class='form-control' type='time' name='tueF' id='tueF'>
+                        </div>
+                        <div class='input-group col-sm-1'>
+                            <label for='tueT'>Úterý do:</label>
+                            <input class='form-control' type='time' name='tueT' id='tueT'>
+                        </div>
+                    </div>
+                    <div class='row'>
+
+                        <div class='input-group col-sm-1'>
+                            <label for='wedF'>Středa od:</label>
+                            <input class='form-control' type='time' name='wedF' id='wedF'>
+                        </div>
+                        <div class='input-group col-sm-1'>
+                            <label for='wedT'>Středa do:</label>
+                            <input class='form-control' type='time' name='wedT' id='wedT'>
+
+                        </div>
+                    </div>
+                    <div class='row'>
+
+                        <div class='input-group col-sm-1'>
+                            <label for='thuF'>Čtvrtek od:</label>
+                            <input class='form-control' type='time' name='thuF' id='thuF'>
+                        </div>
+                        <div class='input-group col-sm-1'>
+                            <label for='thuT'>Čtvrtek do:</label>
+                            <input class='form-control' type='time' name='thuT' id='thuT'>
+
+                        </div>
+                    </div>
+                    <div class='row'>
+
+                        <div class='input-group col-sm-1'>
+                            <label for='friF'>Pátek od:</label>
+                            <input class='form-control' type='time' name='friF' id='friF'>
+                        </div>
+                        <div class='input-group col-sm-1'>
+                            <label for='friT'>Pátek do:</label>
+                            <input class='form-control' type='time' name='friT' id='friT'>
+                        </div>
+
+                    </div>
+                    <br>
+                    <div class='row'>
+                        <div class='col-sm-2 input-group'>
+                            <button type='submit' class='btn btn-success submit-btn pull-left'>Uložit</button>
+                            <button id='btn-cancel' class='btn btn-warning pull-right'
+                                onclick='redirect("/timetable");'>Zrušit</button>
+                        </div>
+                    </div>
             </form>
 
         </div>

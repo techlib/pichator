@@ -87,9 +87,11 @@ def make_site(manager, access_model, debug=False):
 
     @app.route('/')
     @authorized_only('admin')
-    def index():
+    @pass_user_info
+    def index(uid, username):
         nonlocal has_privilege
-        return flask.render_template('graph.html', **locals())
+        emp_no = manager.get_emp_no(username)
+        return flask.render_template('attendance.html', **locals())
 
     @app.route('/timetable', methods=['GET', 'POST'])
     @authorized_only('user')
@@ -101,14 +103,42 @@ def make_site(manager, access_model, debug=False):
             return flask.render_template('timetable.html', **locals())
         else:
             data_dict = flask.request.form.to_dict()
-            manager.set_timetables(data_dict)
+            if not manager.set_timetables(data_dict):
+                flask.flash(
+                    'Počet hodin v rozvrhu neodpovídá úvazku.', 'error')
             return flask.render_template('timetable.html', **locals())
 
-    @app.route('/timetable_data/<emp_no>')
+    @app.route('/timetable_data')
     @authorized_only('admin')
-    def get_timetables_data(emp_no):
+    @pass_user_info
+    def get_timetables_data(uid, username):
         nonlocal has_privilege
+        emp_no = manager.get_emp_no(username)
+        if not emp_no:
+            raise ImATeapot
         return flask.jsonify(manager.get_timetables(emp_no))
+
+    @app.route('/pvs')
+    @authorized_only('admin')
+    @pass_user_info
+    def get_pvs(uid, username):
+        nonlocal has_privilege
+        period = flask.request.headers.get('X-period')
+        if not period:
+            raise ImATeapot
+        emp_no = manager.get_emp_no(username)
+        return flask.jsonify(manager.get_pvs(emp_no, period))
+
+    @app.route('/attendence_data')
+    @authorized_only('admin')
+    @pass_user_info
+    def get_attendance_data(uid, username):
+        nonlocal has_privilege
+        pvid = flask.request.headers.get('X-pvid')
+        period = flask.request.headers.get('X-period')
+        if not pvid or not period:
+            raise ImATeapot
+        return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):

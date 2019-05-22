@@ -60,7 +60,7 @@ ALTER TYPE public.timerange OWNER TO pichator;
 -- object: public.presence_modes | type: TYPE --
 -- DROP TYPE IF EXISTS public.presence_modes CASCADE;
 CREATE TYPE public.presence_modes AS
- ENUM ('Doctor visit','Compensatory time off','Vacation','Sickday','Unpaid leave','Absence','Employer difficulties','Vacation 0.5','On call time','Sickness','Family member care','Personal trouble','Bussiness trip 4h-','Bussiness trip 4h+','Study','Training','Training -','Injury and disease from profession','Public benefit','Presence','Presence-');
+ ENUM ('Doctor visit','Compensatory time off','Vacation','Sickday','Unpaid leave','Absence','Employer difficulties','Vacation 0.5','On call time','Sickness','Family member care','Personal trouble','Bussiness trip 4h-','Bussiness trip 4h+','Study','Training','Injury and disease from profession','Public benefit','Presence');
 -- ddl-end --
 ALTER TYPE public.presence_modes OWNER TO pichator;
 -- ddl-end --
@@ -126,6 +126,7 @@ CREATE TABLE public.presence(
 	arrival time NOT NULL,
 	departure time NOT NULL,
 	uid_employee bigint NOT NULL,
+	food_stamp bool NOT NULL DEFAULT False,
 	CONSTRAINT presence_pk PRIMARY KEY (presid)
 
 );

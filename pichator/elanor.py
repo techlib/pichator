@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from twisted.python import log
-from datetime import date, datetime
+from datetime import date
 import re
 
 __all__ = ['Elanor']
@@ -29,6 +29,7 @@ class Elanor:
             matches = re.finditer(regex_occupancy, pv.dalsi1_xml, re.MULTILINE)
             for matchNum, match in enumerate(matches):
                 matchNum = matchNum + 1
-                retval.append({'pvid':pv.oscpv, 'occupancy':round(float(match.group(1))/40, 2), 'department':pv.kod, 'validity':(oracle_date_to_date(match.group(2)), oracle_date_to_date(match.group(3))), 'emp_no': pv.oscpv.split('.')[0]})
+                retval.append({'pvid': pv.oscpv, 'occupancy': round(float(match.group(1))/40, 2), 'department': pv.kod, 'validity': (
+                    oracle_date_to_date(match.group(2)), oracle_date_to_date(match.group(3))), 'emp_no': pv.oscpv.split('.')[0]})
         log.msg(f'processed pvs: {retval}\n')
         return retval

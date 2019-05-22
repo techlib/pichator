@@ -7,8 +7,78 @@
 
 {% block scripts %}
 <script>
-    
+    $(document).ready(function () {
+        var pvs = {};
+        $('#period').datepicker({
+            viewMode: 'months',
+            format: 'mm-yyyy',
+            minViewMode: 'months',
+        });
+        $("#period").datepicker().on('changeDate',function(e){
+            $.ajax({
+                url: '/pvs',
+                headers: {
+                    'X-period': $("#period").val()
+                }
+            }).done(function(data){
+                $('#pvs').empty();
+                pvs = data.data
+                for(i = 0; i < pvs.length; i++){
+                    $('#pvs').append('<option value = ' + pvs[i].PV + '>' + pvs[i].PV + '</option>')
+                }
+                $('#dept')[0].value = pvs[0].dept;
+                $('#pvs').selectpicker('refresh');
+            });
+        });
+        $("#pvs").selectpicker();
+        $("#pvs").selectpicker().on('change', function(e){
+            if ($('#pvs')[0].length == 1) {
+                i = 0;
+            } else {
+                i = $('#pvs')[0].selectedIndex;
+            }
+            $('#dept')[0].value = pvs[i].dept;
+            $.ajax({
+                url: '/attendance_data',
+                headers: {
+                    'X-pvid': $('#pvs').val(),
+                    'X-period': $("#period").val()
+                }
+            }).done(function(data){
+                //TODO render results of get_attendence
+                var rows = data.data
+                for(i = 0; i < rows.length; i++){
+                    $('#attendance').append('<input class="">')
+                }
+            });
+        });
+        $('#period').datepicker('setDate', new Date());
+    });
 </script>
 {% endblock %}
+<div class='container-fluid'>
+    <div class='row buffer-top-md'>
+        <div class='col-md-8'>
+            <form class='align-items-center form-inline' id='attendance-form' method='post'>
+                <div class='row'>
+                    <div class='form-group col-sm-1'>
+                        <label for='period'>Období:</label>
+                        <input class='form-control' name='period' id="period" type='text'>
+                    </div>
+                    <div class='form-group col-sm-1'>
+                        <label for='pvs'>PV:</label>
+                        <select class='form-control' class='select-picker' name='pvs' id="pvs"></select>
+                    </div>
+                    <div class='form-group col-sm-1'>
+                        <label for=''>Oddělení:</label>
+                        <input class='form-control' id='dept' name='dept' type='text' readonly>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class='form form-group' id='attendance' name='attendance'>
 
+    </div>
+</div>
 {% endblock %}
