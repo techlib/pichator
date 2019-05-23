@@ -50,7 +50,7 @@ class Manager(object):
         try:
             return emp_t.filter(emp_t.username == username).one().emp_no
         except NoResultFound:
-            log.msg(f'User not found. Supplied username: {username}')
+            log.err(f'User not found. Supplied username: {username}')
             raise Forbidden
 
     def get_timetables(self, emp_no):
@@ -103,7 +103,6 @@ class Manager(object):
         timetable_t = self.pich_db.timetable
         today = date.today()
         maxdate = date.max
-        log.msg(f'data recieved: {data}')
         if not (data['monF'] and data['monT'] and data['tueF'] and data['tueT'] and data['wedF'] and data['wedT'] and data['thuF'] and data['thuT'] and data['friF'] and data['friT']):
             return False
         monday_v = TimeRange(data['monF'], data['monT'])
@@ -185,7 +184,6 @@ class Manager(object):
         uid = emp_t.filter(emp_t.emp_no == emp_no).one().uid
         pvs = pv_t.filter(pv_t.pvid == pvid).all()
         uid_pv = ''
-        log.msg(f'pvs: {pvs}, pvid: {pvid}')
         for day in per_range_list:
             curr_time = ''
             day_date = date(per_year, per_month, day)
@@ -215,14 +213,50 @@ class Manager(object):
                                        'weekday': WEEKDAYS[weekday]})
             else:
                 retval['data'].append({'day': f'{day}. ', 'start': '00:00', 'end': '00:00',
-                                       'mode': 'absence', 'stamp': False,
+                                       'mode': 'Absence', 'stamp': False,
                                        'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                                        'weekday': WEEKDAYS[weekday]})
         return retval
 
     def set_attendance(self, data):
         pass
+    def init_presence(self, period, source):
+        pres_t = self.pich_db.presence
+        emp_t = self.pich_db.employee
+        per_year = int(period.split('-')[1])
+        per_month = int(period.split('-')[0])
+        per_range = monthrange(per_year, per_month)
+        per_range_list = [i for i in range(1, per_range[1] + 1)]
+        for employee in emp_t.all():
+            for day in per_range_list:
+                datetm = datetime.strptime(f'{day}-{per_month}-{per_year}','%d-%m-%Y')
+                date = datetm.date()
+                arriv = source.get_arrival(date, employee.uid)
+                depart = source.get_departure(date, employee.uid)
+                if not arriv:
+                    continue
+                length = (depart - arriv).seconds / 3600
+                presence_mode = 'Presence'
+                food_stamp = length >= 6
+                if not pres_t.filter(
+                        and_(pres_t.uid_employee == employee.uid, pres_t.date == date)).first():
+                    pres_t.insert(date=date, arrival=arriv.time(),
+                                  departure=depart.time(),
+                                  presence_mode=presence_mode,
+                                  uid_employee=employee.uid, food_stamp=food_stamp)
 
+                else:
+                    presence_s = pres_t.filter(
+                        and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
+                    presence = presence_s.one()
+                    if presence.arrival > arriv.time():
+                        presence_s.update({'arrival': arriv.time(), 'food_stamp': food_stamp})
+
+                    if presence.departure < depart.time():
+                        presence_s.update({'departure': depart.time(), 'food_stamp': food_stamp})
+
+        self.pich_db.commit()
+        
     def update_presence(self, date, source):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee
@@ -240,16 +274,14 @@ class Manager(object):
                               departure=depart.time(),
                               presence_mode=presence_mode,
                               uid_employee=employee.uid, food_stamp=food_stamp)
-
             else:
                 presence_s = pres_t.filter(
                     and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
                 presence = presence_s.one()
                 if presence.arrival > arriv.time():
-                    presence_s.update({'arrival': arriv.time()})
-
+                    presence_s.update({'arrival': arriv.time(), 'food_stamp': food_stamp})
                 if presence.departure < depart.time():
-                    presence_s.update({'departure': depart.time()})
+                    presence_s.update({'departure': depart.time(), 'food_stamp': food_stamp})
 
         self.pich_db.commit()
 

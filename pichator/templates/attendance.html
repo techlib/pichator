@@ -9,6 +9,12 @@
 <script>
     var pvs = [];
 
+    function create_input(id, value, readonly) {
+        element_text = '<div class="col-xs-1"><input class="form-control" value="' + value + '" id="' + id + '"' +
+            readonly + '></div>'
+        return element_text;
+    }
+
     function refresh_dept() {
         i = 0
         if ($('#pvs')[0].length != 1) {
@@ -29,7 +35,6 @@
                 'X-period': $("#period").val()
             }
         }).done(function (data) {
-            //TODO render results of get_attendence
             var rows = data.data
             $('#attendance').empty();
             for (i = 0; i < rows.length; i++) {
@@ -38,31 +43,25 @@
                     stamp = 'Ano'
                 };
                 $('#attendance').append(
-                    '<div class="row"><div class="col-xs-1"><input class="form-control" value="' + rows[i]
-                    .day + '" id="day' + i +
-                    '" readonly></div><div class="col-xs-1"><input class="form-control" value="' + rows[i]
-                    .start + '" id="start' + i +
-                    '"></div><div class="col-xs-1"><input class="form-control" value="' + rows[i].end +
-                    '" id="end' + i +
-                    '"></div><div class="col-xs-1"><input class="form-control" value="' + rows[i].mode +
-                    '" id="mode' + i +
-                    '"></div><div class="col-xs-1"><input class="form-control" value="' + rows[i].weekday +
-                    '" id="weekday' + i +
-                    '" readonly></div><div class="col-xs-1"><input class="form-control" value="' + rows[i]
-                    .timetable + '" id="timetable' + i +
-                    '" readonly></div><div class="col-xs-1"><input class="form-control" value="' + stamp +
-                    '" id="stamp' + i +
-                    '" readonly></div></div>')
+                    '<div class="row">' +
+                    create_input('day' + i, rows[i].day, 'readonly') +
+                    create_input('start' + i, rows[i].start, '') +
+                    create_input('end' + i, rows[i].end, '') +
+                    create_input('mode' + i, rows[i].mode, '') +
+                    create_input('weekday' + i, rows[i].weekday, 'readonly') +
+                    create_input('timetable' + i, rows[i].timetable, 'readonly') +
+                    create_input('stamp' + i, rows[i].stamp, 'readonly') +
+                    '</div>')
             }
             $('#attendance').append(
-                '<br><div class="row">' + 
-                '<div class="col-md-7 input-group">' + 
+                '<br><div class="row">' +
+                '<div class="col-md-7 input-group">' +
                 '<div class="col-md-1"><button type="submit" class="btn btn-success submit-btn">Uložit</button></div>' +
                 '<div class="col-md-5"></div>' +
                 '<div class="col-md-1"><button id="btn-cancel" class="btn btn-warning"> Zrušit </button></div> ' +
                 ' </div>' +
                 '</div>'
-                )
+            )
         });
     }
 

@@ -93,6 +93,14 @@ if __name__ == '__main__':
         site = Site(WSGIResource(reactor, pool, site))
         pool.start()
 
+        # Init presence at first run
+        # !!WARING!! Can take very long time
+        '''
+        year = datetime.now().date().year
+        for i in range(1, 13):
+            period = f'{i}-{year}'
+            manager.init_presence(period=period, source=ekv)
+        '''
         # Bind the website to it's address.
         reactor.listenTCP(http_port, site, interface=http_host)
         
