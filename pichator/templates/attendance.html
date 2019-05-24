@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% block title %}Docházka{% endblock %}
 
 {% block content %}
@@ -8,6 +7,14 @@
 {% block scripts %}
 <script>
     var pvs = [];
+
+    function crate_select(id, color, options){
+        options_str = '';
+        for(i=0; i<options.length; i++){
+            options_str += '<option value="' + options[i] + '">' + options[i] + '</option>'
+        }
+        return '<select id="' + id + '" class="' + color + '">' + options_str + '</select>'
+    }
 
     function create_input(id, value, readonly, color) {
         element_text = '<input class="form-control ' + color + '" value="' + value + '" id="' + id + '"' +
@@ -173,29 +180,26 @@
 </script>
 {% endblock %}
 <div class='container-fluid'>
-    <div class='row buffer-top-md'>
-        <div class='col-md-8'>
-            <form class='align-items-center form-inline' id='attendance-form' method='post'>
-                <div class='row'>
-                    <div class='form-group col-sm-1'>
+    <div class='row buffer-top-md well'>
+            <form class='form-inline' id='attendance-form' method='post'>
+                    <div class='form-group'>
                         <label for='period'>Období:</label>
                         <input class='form-control' name='period' id="period" type='text'>
                     </div>
-                    <div class='form-group col-sm-1'>
+                    <div class='form-group'>
                         <label for='pvs'>PV:</label>
                         <select class='form-control' name='pvs' id="pvs"></select>
                     </div>
-                    <div class='form-group col-sm-1'>
+                    <div class='form-group'>
                         <label for=''>Oddělení:</label>
                         <input class='form-control' id='dept' name='dept' type='text' readonly>
                     </div>
-                </div>
             </form>
-        </div>
     </div>
-    <br>
-    <form class='form-inline' id='attendance' name='attendance'>
 
-    </form>
+    <div class='row buffer-top-md'>
+            <form class='form-inline' id='attendance' name='attendance'>
+            </form>
+    </div>
 </div>
 {% endblock %}

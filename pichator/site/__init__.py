@@ -85,13 +85,17 @@ def make_site(manager, access_model, debug=False):
     def imateapot(e):
         return flask.render_template('teapot.html')
 
-    @app.route('/')
+    @app.route('/', methods=['GET', 'POST'])
     @authorized_only('admin')
     @pass_user_info
     def index(uid, username):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
-        return flask.render_template('attendance.html', **locals())
+        if flask.request.method == 'POST':
+            return flask.render_template('attendance.html', **locals())
+        else:
+            data_dict = flask.request.form.to_dict()
+            return flask.render_template('attendance.html', **locals())
 
     @app.route('/timetable', methods=['GET', 'POST'])
     @authorized_only('user')
