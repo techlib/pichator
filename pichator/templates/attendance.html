@@ -9,9 +9,9 @@
 <script>
     var pvs = [];
 
-    function create_input(id, value, readonly) {
-        element_text = '<div class="col-xs-1"><input class="form-control" value="' + value + '" id="' + id + '"' +
-            readonly + '></div>'
+    function create_input(id, value, readonly, color) {
+        element_text = '<input class="form-control" value="' + value + '" id="' + id + '"' +
+            readonly + ' name="' + id + '" ' + color + '>'
         return element_text;
     }
 
@@ -37,27 +37,99 @@
         }).done(function (data) {
             var rows = data.data
             $('#attendance').empty();
-            for (i = 0; i < rows.length; i++) {
+            stamp = 'Ne';
+            readonly = '';
+            color = 'style="background-color:#9bf7c1"';
+            if (rows[0].stamp && rows[0].satmp != 'False') {
+                stamp = 'Ano';
+            };
+            if (rows[0].weekday == 'Sobota' || rows[0].weekday == 'Neděle') {
+                readonly = 'disabled';
+                rows[0].start = '00:00';
+                rows[0].end = '00:00';
+                rows[0].mode = 'Mimo ev.';
+            };
+            if (rows[0].mode == 'Absence' && color != 'bg-secondary') {
+                color = 'style="background-color:#f97c52"';
+            }
+            $('#attendance').append(
+                '<div class="row">' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="day1">Den v měsíci</label>' +
+                create_input('day1', rows[0].day, 'disabled', color) +
+                '</div>' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="start1"> Příchod</label>' +
+                create_input('start1', rows[0].start, 'disabled', color) +
+                '</div>' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="end1">Odchod</label>' +
+                create_input('end1', rows[0].end, 'disabled', color) +
+                '</div>' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="mode1">Docházka</label>' +
+                create_input('mode1', rows[0].mode, 'disabled', color) +
+                '</div>' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="weekday1">Den v týdnu</label>' +
+                create_input('weekday1', rows[0].weekday, 'disabled', color) +
+                '</div>' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="timetable1">Pracovní doba</label>' +
+                create_input('timetable1', rows[0].timetable, 'disabled', color) +
+                '</div>' +
+                '<div class="form-group col-xs-1">' +
+                '<label for="stamp1">Stravenka</label>' +
+                create_input('stamp1', stamp, 'disabled', color) +
+                '</div>' +
+                '</div>'
+            );
+            for (i = 1; i < rows.length; i++) {
                 stamp = 'Ne';
+                readonly = '';
+                color = 'style="background-color:#9bf7c1"';
                 if (rows[i].stamp && rows[i].satmp != 'False') {
-                    stamp = 'Ano'
+                    stamp = 'Ano';
                 };
+                if (rows[i].weekday == 'Sobota' || rows[i].weekday == 'Neděle') {
+                    readonly = 'disabled';
+                    rows[i].start = '00:00';
+                    rows[i].end = '00:00';
+                    rows[i].mode = 'Mimo ev.';
+                };
+                if (rows[i].mode == 'Absence') {
+                    color = 'style="background-color:#f97c52"';
+                }
                 $('#attendance').append(
                     '<div class="row">' +
-                    create_input('day' + i, rows[i].day, 'readonly') +
-                    create_input('start' + i, rows[i].start, '') +
-                    create_input('end' + i, rows[i].end, '') +
-                    create_input('mode' + i, rows[i].mode, '') +
-                    create_input('weekday' + i, rows[i].weekday, 'readonly') +
-                    create_input('timetable' + i, rows[i].timetable, 'readonly') +
-                    create_input('stamp' + i, rows[i].stamp, 'readonly') +
+                    '<div class="col-xs-1">' +
+                    create_input('day' + (i + 1), rows[i].day, 'disabled', color) +
+                    '</div>' +
+                    '<div class="col-xs-1">' +
+                    create_input('start' + (i + 1), rows[i].start, readonly, color) +
+                    '</div>' +
+                    '<div class="col-xs-1">' +
+                    create_input('end' + (i + 1), rows[i].end, readonly, color) +
+                    '</div>' +
+                    '<div class="col-xs-1">' +
+                    create_input('mode' + (i + 1), rows[i].mode, readonly, color) +
+                    '</div>' +
+                    '<div class="col-xs-1">' +
+                    create_input('weekday' + (i + 1), rows[i].weekday, 'disabled', color) +
+                    '</div>' +
+                    '<div class="col-xs-1">' +
+                    create_input('timetable' + (i + 1), rows[i].timetable, 'disabled', color) +
+                    '</div>' +
+                    '<div class="col-xs-1">' +
+                    create_input('stamp' + (i + 1), stamp, 'disabled', color) +
+                    '</div>' +
                     '</div>')
             }
             $('#attendance').append(
                 '<br><div class="row">' +
-                '<div class="col-md-7 input-group">' +
+                '<div class="col-md-8 input-group">' +
                 '<div class="col-md-1"><button type="submit" class="btn btn-success submit-btn">Uložit</button></div>' +
-                '<div class="col-md-5"></div>' +
+                '<div class="col-md-9"></div>' +
                 '<div class="col-md-1"><button id="btn-cancel" class="btn btn-warning"> Zrušit </button></div> ' +
                 ' </div>' +
                 '</div>'
@@ -120,7 +192,7 @@
         </div>
     </div>
     <br>
-    <form class='form form-group' id='attendance' name='attendance'>
+    <form class='form-inline' id='attendance' name='attendance'>
 
     </form>
 </div>
