@@ -8,9 +8,9 @@
 <script>
     var pvs = [];
 
-    function crate_select(id, color, options){
+    function crate_select(id, color, options) {
         options_str = '';
-        for(i=0; i<options.length; i++){
+        for (i = 0; i < options.length; i++) {
             options_str += '<option value="' + options[i] + '">' + options[i] + '</option>'
         }
         return '<select id="' + id + '" class="' + color + '">' + options_str + '</select>'
@@ -134,15 +134,6 @@
                     '</div>' +
                     '</div>')
             }
-            $('#attendance').append(
-                '<br><div class="row">' +
-                '<div class="col-md-8 input-group">' +
-                '<div class="col-md-1"><button type="submit" class="btn btn-success submit-btn">Uložit</button></div>' +
-                '<div class="col-md-9"></div>' +
-                '<div class="col-md-1"><button id="btn-cancel" class="btn btn-warning"> Zrušit </button></div> ' +
-                ' </div>' +
-                '</div>'
-            )
         });
     }
 
@@ -181,25 +172,29 @@
 {% endblock %}
 <div class='container-fluid'>
     <div class='row buffer-top-md well'>
-            <form class='form-inline' id='attendance-form' method='post'>
-                    <div class='form-group'>
-                        <label for='period'>Období:</label>
-                        <input class='form-control' name='period' id="period" type='text'>
-                    </div>
-                    <div class='form-group'>
-                        <label for='pvs'>PV:</label>
-                        <select class='form-control' name='pvs' id="pvs"></select>
-                    </div>
-                    <div class='form-group'>
-                        <label for=''>Oddělení:</label>
-                        <input class='form-control' id='dept' name='dept' type='text' readonly>
-                    </div>
-            </form>
+        <form class='form-inline' id='attendance-form' method='post'>
+            <div class='form-group'>
+                <label for='period'>Období:</label>
+                <input class='form-control' name='period' id="period" type='text'>
+            </div>
+            <div class='form-group'>
+                <label for='pvs'>PV:</label>
+                <select class='form-control' name='pvs' id="pvs"></select>
+            </div>
+            <div class='form-group'>
+                <label for=''>Oddělení:</label>
+                <input class='form-control' id='dept' name='dept' type='text' readonly>
+            </div>
+            <div class='form-group'>
+                <button class='btn btn-success' form='attendance-from' type='submit'>Uložit</button>
+                <button class='btn btn-warning' form='attendance-from' onclick='redirect("/");'>Zrušit</button>
+            </div>
+        </form>
     </div>
 
     <div class='row buffer-top-md'>
-            <form class='form-inline' id='attendance' name='attendance'>
-            </form>
+        <form class='form-inline' id='attendance' name='attendance'>
+        </form>
     </div>
 </div>
 {% endblock %}

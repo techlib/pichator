@@ -8,6 +8,7 @@
 {% block scripts %}
 <script>
     $(document).ready(function () {
+        $('.clockpicker').clockpicker()
         $('#pvs').selectpicker();
         timetable = []
         emp_no = '{{ emp_no }}'
@@ -63,92 +64,141 @@
 {% endblock %}
 
 <div class='container-fluid'>
+    <div class='row buffer-top-md well'>
+        <form id='pv-select' class="form-inline">
+            <div class='form-group'>
+                <label for='pvs'>Číslo PV:</label>
+                <select class='form-control' name='pvs' id='pvs'></select>
+            </div>
+            <div class='form-group'>
+                <label for='occupancy'> Úvazek: </label>
+                <input type='text' class='form-control' id='occupancy' name='occupancy' readonly>
+            </div>
+            <div class='form-group'>
+                <label for='dept'> Oddělení: </label>
+                <input type='text' class='form-control' id='dept' name='dept' readonly>
+            </div>
+            <div class='form-group'>
+                <button class='btn btn-success' form='attendance-from' type='submit'>Uložit</button>
+                <button class='btn btn-warning' form='attendance-from' onclick='redirect("/timetable");'>Zrušit</button>
+            </div>
+        </form>
+    </div>
     <div class='row buffer-top-md'>
-        <div class='col-md-8'>
-            <form id='timetable-form' method='post' class="form-inline">
-                <div class='row'>
-                    <div class='form-group col-sm-1'>
-                        <label for='pvs'>Číslo PV:</label>
-                        <select class='form-control' name='pvs' id='pvs'></select>
-                    </div>
-                    <div class='form-group col-sm-1'>
-                        <label for='occupancy'> Úvazek: </label>
-                        <input type='text' class='form-control' id='occupancy' name='occupancy' readonly>
-                    </div>
-                    <div class='form-group col-sm-1'>
-                        <label for='dept'> Oddělení: </label>
-                        <input type='text' class='form-control' id='dept' name='dept' readonly>
+        <form class='form-inline' id='timetable-from' name='timetable-form'>
+            <div class='row'>
+                <div class='form-group col-xs-1'>
+                    <label for='mon-f-picker'>Pondělí od:</label>
+                    <div class='input-group clockpicker ' id='mon-f-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='monF' name='monF'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
                 </div>
-                    <br>
-                    <div class="row">
-                        <div class='input-group col-sm-1'>
-                            <label for='monF'>Pondělí od:</label>
-                            <input class='form-control' type='time' name='monF' id='monF'>
-                        </div>
-                        <div class='input-group col-sm-1'>
-                            <label for='monT'>Pondělí do:</label>
-                            <input class='form-control' type='time' name='monT' id='monT'>
-                        </div>
+                <div class='form-group col-xs-1'>
+                    <label for='mon-t-picker'>Pondělí do:</label>
+                    <div class='input-group clockpicker ' id='mon-t-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='monT' name='monT'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
-                    <div class='row'>
-                        <div class='input-group col-sm-1'>
-                            <label for='tueF'>Úterý od:</label>
-                            <input class='form-control' type='time' name='tueF' id='tueF'>
-                        </div>
-                        <div class='input-group col-sm-1'>
-                            <label for='tueT'>Úterý do:</label>
-                            <input class='form-control' type='time' name='tueT' id='tueT'>
-                        </div>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='form-group col-xs-1'>
+                    <label for='tue-f-picker'>Úterý od:</label>
+                    <div class='input-group clockpicker ' id='tue-f-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='tueF' name='tueF'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
-                    <div class='row'>
-
-                        <div class='input-group col-sm-1'>
-                            <label for='wedF'>Středa od:</label>
-                            <input class='form-control' type='time' name='wedF' id='wedF'>
-                        </div>
-                        <div class='input-group col-sm-1'>
-                            <label for='wedT'>Středa do:</label>
-                            <input class='form-control' type='time' name='wedT' id='wedT'>
-
-                        </div>
+                </div>
+                <div class='form-group col-xs-1'>
+                    <label for='tue-t-picker'>Úterý do:</label>
+                    <div class='input-group clockpicker' id='tue-t-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='tueT' name='tueT'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
-                    <div class='row'>
-
-                        <div class='input-group col-sm-1'>
-                            <label for='thuF'>Čtvrtek od:</label>
-                            <input class='form-control' type='time' name='thuF' id='thuF'>
-                        </div>
-                        <div class='input-group col-sm-1'>
-                            <label for='thuT'>Čtvrtek do:</label>
-                            <input class='form-control' type='time' name='thuT' id='thuT'>
-
-                        </div>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='form-group col-xs-1'>
+                    <label for='wed-f-picker'>Středa od:</label>
+                    <div class='input-group clockpicker' id='wef-f-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='wedF' name='wedF'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
-                    <div class='row'>
-
-                        <div class='input-group col-sm-1'>
-                            <label for='friF'>Pátek od:</label>
-                            <input class='form-control' type='time' name='friF' id='friF'>
-                        </div>
-                        <div class='input-group col-sm-1'>
-                            <label for='friT'>Pátek do:</label>
-                            <input class='form-control' type='time' name='friT' id='friT'>
-                        </div>
-
+                </div>
+                <div class='form-group col-xs-1'>
+                    <label for='wed-t-picker'>Středa do:</label>
+                    <div class='input-group clockpicker' id='wed-t-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='wedT' name='wedT'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
-                    <br>
-                    <div class='row'>
-                        <div class='col-sm-2 input-group'>
-                            <button type='submit' class='btn btn-success submit-btn pull-left'>Uložit</button>
-                            <button id='btn-cancel' class='btn btn-warning pull-right'
-                                onclick='redirect("/timetable");'>Zrušit</button>
-                        </div>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='form-group col-xs-1'>
+                    <label for='thu-f-picker'>Čtvrtek od:</label>
+                    <div class='input-group clockpicker' id='thu-f-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='thuF' name='thuF'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
                     </div>
-            </form>
-
-        </div>
+                </div>
+                <div class='form-group col-xs-1'>
+                    <label for='thu-t-picker'>Čtvrtek do:</label>
+                    <div class='input-group clockpicker' id='thu-t-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='thuT' name='thuT'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='form-group col-xs-1'>
+                    <label for='fri-f-picker'>Pátek od:</label>
+                    <div class='input-group clockpicker' id='fri-f-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='friF' name='friF'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                    </div>
+                </div>
+                <div class='form-group col-xs-1'>
+                    <label for='fri-t-picker'>Pátek do:</label>
+                    <div class='input-group clockpicker' id='fri-t-picker' data-placement='right' data-align='top'
+                        data-autoclose='true'>
+                        <input type="text" class="form-control" id='friT' name='friT'>
+                        <span class="input-group-addon">
+                            <span class="glyphicon glyphicon-time"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
+
 </div>
 
 {% endblock %}
