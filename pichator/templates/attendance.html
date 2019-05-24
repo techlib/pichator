@@ -10,8 +10,8 @@
     var pvs = [];
 
     function create_input(id, value, readonly, color) {
-        element_text = '<input class="form-control" value="' + value + '" id="' + id + '"' +
-            readonly + ' name="' + id + '" ' + color + '>'
+        element_text = '<input class="form-control ' + color + '" value="' + value + '" id="' + id + '"' +
+            readonly + ' name="' + id + '">'
         return element_text;
     }
 
@@ -39,7 +39,7 @@
             $('#attendance').empty();
             stamp = 'Ne';
             readonly = '';
-            color = 'style="background-color:#9bf7c1"';
+            color = 'input-succ';
             if (rows[0].stamp && rows[0].satmp != 'False') {
                 stamp = 'Ano';
             };
@@ -48,9 +48,10 @@
                 rows[0].start = '00:00';
                 rows[0].end = '00:00';
                 rows[0].mode = 'Mimo ev.';
+                color = 'input-info';
             };
             if (rows[0].mode == 'Absence' && color != 'bg-secondary') {
-                color = 'style="background-color:#f97c52"';
+                color = 'input-warn';
             }
             $('#attendance').append(
                 '<div class="row">' +
@@ -60,15 +61,15 @@
                 '</div>' +
                 '<div class="form-group col-xs-1">' +
                 '<label for="start1"> Příchod</label>' +
-                create_input('start1', rows[0].start, 'disabled', color) +
+                create_input('start1', rows[0].start, readonly, color) +
                 '</div>' +
                 '<div class="form-group col-xs-1">' +
                 '<label for="end1">Odchod</label>' +
-                create_input('end1', rows[0].end, 'disabled', color) +
+                create_input('end1', rows[0].end, readonly, color) +
                 '</div>' +
                 '<div class="form-group col-xs-1">' +
                 '<label for="mode1">Docházka</label>' +
-                create_input('mode1', rows[0].mode, 'disabled', color) +
+                create_input('mode1', rows[0].mode, readonly, color) +
                 '</div>' +
                 '<div class="form-group col-xs-1">' +
                 '<label for="weekday1">Den v týdnu</label>' +
@@ -87,7 +88,7 @@
             for (i = 1; i < rows.length; i++) {
                 stamp = 'Ne';
                 readonly = '';
-                color = 'style="background-color:#9bf7c1"';
+                color = 'input-succ';
                 if (rows[i].stamp && rows[i].satmp != 'False') {
                     stamp = 'Ano';
                 };
@@ -96,9 +97,10 @@
                     rows[i].start = '00:00';
                     rows[i].end = '00:00';
                     rows[i].mode = 'Mimo ev.';
+                    color = 'input-info';
                 };
                 if (rows[i].mode == 'Absence') {
-                    color = 'style="background-color:#f97c52"';
+                    color = 'input-warn';
                 }
                 $('#attendance').append(
                     '<div class="row">' +

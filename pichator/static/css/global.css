@@ -5,3 +5,12 @@
 .input-sm {
  max-width: 6em;
 }
+.input-succ {
+    background-color: #d2ffce !important;
+}
+.input-warn {
+    background-color: #ffccb8 !important;
+}
+.input-info {
+    background-color: #b4ceff !important;
+}
