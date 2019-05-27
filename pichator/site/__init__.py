@@ -127,10 +127,13 @@ def make_site(manager, access_model, debug=False):
     @pass_user_info
     def get_pvs(uid, username):
         nonlocal has_privilege
-        period = flask.request.headers.get('X-period')
+        period = flask.request.values.get('period')
+
         if not period:
             raise ImATeapot
+
         emp_no = manager.get_emp_no(username)
+
         return flask.jsonify(manager.get_pvs(emp_no, period))
 
     @app.route('/attendance_data')
@@ -138,10 +141,13 @@ def make_site(manager, access_model, debug=False):
     @pass_user_info
     def get_attendance_data(uid, username):
         nonlocal has_privilege
-        pvid = flask.request.headers.get('X-pvid')
-        period = flask.request.headers.get('X-period')
+
+        pvid = flask.request.values.get('pvid')
+        period = flask.request.values.get('period')
+
         if not pvid or not period:
             raise ImATeapot
+
         return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
 
     @app.teardown_appcontext

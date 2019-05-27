@@ -35,13 +35,8 @@
         if ($('#pvs')[0].length != 1) {
             i = $('#pvs')[0].selectedIndex;
         }
-        $.ajax({
-            url: '/attendance_data',
-            headers: {
-                'X-pvid': pvs[i].PV,
-                'X-period': $("#period").val()
-            }
-        }).done(function (data) {
+        $.get('/attendance_data?' + $.param({pvid: pvs[i].PV, period: $("#period").val()}))
+        .done(function (data) {
             var rows = data.data
             $('#attendance').empty();
             stamp = 'Ne';
@@ -144,12 +139,8 @@
             minViewMode: 'months',
         });
         $("#period").datepicker().on('changeDate', function (e) {
-            $.ajax({
-                url: '/pvs',
-                headers: {
-                    'X-period': $("#period").val()
-                }
-            }).done(function (data) {
+            $.get('/pvs?' + $.param({period: $("#period").val()}))
+            .done(function (data) {
                 $('#pvs').empty();
                 pvs = data.data
                 for (i = 0; i < pvs.length; i++) {
