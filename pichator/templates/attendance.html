@@ -74,13 +74,12 @@
                         ],
                         'createdRow': function(row, data, dataIndex){
                             if(data.weekday == 'Sobota' || data.weekday == 'Neděle'){
-                                $(row).addClass('row-disabled')
                             }
                             else if(data.mode == 'Absence'){
-                                $(row).addClass('row-warning');
+                                $(row).addClass('warning');
                             }
                             else{
-                                $(row).addClass('row-success');
+                                $(row).addClass('success');
                             }
 
 
