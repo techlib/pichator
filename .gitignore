@@ -3,7 +3,6 @@ __pycache__
 /build/
 /dist/
 *.egg*
-/*/static/vendor/
 /src/
 .vscode
 *prod.ini

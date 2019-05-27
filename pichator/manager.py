@@ -311,7 +311,7 @@ class Manager(object):
                                         pv_t.department == pv['department'], pv_t.uid_employee == uid_emp)).first():
                         pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
                                          pv_t.department == pv['department'], pv_t.uid_employee == uid_emp
-                                         )).one().update().values({'validity': valid})
+                                         )).update({'validity': valid})
                     else:
                         pv_t.insert(pvid=pv['pvid'], occupancy=pv['occupancy'],
                                     department=pv['department'], validity=valid, uid_employee=uid_emp)
