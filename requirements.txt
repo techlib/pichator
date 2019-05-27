@@ -1,0 +1,8 @@
+cx_oracle
+pymssql
+psycopg2-binary
+python-dateutil
+flask
+sqlalchemy
+sqlsoup
+twisted
