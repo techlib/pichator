@@ -103,6 +103,7 @@ class Manager(object):
         timetable_t = self.pich_db.timetable
         today = date.today()
         maxdate = date.max
+        log.msg(data)
         if not (data['monF'] and data['monT'] and data['tueF'] and data['tueT'] and data['wedF'] and data['wedT'] and data['thuF'] and data['thuT'] and data['friF'] and data['friT']):
             return False
         monday_v = TimeRange(data['monF'], data['monT'])
@@ -113,7 +114,7 @@ class Manager(object):
         hours_in_week = (monday_v.len() + tuesday_v.len() +
                          wedensday_v.len() + thursday_v.len() + friday_v.len()) / 60
         validity_v = DateRange(today, maxdate)
-        pvid_v = data['pvs']
+        pvid_v = data['f_pvs']
         if not monday_v and tuesday_v and wedensday_v and thursday_v and friday_v and validity_v and pvid_v:
             raise ImATeapot
         pvs = pv_t.filter(pv_t.pvid == pvid_v).all()

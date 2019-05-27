@@ -72,13 +72,11 @@
                         order: [
                             [0, "asc"]
                         ],
-                        'createdRow': function(row, data, dataIndex){
-                            if(data.weekday == 'Sobota' || data.weekday == 'Neděle'){
-                            }
-                            else if(data.mode == 'Absence'){
+                        'createdRow': function (row, data, dataIndex) {
+                            if (data.weekday == 'Sobota' || data.weekday ==
+                                'Neděle') {} else if (data.mode == 'Absence') {
                                 $(row).addClass('warning');
-                            }
-                            else{
+                            } else {
                                 $(row).addClass('success');
                             }
 
@@ -116,11 +114,11 @@
                 <label for=''>Oddělení:</label>
                 <input class='form-control' id='dept' name='dept' type='text' readonly>
             </div>
-            <div class='form-group'>
-                <button class='btn btn-success' form='attendance-from' type='submit'>Uložit</button>
-                <button class='btn btn-warning' form='attendance-from' onclick='redirect("/");'>Zrušit</button>
-            </div>
         </form>
+        <div class='form-group'>
+            <button class='btn btn-success'>Uložit</button>
+            <button class='btn btn-warning' onclick='redirect("/");'>Zrušit</button>
+        </div>
     </div>
     <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
         <thead>

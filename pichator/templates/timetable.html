@@ -7,6 +7,17 @@
 
 {% block scripts %}
 <script>
+    function submit_timetable() {
+        if($('#pvs')[0].length == 1){
+            i = 0;
+        }
+        else{
+            i = $('#pvs')[0].selectedIndex;
+        }
+        console.log($('#pvs')[i].value)
+        $('#f_pvs').val($('#pvs')[i].value);
+        $('#timetable-form').submit();
+    }
     $(document).ready(function () {
         $('.clockpicker').clockpicker()
         $('#pvs').selectpicker();
@@ -65,7 +76,7 @@
 
 <div class='container-fluid'>
     <div class='row buffer-top-md well'>
-        <form id='pv-select' class="form-inline">
+        <form id='pv-select' class="form-inline" method='POST'>
             <div class='form-group'>
                 <label for='pvs'>Číslo PV:</label>
                 <select class='form-control' name='pvs' id='pvs'></select>
@@ -78,14 +89,16 @@
                 <label for='dept'> Oddělení: </label>
                 <input type='text' class='form-control' id='dept' name='dept' readonly>
             </div>
-            <div class='form-group'>
-                <button class='btn btn-success' form='attendance-from' type='submit'>Uložit</button>
-                <button class='btn btn-warning' form='attendance-from' onclick='redirect("/timetable");'>Zrušit</button>
-            </div>
+
         </form>
+        <div class='form-group'>
+            <button class='btn btn-success' onclick="submit_timetable();">Uložit</button>
+            <button class='btn btn-warning' onclick='redirect("/timetable");'>Zrušit</button>
+        </div>
+
     </div>
     <div class='row buffer-top-md'>
-        <form class='form-inline' id='timetable-from' name='timetable-form'>
+        <form class='form-inline' id='timetable-form' name='timetable-form' method='post' action='/timetable'>
             <div class='row'>
                 <div class='form-group col-xs-1'>
                     <label for='mon-f-picker'>Pondělí od:</label>
@@ -195,6 +208,7 @@
                         </span>
                     </div>
                 </div>
+                <input type='text' hidden='true' id='f_pvs' name='f_pvs'>
             </div>
         </form>
     </div>
