@@ -8,128 +8,12 @@
 <script>
     var pvs = [];
 
-    function crate_select(id, color, options) {
-        options_str = '';
-        for (i = 0; i < options.length; i++) {
-            options_str += '<option value="' + options[i] + '">' + options[i] + '</option>'
-        }
-        return '<select id="' + id + '" class="' + color + '">' + options_str + '</select>'
-    }
-
-    function create_input(id, value, readonly, color) {
-        element_text = '<input class="form-control ' + color + '" value="' + value + '" id="' + id + '"' +
-            readonly + ' name="' + id + '">'
-        return element_text;
-    }
-
     function refresh_dept() {
         i = 0
         if ($('#pvs')[0].length != 1) {
             i = $('#pvs')[0].selectedIndex;
         }
         $('#dept')[0].value = pvs[i].dept;
-    }
-
-    function get_att_data() {
-        i = 0
-        if ($('#pvs')[0].length != 1) {
-            i = $('#pvs')[0].selectedIndex;
-        }
-        $.get('/attendance_data?' + $.param({pvid: pvs[i].PV, period: $("#period").val()}))
-        .done(function (data) {
-            var rows = data.data
-            $('#attendance').empty();
-            stamp = 'Ne';
-            readonly = '';
-            color = 'input-succ';
-            if (rows[0].stamp && rows[0].satmp != 'False') {
-                stamp = 'Ano';
-            };
-            if (rows[0].weekday == 'Sobota' || rows[0].weekday == 'Neděle') {
-                readonly = 'disabled';
-                rows[0].start = '00:00';
-                rows[0].end = '00:00';
-                rows[0].mode = 'Mimo ev.';
-                color = 'input-info';
-            };
-            if (rows[0].mode == 'Absence' && color != 'bg-secondary') {
-                color = 'input-warn';
-            }
-            $('#attendance').append(
-                '<div class="row">' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="day1">Den v měsíci</label>' +
-                create_input('day1', rows[0].day, 'disabled', color) +
-                '</div>' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="start1"> Příchod</label>' +
-                create_input('start1', rows[0].start, readonly, color) +
-                '</div>' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="end1">Odchod</label>' +
-                create_input('end1', rows[0].end, readonly, color) +
-                '</div>' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="mode1">Docházka</label>' +
-                create_input('mode1', rows[0].mode, readonly, color) +
-                '</div>' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="weekday1">Den v týdnu</label>' +
-                create_input('weekday1', rows[0].weekday, 'disabled', color) +
-                '</div>' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="timetable1">Pracovní doba</label>' +
-                create_input('timetable1', rows[0].timetable, 'disabled', color) +
-                '</div>' +
-                '<div class="form-group col-xs-1">' +
-                '<label for="stamp1">Stravenka</label>' +
-                create_input('stamp1', stamp, 'disabled', color) +
-                '</div>' +
-                '</div>'
-            );
-            for (i = 1; i < rows.length; i++) {
-                stamp = 'Ne';
-                readonly = '';
-                color = 'input-succ';
-                if (rows[i].stamp && rows[i].satmp != 'False') {
-                    stamp = 'Ano';
-                };
-                if (rows[i].weekday == 'Sobota' || rows[i].weekday == 'Neděle') {
-                    readonly = 'disabled';
-                    rows[i].start = '00:00';
-                    rows[i].end = '00:00';
-                    rows[i].mode = 'Mimo ev.';
-                    color = 'input-info';
-                };
-                if (rows[i].mode == 'Absence') {
-                    color = 'input-warn';
-                }
-                $('#attendance').append(
-                    '<div class="row">' +
-                    '<div class="col-xs-1">' +
-                    create_input('day' + (i + 1), rows[i].day, 'disabled', color) +
-                    '</div>' +
-                    '<div class="col-xs-1">' +
-                    create_input('start' + (i + 1), rows[i].start, readonly, color) +
-                    '</div>' +
-                    '<div class="col-xs-1">' +
-                    create_input('end' + (i + 1), rows[i].end, readonly, color) +
-                    '</div>' +
-                    '<div class="col-xs-1">' +
-                    create_input('mode' + (i + 1), rows[i].mode, readonly, color) +
-                    '</div>' +
-                    '<div class="col-xs-1">' +
-                    create_input('weekday' + (i + 1), rows[i].weekday, 'disabled', color) +
-                    '</div>' +
-                    '<div class="col-xs-1">' +
-                    create_input('timetable' + (i + 1), rows[i].timetable, 'disabled', color) +
-                    '</div>' +
-                    '<div class="col-xs-1">' +
-                    create_input('stamp' + (i + 1), stamp, 'disabled', color) +
-                    '</div>' +
-                    '</div>')
-            }
-        });
     }
 
     $(document).ready(function () {
@@ -139,24 +23,81 @@
             minViewMode: 'months',
         });
         $("#period").datepicker().on('changeDate', function (e) {
-            $.get('/pvs?' + $.param({period: $("#period").val()}))
-            .done(function (data) {
-                $('#pvs').empty();
-                pvs = data.data
-                for (i = 0; i < pvs.length; i++) {
-                    $('#pvs').append('<option value = ' + pvs[i].PV + '>' + pvs[i].PV +
-                        '</option>')
-                }
-                refresh_dept();
-                $('#pvs').selectpicker('refresh');
-                get_att_data();
-            });
+            $.get('/pvs?' + $.param({
+                    period: $("#period").val()
+                }))
+                .done(function (data) {
+                    $('#pvs').empty();
+                    pvs = data.data
+                    for (i = 0; i < pvs.length; i++) {
+                        $('#pvs').append('<option value = ' + pvs[i].PV + '>' + pvs[i].PV +
+                            '</option>')
+                    }
+                    refresh_dept();
+                    $('#pvs').selectpicker('refresh');
+                    i = 0
+                    if ($('#pvs')[0].length != 1) {
+                        i = $('#pvs')[0].selectedIndex;
+                    }
+                    $('#attendance').DataTable({
+                        ajax: {
+                            'url': '/attendance_data',
+                            'data': {
+                                'pvid': pvs[i].PV,
+                                'period': $('#period').val()
+                            }
+                        },
+                        columns: [{
+                                data: 'day',
+                            },
+                            {
+                                data: 'start',
+                            },
+                            {
+                                data: 'end',
+                            },
+                            {
+                                data: 'mode',
+                            },
+                            {
+                                data: 'weekday',
+                            },
+                            {
+                                data: 'timetable',
+                            },
+                            {
+                                data: 'stamp',
+                            },
+                        ],
+                        order: [
+                            [0, "asc"]
+                        ],
+                        'createdRow': function(row, data, dataIndex){
+                            if(data.weekday == 'Sobota' || data.weekday == 'Neděle'){
+                                $(row).addClass('row-disabled')
+                            }
+                            else if(data.mode == 'Absence'){
+                                $(row).addClass('row-warning');
+                            }
+                            else{
+                                $(row).addClass('row-success');
+                            }
+
+
+                        },
+                        paging: false,
+                        searching: false,
+                        bLengthChange: false,
+                        bInfo: false,
+                        ordering: false,
+                        responsive: true,
+                    });
+                });
         });
         $('#period').datepicker('setDate', new Date());
         $("#pvs").selectpicker();
         $("#pvs").selectpicker().on('change', function (e) {
             refresh_dept();
-            get_att_data();
         });
     });
 </script>
@@ -182,10 +123,20 @@
             </div>
         </form>
     </div>
-
-    <div class='row buffer-top-md'>
-        <form class='form-inline' id='attendance' name='attendance'>
-        </form>
-    </div>
+    <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
+        <thead>
+            <tr>
+                <th>Den v měsíci</th>
+                <th>Příchod</th>
+                <th>Odchod</th>
+                <th>Režim docházky</th>
+                <th>Den v týdnu</th>
+                <th>Precovní doba</th>
+                <th>Nárok na stravenku</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
 </div>
 {% endblock %}

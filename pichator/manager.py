@@ -208,12 +208,12 @@ class Manager(object):
                 and_(pres_t.date == day_date, pres_t.uid_employee == uid)).first()
             if attend:
                 retval['data'].append({'day': f'{day}. ', 'start': f'{attend.arrival}', 'end': f'{attend.departure}',
-                                       'mode': attend.presence_mode, 'stamp': attend.food_stamp,
+                                       'mode': attend.presence_mode, 'stamp': 'Ano' if attend.food_stamp else 'Ne',
                                        'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                                        'weekday': WEEKDAYS[weekday]})
             else:
                 retval['data'].append({'day': f'{day}. ', 'start': '00:00', 'end': '00:00',
-                                       'mode': 'Absence', 'stamp': False,
+                                       'mode': 'Absence', 'stamp': 'Ne',
                                        'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                                        'weekday': WEEKDAYS[weekday]})
         return retval
