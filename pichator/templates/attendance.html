@@ -6,6 +6,15 @@
 
 {% block scripts %}
 <script>
+    function create_form(days) {
+        form = '';
+        for (i = 1; i <= days; i++) {
+            form += "<input type='time' name='start" + i + "'><input type='time' name='end" + i +
+                "'><input type='text' name='mode" + i + "'>";
+        }
+        return form
+    }
+
     var pvs = [];
 
     function refresh_dept() {
@@ -39,14 +48,13 @@
                     if ($('#pvs')[0].length != 1) {
                         i = $('#pvs')[0].selectedIndex;
                     }
+                    if ($.fn.DataTable.isDataTable('#attendance')) {
+                        $('#attendance').DataTable().destroy();
+                    }
+                    $('#attendance tbody').empty();
+                    $('#transporter-form').empty();
+
                     $('#attendance').DataTable({
-                        ajax: {
-                            'url': '/attendance_data',
-                            'data': {
-                                'pvid': pvs[i].PV,
-                                'period': $('#period').val()
-                            }
-                        },
                         columns: [{
                                 data: 'day',
                             },
@@ -72,22 +80,32 @@
                         order: [
                             [0, "asc"]
                         ],
-                        'createdRow': function (row, data, dataIndex) {
-                            if (data.weekday == 'Sobota' || data.weekday ==
-                                'Neděle') {} else if (data.mode == 'Absence') {
+                        createdRow: function (row, data, dataIndex) {
+                            if (data.mode == 'Absence' && data.weekday != 'Sobota' &&
+                                data.weekday !=
+                                'Neděle') {
                                 $(row).addClass('warning');
-                            } else {
+                            } else if (data.mode == 'Presence') {
                                 $(row).addClass('success');
                             }
+                        },
+                        ajax: {
+                            'url': '/attendance_data',
+                            'data': function (d) {
+                                d.pvid = pvs[i].PV;
+                                d.period = $('#period').val();
 
-
+                            },
+                        },
+                        initComplete: function(settings, data){
+                            $('#transporter-form').append(create_form(data.data
+                            .length));
                         },
                         paging: false,
                         searching: false,
                         bLengthChange: false,
                         bInfo: false,
                         ordering: false,
-                        responsive: true,
                     });
                 });
         });
@@ -95,6 +113,65 @@
         $("#pvs").selectpicker();
         $("#pvs").selectpicker().on('change', function (e) {
             refresh_dept();
+            if ($.fn.DataTable.isDataTable('#attendance')) {
+                $('#attendance').DataTable().destroy();
+            }
+            $('#attendance tbody').empty();
+            $('#transporter-form').empty();
+
+            $('#attendance').DataTable({
+                columns: [{
+                        data: 'day',
+                    },
+                    {
+                        data: 'start',
+                    },
+                    {
+                        data: 'end',
+                    },
+                    {
+                        data: 'mode',
+                    },
+                    {
+                        data: 'weekday',
+                    },
+                    {
+                        data: 'timetable',
+                    },
+                    {
+                        data: 'stamp',
+                    },
+                ],
+                order: [
+                    [0, "asc"]
+                ],
+                createdRow: function (row, data, dataIndex) {
+                    if (data.mode == 'Absence' && data.weekday != 'Sobota' &&
+                        data.weekday !=
+                        'Neděle') {
+                        $(row).addClass('warning');
+                    } else if (data.mode == 'Presence') {
+                        $(row).addClass('success');
+                    }
+                },
+                ajax: {
+                    'url': '/attendance_data',
+                    'data': function (d) {
+                        d.pvid = pvs[i].PV;
+                        d.period = $('#period').val();
+
+                    },
+                },
+                initComplete: function (settings, data) {
+                    $('#transporter-form').append(create_form(data.data
+                        .length));
+                },
+                paging: false,
+                searching: false,
+                bLengthChange: false,
+                bInfo: false,
+                ordering: false,
+            });
         });
     });
 </script>
@@ -135,5 +212,8 @@
         <tbody>
         </tbody>
     </table>
+    <!-- invisible form for submiting data from table -->
+    <form id='transporter-form' name='transporter-form' style='display:none'>
+    </form>
 </div>
 {% endblock %}

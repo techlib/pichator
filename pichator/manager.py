@@ -11,7 +11,7 @@ from sqlalchemy import types as sqltypes
 from datetime import timedelta, datetime, date
 from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.exceptions import Forbidden, ImATeapot
+from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange
 
 
@@ -105,7 +105,9 @@ class Manager(object):
         maxdate = date.max
         log.msg(data)
         if not (data['monF'] and data['monT'] and data['tueF'] and data['tueT'] and data['wedF'] and data['wedT'] and data['thuF'] and data['thuT'] and data['friF'] and data['friT']):
-            return False
+            log.err('Attempt to upsert timetable without all days periods filled-in.\n\
+                    To signify free day, please set start and end of workday to 00:00')
+            raise NotAcceptable
         monday_v = TimeRange(data['monF'], data['monT'])
         tuesday_v = TimeRange(data['tueF'], data['tueT'])
         wedensday_v = TimeRange(data['wedF'], data['wedT'])
@@ -115,8 +117,6 @@ class Manager(object):
                          wedensday_v.len() + thursday_v.len() + friday_v.len()) / 60
         validity_v = DateRange(today, maxdate)
         pvid_v = data['f_pvs']
-        if not monday_v and tuesday_v and wedensday_v and thursday_v and friday_v and validity_v and pvid_v:
-            raise ImATeapot
         pvs = pv_t.filter(pv_t.pvid == pvid_v).all()
         for pv in pvs:
             if today in pv.validity:
@@ -126,7 +126,8 @@ class Manager(object):
         if not hours_in_week == 40 * occupancy:
             return False
         if not valid_pv_uid:
-            raise ImATeapot
+            log.err('Attempt to upsert timetable for user who doesn\'t have valid PV')
+            raise NotAcceptable
         pv_w_tt = self.pich_db.session().query(
             timetable_t, pv_t).join(pv_t).filter(pv_t.pvid == pvid_v).all()
         for pv_w_tt_it in pv_w_tt:
@@ -148,7 +149,7 @@ class Manager(object):
         except Exception as e:
             log.err(e)
             self.pich_db.rollback()
-            raise ImATeapot
+            raise InternalServerError
 
     def get_pvs(self, emp_no, period):
         retval = {'data': []}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Server Error{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+ <div class="row">
+  <div class="col-md-8 col-md-push-2 buffer-top-md">
+   <div class="blank-slate-pf">
+    <h2>Forbidden</h2>
+
+    <p>During processing of your request, there was an unspecified error.</p>
+    <p>
+     Please contact application administrator at <a href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>
+     who should inspect logs for detailed error.
+    </p>
+   </div>
+  </div>
+ </div>
+</div>
+{% endblock %}

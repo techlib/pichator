@@ -17,6 +17,9 @@ from dateutil.relativedelta import *
 from xml.sax.saxutils import escape
 
 
+from twisted.python import log
+
+
 import flask
 import os
 import re
@@ -55,7 +58,7 @@ def make_site(manager, access_model, debug=False):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             uid = flask.request.headers.get('X-User-Id', '0')
-            username = flask.request.headers.get('X-Full-Name', 'koudi')
+            username = flask.request.headers.get('X-Full-Name', 'brabemi')
 
             kwargs.update({
                 'uid': int(uid),
@@ -84,6 +87,14 @@ def make_site(manager, access_model, debug=False):
     @app.errorhandler(ImATeapot.code)
     def imateapot(e):
         return flask.render_template('teapot.html')
+
+    @app.errorhandler(NotAcceptable.code)
+    def notacceptable(e):
+        return flask.render_template('not_acceptable.html')
+
+    @app.errorhandler(InternalServerError.code)
+    def internalservererror(e):
+        return flask.render_template('internal_server_error.html')
 
     @app.route('/', methods=['GET', 'POST'])
     @authorized_only('admin')
@@ -119,7 +130,8 @@ def make_site(manager, access_model, debug=False):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
         if not emp_no:
-            raise ImATeapot
+            log.err('Query for timetable data for employee who is not in database.')
+            raise NotAcceptable
         return flask.jsonify(manager.get_timetables(emp_no))
 
     @app.route('/pvs')
@@ -130,7 +142,8 @@ def make_site(manager, access_model, debug=False):
         period = flask.request.values.get('period')
 
         if not period:
-            raise ImATeapot
+            log.err('Query for list of PVs without required period parameter.')
+            raise NotAcceptable
 
         emp_no = manager.get_emp_no(username)
 
@@ -143,10 +156,20 @@ def make_site(manager, access_model, debug=False):
         nonlocal has_privilege
 
         pvid = flask.request.values.get('pvid')
+        emp_no = manager.get_emp_no(username)
+        if not pvid or not emp_no:
+            log.err(
+                'Query for attendance data without required parameter pvid or emp_no.')
+            raise NotAcceptable
+        if str(emp_no) != pvid.split('.')[0]:
+            log.err('Requesting attendance data for user other than is logged-in.')
+            raise Forbidden
         period = flask.request.values.get('period')
 
         if not pvid or not period:
-            raise ImATeapot
+            log.err(
+                'Query for attendance data without required parameter pvid or period.')
+            raise NotAcceptable
 
         return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
 
