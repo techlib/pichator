@@ -173,12 +173,11 @@ def make_site(manager, access_model, debug=False):
 
         return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
     
-    @app.route('/attendance_submit')
+    @app.route('/attendance_submit', methods=['POST'])
     @authorized_only('admin')
     @pass_user_info
     def set_attendance_data(uid, username):
         nonlocal has_privilege
-        data = flask.request.form.to_dict
         pvid = flask.request.values.get('pvid')
         emp_no = manager.get_emp_no(username)
         if not pvid or not emp_no:

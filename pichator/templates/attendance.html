@@ -6,20 +6,83 @@
 
 {% block scripts %}
 <script>
-    function create_form(days) {
-        form = '';
-        for (i = 1; i <= days; i++) {
-            form += "<input type='time' name='start" + i + "'><input type='time' name='end" + i +
-                "'><input type='text' name='mode" + i + "'>";
-        }
-        return form
-    }
-
     function submit_data() {
+        i = 0
+        if ($('#pvs')[0].length != 1) {
+            i = $('#pvs')[0].selectedIndex;
+        }
+        pvid = pvs[i].pvid;
         $.ajax({
             url: '/attendance_submit',
             method: 'POST',
-        })
+            data: {
+                'period': $('period').val(),
+                'pvid': pvid,
+                'start': $('#editForm-start').val(),
+                'end': $('#editForm-end').val(),
+            },
+        }).done(function(){
+            reload_table();
+        });
+    }
+
+    function reload_table() {
+        if ($.fn.DataTable.isDataTable('#attendance')) {
+            $('#attendance').DataTable().destroy();
+        }
+        $('#attendance tbody').empty();
+        $('#transporter-form').empty();
+
+        attendance = $('#attendance').DataTable({
+            columns: [{
+                    data: 'day',
+                },
+                {
+                    data: 'start',
+                },
+                {
+                    data: 'end',
+                },
+                {
+                    data: 'mode',
+                },
+                {
+                    data: 'weekday',
+                },
+                {
+                    data: 'timetable',
+                },
+                {
+                    data: 'stamp',
+                },
+            ],
+            order: [
+                [0, "asc"]
+            ],
+            createdRow: function (row, data, dataIndex) {
+                if (data.mode == 'Absence' && data.weekday !=
+                    'Sobota' &&
+                    data.weekday !=
+                    'Neděle') {
+                    $(row).addClass('warning');
+                } else if (data.mode == 'Presence') {
+                    $(row).addClass('success');
+                }
+            },
+            ajax: {
+                'url': '/attendance_data',
+                'data': function (d) {
+                    d.pvid = pvs[i].PV;
+                    d.period = $('#period').val();
+
+                },
+            },
+            paging: false,
+            searching: false,
+            bLengthChange: false,
+            bInfo: false,
+            ordering: false,
+        });
     }
 
     var pvs = [];
@@ -56,66 +119,7 @@
                     if ($('#pvs')[0].length != 1) {
                         i = $('#pvs')[0].selectedIndex;
                     }
-                    if ($.fn.DataTable.isDataTable('#attendance')) {
-                        $('#attendance').DataTable().destroy();
-                    }
-                    $('#attendance tbody').empty();
-                    $('#transporter-form').empty();
-
-                    attendance = $('#attendance').DataTable({
-                        columns: [{
-                                data: 'day',
-                            },
-                            {
-                                data: 'start',
-                            },
-                            {
-                                data: 'end',
-                            },
-                            {
-                                data: 'mode',
-                            },
-                            {
-                                data: 'weekday',
-                            },
-                            {
-                                data: 'timetable',
-                            },
-                            {
-                                data: 'stamp',
-                            },
-                        ],
-                        order: [
-                            [0, "asc"]
-                        ],
-                        createdRow: function (row, data, dataIndex) {
-                            if (data.mode == 'Absence' && data.weekday !=
-                                'Sobota' &&
-                                data.weekday !=
-                                'Neděle') {
-                                $(row).addClass('warning');
-                            } else if (data.mode == 'Presence') {
-                                $(row).addClass('success');
-                            }
-                        },
-                        ajax: {
-                            'url': '/attendance_data',
-                            'data': function (d) {
-                                d.pvid = pvs[i].PV;
-                                d.period = $('#period').val();
-
-                            },
-                        },
-                        initComplete: function (settings, data) {
-                            $('#transporter-form').append(create_form(data.data
-                                .length));
-                        },
-                        paging: false,
-                        searching: false,
-                        bLengthChange: false,
-                        bInfo: false,
-                        ordering: false,
-                    });
+                    reload_table();
                 });
         });
         $('#period').datepicker('setDate', new Date());
@@ -189,10 +193,15 @@
             console.log(data);
             $('#editForm-day').val(data.day);
             $('#editForm-start').val(data.start);
+            $('#editForm-end').val(data.end);
+            $('#editForm-mode').val(data.mode);
+            $('#editForm-weekday').val(data.weekday);
             $('#modalEditForm').modal('show');
             //open edit modal that shows data from table and decide what is editable
             //on modal submit send new data with pv and datepicker value and reload datatable
         });
+        $('.clock-picker').clockpicker();
+        $('#editForm-mode').selectpicker();
     });
 </script>
 {% endblock %}
@@ -221,20 +230,38 @@
                     <h4 class="modal-title w-100 font-weight-bold">Editace docházky</h4>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id='updateForm'>
                         <div class="form-group">
-                            <input type="text" id="editForm-day" class="form-control" disabled>
                             <label for="editForm-day">Den v měsíci</label>
+                            <input type="text" id="editForm-day" class="form-control" disabled>
                         </div>
 
                         <div class="form-group">
-                            <input type="time" id="editForm-start" class="form-control validate">
-                            <label data-error="wrong" data-success="right" for="editForm-start">Příchod</label>
+                            <label for="editForm-start">Příchod</label>
+                            <input type="time" id="editForm-start" class="form-control clock-picker"
+                                data-placement='right' data-align='top' data-autoclose='true'>
+                        </div>
+                        <div class="form-group">
+                            <label for="editForm-end">Odchod</label>
+                            <input type="time" id="editForm-end" class="form-control clock-picker"
+                                data-placement='right' data-align='top' data-autoclose='true'>
+                        </div>
+                        <div class="form-group">
+                            <label for="editForm-mode">Režim docházky</label>
+                            <select id="editForm-mode" class="form-control">
+                                <option>Absence</option>
+                                <option>Presence</option>
+                                <option>Dovolená</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editForm-start">Den v týdnu</label>
+                            <input type="text" id="editForm-weekday" class="form-control" disabled>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer d-flex justify-content-center">
-                    <button class="btn btn-success">Uložit</button>
+                    <button class="btn btn-success" onclick='submit_data();'>Uložit</button>
                     <button class="btn btn-warning" data-dismiss='modal'>Zrušit</button>
                 </div>
             </div>
@@ -255,8 +282,5 @@
         <tbody>
         </tbody>
     </table>
-    <!-- invisible form for submiting data from table -->
-    <form id='transporter-form' name='transporter-form' style='display:none'>
-    </form>
 </div>
 {% endblock %}
