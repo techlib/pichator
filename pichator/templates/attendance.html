@@ -6,23 +6,23 @@
 
 {% block scripts %}
 <script>
+    var pvs = [];
+
     function submit_data() {
         i = 0
         if ($('#pvs')[0].length != 1) {
             i = $('#pvs')[0].selectedIndex;
         }
-        pvid = pvs[i].pvid;
-        $.ajax({
-            url: '/attendance_submit',
-            method: 'POST',
-            data: {
-                'period': $('period').val(),
-                'pvid': pvid,
-                'start': $('#editForm-start').val(),
-                'end': $('#editForm-end').val(),
-            },
-        }).done(function(){
+        pvid = pvs[i].PV;
+        $.get('/attendance_submit?' + $.param({
+            'period': $('#period').val(),
+            'pvid': pvid,
+            'start': $('#editForm-start').val(),
+            'end': $('#editForm-end').val(),
+            'mode': $('#editForm-mode').val(),
+        })).done(function () {
             reload_table();
+            $('#modalEditForm').modal('hide');
         });
     }
 
@@ -84,9 +84,6 @@
             ordering: false,
         });
     }
-
-    var pvs = [];
-    var editor;
 
     function refresh_dept() {
         i = 0
@@ -190,15 +187,12 @@
         $('#attendance tbody').on('click', 'tr', function (e) {
             e.stopPropagation();
             var data = attendance.row(this).data();
-            console.log(data);
             $('#editForm-day').val(data.day);
             $('#editForm-start').val(data.start);
             $('#editForm-end').val(data.end);
             $('#editForm-mode').val(data.mode);
             $('#editForm-weekday').val(data.weekday);
             $('#modalEditForm').modal('show');
-            //open edit modal that shows data from table and decide what is editable
-            //on modal submit send new data with pv and datepicker value and reload datatable
         });
         $('.clock-picker').clockpicker();
         $('#editForm-mode').selectpicker();

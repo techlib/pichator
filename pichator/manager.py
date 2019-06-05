@@ -233,8 +233,8 @@ class Manager(object):
                                        'weekday': WEEKDAYS[weekday]})
         return retval
 
-    def set_attendance(self, uid, pvid, period, username, data):
-        log.msg(data)
+    def set_attendance(self, uid, pvid, period, username, start, end, mode):
+        log.msg(pvid, period, username, start, end, mode)
         return ''
     def init_presence(self, period, source):
         pres_t = self.pich_db.presence

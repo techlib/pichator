@@ -173,7 +173,7 @@ def make_site(manager, access_model, debug=False):
 
         return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
     
-    @app.route('/attendance_submit', methods=['POST'])
+    @app.route('/attendance_submit')
     @authorized_only('admin')
     @pass_user_info
     def set_attendance_data(uid, username):
@@ -193,8 +193,17 @@ def make_site(manager, access_model, debug=False):
             log.err(
                 'Query for attendance data without required parameter period.')
             raise NotAcceptable
+        start = flask.request.values.get('start')
+        end = flask.request.values.get('end')
+        if not start or not end:
+            log.err(
+                'Query for attendance data without required parameter start or end.')
+            raise NotAcceptable
+        mode = flask.request.values.get('mode')
+        if not mode:
+            mode = 'Absence'
 
-        return flask.jsonify(manager.set_attendance(uid, pvid, period, username, data))
+        return flask.jsonify(manager.set_attendance(uid, pvid, period, username, start, end, mode))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
