@@ -172,6 +172,30 @@ def make_site(manager, access_model, debug=False):
             raise NotAcceptable
 
         return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
+    
+    @app.route('/attendance_submit')
+    @authorized_only('admin')
+    @pass_user_info
+    def set_attendance_data(uid, username):
+        nonlocal has_privilege
+        data = flask.request.form.to_dict
+        pvid = flask.request.values.get('pvid')
+        emp_no = manager.get_emp_no(username)
+        if not pvid or not emp_no:
+            log.err(
+                'Query for attendance data without required parameter pvid or emp_no.')
+            raise NotAcceptable
+        if str(emp_no) != pvid.split('.')[0]:
+            log.err('Submiting attendance data for user other than is logged-in.')
+            raise Forbidden
+        period = flask.request.values.get('period')
+
+        if not period:
+            log.err(
+                'Query for attendance data without required parameter period.')
+            raise NotAcceptable
+
+        return flask.jsonify(manager.set_attendance(uid, pvid, period, username, data))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):

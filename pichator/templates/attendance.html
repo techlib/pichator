@@ -15,7 +15,28 @@
         return form
     }
 
+    function tableToJSON(tblObj) {
+        var data = [];
+        var $headers = $(tblObj).find("th");
+        var $rows = $(tblObj).find("tbody tr").each(function (index) {
+            $cells = $(this).find("td");
+            data[index] = {};
+            $cells.each(function (cellIndex) {
+                data[index][$($headers[cellIndex]).html()] = $(this).html();
+            });
+        });
+        return data;
+    }
+
+    function submit_data(){
+        $.ajax({
+            url: '/attendance_submit',
+            method: 'POST',
+        })
+    }
+
     var pvs = [];
+    var editor;
 
     function refresh_dept() {
         i = 0
@@ -81,7 +102,8 @@
                             [0, "asc"]
                         ],
                         createdRow: function (row, data, dataIndex) {
-                            if (data.mode == 'Absence' && data.weekday != 'Sobota' &&
+                            if (data.mode == 'Absence' && data.weekday !=
+                                'Sobota' &&
                                 data.weekday !=
                                 'Neděle') {
                                 $(row).addClass('warning');
@@ -97,9 +119,9 @@
 
                             },
                         },
-                        initComplete: function(settings, data){
+                        initComplete: function (settings, data) {
                             $('#transporter-form').append(create_form(data.data
-                            .length));
+                                .length));
                         },
                         paging: false,
                         searching: false,
@@ -111,68 +133,69 @@
         });
         $('#period').datepicker('setDate', new Date());
         $("#pvs").selectpicker();
-        $("#pvs").selectpicker().on('change', function (e) {
-            refresh_dept();
-            if ($.fn.DataTable.isDataTable('#attendance')) {
-                $('#attendance').DataTable().destroy();
-            }
-            $('#attendance tbody').empty();
-            $('#transporter-form').empty();
+        $("#pvs")
+            .selectpicker().on('change', function (e) {
+                refresh_dept();
+                if ($.fn.DataTable.isDataTable('#attendance')) {
+                    $('#attendance').DataTable().destroy();
+                }
+                $('#attendance tbody').empty();
+                $('#transporter-form').empty();
 
-            $('#attendance').DataTable({
-                columns: [{
-                        data: 'day',
+                $('#attendance').DataTable({
+                    columns: [{
+                            data: 'day',
+                        },
+                        {
+                            data: 'start',
+                        },
+                        {
+                            data: 'end',
+                        },
+                        {
+                            data: 'mode',
+                        },
+                        {
+                            data: 'weekday',
+                        },
+                        {
+                            data: 'timetable',
+                        },
+                        {
+                            data: 'stamp',
+                        },
+                    ],
+                    order: [
+                        [0, "asc"]
+                    ],
+                    createdRow: function (row, data, dataIndex) {
+                        if (data.mode == 'Absence' && data.weekday != 'Sobota' &&
+                            data.weekday !=
+                            'Neděle') {
+                            $(row).addClass('warning');
+                        } else if (data.mode == 'Presence') {
+                            $(row).addClass('success');
+                        }
                     },
-                    {
-                        data: 'start',
-                    },
-                    {
-                        data: 'end',
-                    },
-                    {
-                        data: 'mode',
-                    },
-                    {
-                        data: 'weekday',
-                    },
-                    {
-                        data: 'timetable',
-                    },
-                    {
-                        data: 'stamp',
-                    },
-                ],
-                order: [
-                    [0, "asc"]
-                ],
-                createdRow: function (row, data, dataIndex) {
-                    if (data.mode == 'Absence' && data.weekday != 'Sobota' &&
-                        data.weekday !=
-                        'Neděle') {
-                        $(row).addClass('warning');
-                    } else if (data.mode == 'Presence') {
-                        $(row).addClass('success');
-                    }
-                },
-                ajax: {
-                    'url': '/attendance_data',
-                    'data': function (d) {
-                        d.pvid = pvs[i].PV;
-                        d.period = $('#period').val();
+                    ajax: {
+                        'url': '/attendance_data',
+                        'data': function (d) {
+                            d.pvid = pvs[i].PV;
+                            d.period = $('#period').val();
 
+                        },
                     },
-                },
-                initComplete: function (settings, data) {
-                    $('#transporter-form').append(create_form(data.data
-                        .length));
-                },
-                paging: false,
-                searching: false,
-                bLengthChange: false,
-                bInfo: false,
-                ordering: false,
+                    initComplete: function (settings, data) {
+                        $('#transporter-form').append(create_form(data.data
+                            .length));
+                    },
+                    paging: false,
+                    searching: false,
+                    bLengthChange: false,
+                    bInfo: false,
+                    ordering: false,
+                });
             });
-        });
     });
 </script>
 {% endblock %}
@@ -193,7 +216,7 @@
             </div>
         </form>
         <div class='form-group'>
-            <button class='btn btn-success'>Uložit</button>
+            <button class='btn btn-success' onclick='submit_data();'>Uložit</button>
             <button class='btn btn-warning' onclick='redirect("/");'>Zrušit</button>
         </div>
     </div>
@@ -205,7 +228,7 @@
                 <th>Odchod</th>
                 <th>Režim docházky</th>
                 <th>Den v týdnu</th>
-                <th>Precovní doba</th>
+                <th>Pracovní doba</th>
                 <th>Nárok na stravenku</th>
             </tr>
         </thead>

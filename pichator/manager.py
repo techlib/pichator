@@ -5,6 +5,7 @@ __all__ = ['Manager']
 
 from twisted.python import log
 from twisted.internet.task import LoopingCall
+from threading import Thread
 from sqlalchemy import and_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import types as sqltypes
@@ -52,6 +53,18 @@ class Manager(object):
         except NoResultFound:
             log.err(f'User not found. Supplied username: {username}')
             raise Forbidden
+        
+    def threaded_init(self, period, source):
+        th_init = Thread(target=self.init_presence, args=(period, source))
+        th_init.start()
+        
+    def threaded_update_presence(self, date, source):
+        th_up_pres = Thread(target=self.update_presence, args=(date, source))
+        th_up_pres.start()
+        
+    def threaded_update_pv(self, elanor):
+        th_up_pv = Thread(target=self.update_pvs, args=(elanor, ))
+        th_up_pv.start()   
 
     def get_timetables(self, emp_no):
         payload = {'data': []}
@@ -220,8 +233,9 @@ class Manager(object):
                                        'weekday': WEEKDAYS[weekday]})
         return retval
 
-    def set_attendance(self, data):
-        pass
+    def set_attendance(self, uid, pvid, period, username, data):
+        log.msg(data)
+        return ''
     def init_presence(self, period, source):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee
