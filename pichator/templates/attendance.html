@@ -20,6 +20,7 @@
             'start': $('#editForm-start').val(),
             'end': $('#editForm-end').val(),
             'mode': $('#editForm-mode').val(),
+            'day': $('#editForm-day').val(),
         })).done(function () {
             reload_table();
             $('#modalEditForm').modal('hide');
@@ -187,12 +188,14 @@
         $('#attendance tbody').on('click', 'tr', function (e) {
             e.stopPropagation();
             var data = attendance.row(this).data();
-            $('#editForm-day').val(data.day);
-            $('#editForm-start').val(data.start);
-            $('#editForm-end').val(data.end);
-            $('#editForm-mode').val(data.mode);
-            $('#editForm-weekday').val(data.weekday);
-            $('#modalEditForm').modal('show');
+            if (data.weekday != 'Sobota' && data.weekday != 'Neděle') {
+                $('#editForm-day').val(data.day);
+                $('#editForm-start').val(data.start);
+                $('#editForm-end').val(data.end);
+                $('#editForm-mode').val(data.mode);
+                $('#editForm-weekday').val(data.weekday);
+                $('#modalEditForm').modal('show');
+            }
         });
         $('.clock-picker').clockpicker();
         $('#editForm-mode').selectpicker();

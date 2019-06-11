@@ -202,8 +202,12 @@ def make_site(manager, access_model, debug=False):
         mode = flask.request.values.get('mode')
         if not mode:
             mode = 'Absence'
+        day = flask.request.values.get('day')
+        if not day:
+            log.err('Query without required parameter day.')
+            raise NotAcceptable
 
-        return flask.jsonify(manager.set_attendance(uid, pvid, period, username, start, end, mode))
+        return flask.jsonify(manager.set_attendance(day, pvid, period, username, start, end, mode))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
