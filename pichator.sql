@@ -34,6 +34,7 @@ CREATE TABLE public.employee(
 	emp_no smallint,
 	username character varying NOT NULL,
 	uid bigint NOT NULL,
+	acl character varying NOT NULL DEFAULT 'edit',
 	CONSTRAINT employee_pk PRIMARY KEY (uid)
 
 );

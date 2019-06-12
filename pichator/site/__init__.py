@@ -96,18 +96,30 @@ def make_site(manager, access_model, debug=False):
     def internalservererror(e):
         return flask.render_template('internal_server_error.html')
 
-    @app.route('/', methods=['GET', 'POST'])
+    @app.route('/')
     @authorized_only('admin')
     @pass_user_info
     def index(uid, username):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
-        if flask.request.method == 'POST':
-            return flask.render_template('attendance.html', **locals())
+        acl = manager.get_acl(username)
+        if acl == 'readonly':
+            return flask.render_template('attendance_ro.html', **locals())
+        elif acl.isdigit():
+            dept = int(acl)
+            return flask.render_template('attendance_manager.html', **locals())
         else:
-            data_dict = flask.request.form.to_dict()
             return flask.render_template('attendance.html', **locals())
 
+    @app.route('/get_emp')
+    @authorized_only('admin')
+    @pass_user_info
+    def employees(uid, username):
+        dept = flask.request.values.get('dept')
+        period = flask.request.values.get('period')
+        return flask.jsonify(manager.get_employees(dept, period))
+    
+    
     @app.route('/timetable', methods=['GET', 'POST'])
     @authorized_only('user')
     @pass_user_info
@@ -207,7 +219,7 @@ def make_site(manager, access_model, debug=False):
             log.err('Query without required parameter day.')
             raise NotAcceptable
 
-        return flask.jsonify(manager.set_attendance(day, pvid, period, username, start, end, mode))
+        return flask.jsonify(manager.set_attendance(day, period, username, start, end, mode))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):

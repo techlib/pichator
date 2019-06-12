@@ -5,3 +5,12 @@
 .input-sm {
  max-width: 6em;
 }
+.absence{
+    color: crimson !important
+}
+.today{
+    background-color:#73BCF7 !important
+}
+.weekend td:first-child{
+    font-weight: bold !important
+}

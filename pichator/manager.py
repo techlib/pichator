@@ -52,8 +52,42 @@ class Manager(object):
             return emp_t.filter(emp_t.username == username).one().emp_no
         except NoResultFound:
             log.err(f'User not found. Supplied username: {username}')
-            raise Forbidden
+            raise NotAcceptable
+        
+    def get_acl(self, username):
+        emp_t = self.pich_db.employee
+        try:
+            return emp_t.filter(emp_t.username == username).one().acl
+        except NoResultFound:
+            log.err(f'User not found. Supplied username: {username}')
+            raise NotAcceptable
+        
+    def get_depts(self, username):
+        emp_t = self.pich_db.employee
+        pv_t = self.pich_db.pv
+        try:
+            emp_uid = emp_t.filter(emp_t.emp_no == self.get_emp_no(username)).one().uid
+            return [i.dept for i in pv_t.filter(and_(pv_t.uid_employee == emp_uid, datetime.today().date() in pv_t.validity))]
+        except Exception as e:
+            log.err(e)
+            return []
+        
+    def get_employees(self, dept, period):
+        retval = []
+        emp_t = self.pich_db.employee
+        pv_t = self.pich_db.pv
+        per_range = monthrange(
+            int(period.split('-')[1]), int(period.split('-')[0]))
+        per_start = datetime.strptime(
+            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
+        per_end = datetime.strptime(
+            period + f'-{per_range[1]}', '%m-%Y-%d').date()
 
+        for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
+            if str(employee[0].department)[0] == str(dept)[0] and (per_start in employee[0].validity or per_end in employee[0].validity):
+                retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name, 'PV':employee[0].pvid})
+        return retval
+        
     def threaded_init(self, period, source):
         th_init = Thread(target=self.init_presence, args=(period, source))
         th_init.start()
@@ -234,7 +268,7 @@ class Manager(object):
                                        'weekday': WEEKDAYS[weekday]})
         return retval
 
-    def set_attendance(self, day, pvid, period, username, start, end, mode):
+    def set_attendance(self, day, period, username, start, end, mode):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee
         per_year = int(period.split('-')[1])

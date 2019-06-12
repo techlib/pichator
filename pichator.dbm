@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="171,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="15,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -38,6 +38,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</column>
 	<column name="uid" not-null="true">
 		<type name="bigint" length="0"/>
+	</column>
+	<column name="acl" not-null="true" default-value="'edit'">
+		<type name="character varying" length="0"/>
 	</column>
 	<constraint name="employee_pk" type="pk-constr" table="public.employee">
 		<columns names="uid" ref-type="src-columns"/>
