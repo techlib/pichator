@@ -100,48 +100,41 @@ class Manager(object):
         th_up_pv = Thread(target=self.update_pvs, args=(elanor, ))
         th_up_pv.start()
 
-    def get_timetables(self, emp_no):
+    def get_timetables(self, emp_uid):
         payload = {'data': []}
-        emp_t = self.pich_db.employee
+        today = date.today()
+
         time_t = self.pich_db.timetable
         pv_t = self.pich_db.pv
-        today = date.today()
-        pvs = self.pich_db.session.query(emp_t,
-                                         pv_t, time_t).join(
-            pv_t, emp_t.uid == pv_t.uid_employee).join(time_t, time_t.uid_pv == pv_t.uid, isouter=True).filter(emp_t.emp_no == emp_no).all()
-        for pv in pvs:
-            work_rel = pv[1]
-            if pv[2]:
-                tt = pv[2]
-                if today in work_rel.validity and today in tt.validity:
-                    payload["data"].append({"PV": work_rel.pvid, "occupancy": str(work_rel.occupancy),
-                                            "department": work_rel.department,
-                                            "days": [tt.monday.lower.strftime('%H:%M'),
-                                                     tt.monday.upper.strftime(
-                                                         '%H:%M'),
-                                                     tt.tuesday.lower.strftime(
-                                                         '%H:%M'),
-                                                     tt.tuesday.upper.strftime(
-                                                         '%H:%M'),
-                                                     tt.wedensday.lower.strftime(
-                                                         '%H:%M'),
-                                                     tt.wedensday.upper.strftime(
-                                                         '%H:%M'),
-                                                     tt.thursday.lower.strftime(
-                                                         '%H:%M'),
-                                                     tt.thursday.upper.strftime(
-                                                         '%H:%M'),
-                                                     tt.friday.lower.strftime(
-                                                         '%H:%M'),
-                                                     tt.friday.upper.strftime('%H:%M')]})
+
+        pvs = self.pich_db.session.query(pv_t, time_t) \
+            .outerjoin(time_t, time_t.uid_pv == pv_t.uid) \
+            .filter(pv_t.validity.contains(today)) \
+            .filter(pv_t.uid_employee == emp_uid) \
+            .filter(time_t.validity.contains(today))
+
+        for item in pvs.all():
+            pv, tt = item
+
+            pv_data = {
+                'PV': pv.pvid,
+                'occupancy': int(pv.occupancy),
+                'department': pv.department,
+                'days': [],
+            }
+
+            if tt:
+                for day in ('monday', 'tuesday', 'wedensday', 'thursday', 'friday'):
+                    pv_data['days'].append(
+                        tt.__getattribute__(day).lower.strftime('%H:%M'))
+                    pv_data['days'].append(
+                        tt.__getattribute__(day).upper.strftime('%H:%M'))
+
             else:
-                if today in pv[1].validity:
-                    payload["data"].append({"PV": work_rel.pvid, "occupancy": str(pv[1].occupancy),
-                                            "department": work_rel.department,
-                                            "days": ['08:00', '16:30', '08:00',
-                                                     '16:30', '08:00', '16:30',
-                                                     '08:00', '16:30', '08:00',
-                                                     '16:30']})
+                pv_data['days'] = ['08:00', '16:30'] * 5
+
+            payload['data'].append(pv_data)
+
         return payload
 
     def set_timetables(self, data):
