@@ -117,7 +117,7 @@ class Manager(object):
 
             pv_data = {
                 'PV': pv.pvid,
-                'occupancy': int(pv.occupancy),
+                'occupancy': str(pv.occupancy),
                 'department': pv.department,
                 'days': [],
             }
