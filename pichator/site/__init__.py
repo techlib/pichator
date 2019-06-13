@@ -118,12 +118,19 @@ def make_site(manager, access_model, debug=False):
         dept = flask.request.values.get('dept')
         period = flask.request.values.get('period')
         return flask.jsonify(manager.get_employees(dept, period))
+    
+    @app.route('/dept')
+    @authorized_only('admin')
+    @pass_user_info
+    def display_dept(uid, username):
+        acl = manager.get_acl(username)
+        return flask.render_template('attendance_department.html', **locals())
 
     @app.route('/dept_data')
     @authorized_only('admin')
     @pass_user_info
     def get_dept(uid, username):
-        dept = flask.request.vlues.get('dept')
+        dept = flask.request.values.get('dept')
         if not dept:
             log.err(
                 'Geting data for department without mandatory parameter department number.')
@@ -135,7 +142,7 @@ def make_site(manager, access_model, debug=False):
             raise Forbidden
         period = flask.request.values.get('period')
         if not period:
-            today = datetime.datetime.today()
+            today = datetime.today()
             period = f'{today.month}-{today.year}'
         return flask.jsonify(manager.get_department(dept, period))
 

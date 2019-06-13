@@ -6,15 +6,61 @@
 
 {% block scripts %}
 <script>
+    var column_def = []
+
+    function getData(cb_func) {
+        $.ajax({
+            url: '/dept_data',
+            data: {
+                dept: '{{ acl }}',
+                period: $('#period').val(),
+            },
+            success: cb_func
+        })
+    }
+
     function reload_table() {
         if ($.fn.DataTable.isDataTable('#attendance')) {
             $('#attendance').DataTable().destroy();
         }
         $('#attendance tbody').empty();
-        $('#attendance').DataTable();
+        getData(function (data) {
+            var column_defs = [{
+                data: 'Jméno',
+                title: 'Jméno'
+            }]
+            columnNames = Object.keys(data.data[0]);
+            for (var i in columnNames) {
+                if (columnNames[i] != 'Jméno') {
+                    column_defs.push({
+                        data: columnNames[i],
+                        title: columnNames[i]
+                    })
+                }
+            }
+            $('#attendance').DataTable({
+                data: data.data,
+                columns: column_defs,
+                paging: false,
+                searching: false,
+                bLengthChange: false,
+                bInfo: false,
+                ordering: false,
+                order: [
+                    [0, "asc"]
+                ],
+            });
+        });
     };
 
     $(document).ready(function () {
+        $('#period').datepicker({
+            viewMode: 'months',
+            format: 'mm-yyyy',
+            minViewMode: 'months',
+        });
+        $('#period').datepicker().on('changeDate', reload_table())
+        $('#period').datepicker('setDate', new Date());
 
     });
 </script>
@@ -28,21 +74,15 @@
             </div>
             <div class='form-group'>
                 <label for=''>Oddělení:</label>
-                <input class='form-control' id='dept' name='dept' type='text' readonly>
+                <input class='form-control' id='dept' name='dept' type='text' readonly value='{{ acl }}'>
             </div>
         </form>
     </div>
     <div class="row">
-        <div class="col-md-6 col-md-push-3">
+        <div class="col-md-6">
 
             <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
                 <thead>
-                    <tr>
-                        <th>Jméno</th>
-                        {% for i in range(31)%}
-                        <th>{{i + 1}}</th>
-                        {% endfor %}
-                    </tr>
                 </thead>
                 <tbody>
                 </tbody>

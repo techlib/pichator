@@ -53,7 +53,7 @@ class Manager(object):
         except NoResultFound:
             log.err(f'User not found. Supplied username: {username}')
             raise NotAcceptable
-        
+
     def get_acl(self, username):
         emp_t = self.pich_db.employee
         try:
@@ -61,17 +61,18 @@ class Manager(object):
         except NoResultFound:
             log.err(f'User not found. Supplied username: {username}')
             raise NotAcceptable
-        
+
     def get_depts(self, username):
         emp_t = self.pich_db.employee
         pv_t = self.pich_db.pv
         try:
-            emp_uid = emp_t.filter(emp_t.emp_no == self.get_emp_no(username)).one().uid
+            emp_uid = emp_t.filter(
+                emp_t.emp_no == self.get_emp_no(username)).one().uid
             return [i.dept for i in pv_t.filter(and_(pv_t.uid_employee == emp_uid, datetime.today().date() in pv_t.validity))]
         except Exception as e:
             log.err(e)
             return []
-        
+
     def get_employees(self, dept, period):
         retval = []
         emp_t = self.pich_db.employee
@@ -85,9 +86,10 @@ class Manager(object):
 
         for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
             if str(employee[0].department)[0] == str(dept)[0] and (per_start in employee[0].validity or per_end in employee[0].validity):
-                retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name, 'PV':employee[0].pvid, 'dept': employee[0].department, 'username': employee[1].username})
+                retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name,
+                               'PV': employee[0].pvid, 'dept': employee[0].department, 'username': employee[1].username})
         return retval
-        
+
     def threaded_init(self, period, source):
         th_init = Thread(target=self.init_presence, args=(period, source))
         th_init.start()
@@ -297,9 +299,36 @@ class Manager(object):
         self.pich_db.commit()
 
     def get_department(self, dept, period):
+        retval = {'data': []}
         emp_t = self.pich_db.employee
-        
-    
+        pv_t = self.pich_db.pv
+        pres_t = self.pich_db.presence
+        per_range = monthrange(
+            int(period.split('-')[1]), int(period.split('-')[0]))
+        per_start = datetime.strptime(
+            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
+        per_end = datetime.strptime(
+            period + f'-{per_range[1]}', '%m-%Y-%d').date()
+
+        for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
+            if str(employee[0].department)[0] == str(dept)[0] and (per_start in employee[0].validity or per_end in employee[0].validity):
+                retval_dict = {
+                    'Jméno': f'{employee[1].first_name} {employee[1].last_name}'}
+                for day in range(per_range[1]):
+                    curr_date = date(per_start.year, per_start.month, day + 1)
+                    presence = pres_t.filter(
+                        and_(pres_t.uid_employee == employee[1].uid, pres_t.date == curr_date)).first()
+                    if not presence or presence.presence_mode == 'Absence':
+                        retval_dict[str(day + 1)] = '-'
+                    elif presence.presence_mode == 'Presence':
+                        retval_dict[str(day + 1)] = '/'
+                    elif presence.presence_mode == 'Dovolená':
+                        retval_dict[str(day + 1)] = 'd'
+                    else:
+                        retval_dict[str(day + 1)] = 'N/A'
+                retval['data'].append(retval_dict)
+        return retval
+
     def init_presence(self, period, source):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee
