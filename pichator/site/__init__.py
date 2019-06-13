@@ -170,7 +170,7 @@ def make_site(manager, access_model, debug=False):
         if not emp_no:
             log.err('Query for timetable data for employee who is not in database.')
             raise NotAcceptable
-        return flask.jsonify(manager.get_timetables(emp_no))
+        return flask.jsonify(manager.get_timetables(uid))
 
     @app.route('/pvs')
     @authorized_only('admin')

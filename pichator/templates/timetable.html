@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% set day_names = ['Ponděli', 'Útery', 'Středa', 'Čtvrtek', 'Pátek'] -%}
+
 
 {% block title %}Úprava pracovní doby{% endblock %}
 
@@ -8,16 +10,67 @@
 {% block scripts %}
 <script>
     function submit_timetable() {
-        if($('#pvs')[0].length == 1){
+        if ($('#pvs')[0].length == 1) {
             i = 0;
         }
-        else{
+        else {
             i = $('#pvs')[0].selectedIndex;
         }
         console.log($('#pvs')[i].value)
         $('#f_pvs').val($('#pvs')[i].value);
         $('#timetable-form').submit();
     }
+
+    function fillTimetable(timetable) {
+        $('#occupancy').val(timetable.occupancy)
+        $('#dept').val(timetable.department)
+        $('#monF').val(timetable.days[0])
+        $('#monT').val(timetable.days[1])
+        $('#tueF').val(timetable.days[2])
+        $('#tueT').val(timetable.days[3])
+        $('#wedF').val(timetable.days[4])
+        $('#wedT').val(timetable.days[5])
+        $('#thuF').val(timetable.days[6])
+        $('#thuT').val(timetable.days[7])
+        $('#friF').val(timetable.days[8])
+        $('#friT').val(timetable.days[9])
+
+        calculateTotal()
+    }
+
+    function getMinutes(time) {
+        var parts = time.split(':')
+        return parseInt(parts[0]) * 60 + parseInt(parts[1])
+    }
+
+    function formatDuration(total) {
+        var minutes = total % 60
+        var hours = (total - minutes) / 60
+
+        return hours + ':' + minutes.toString().padStart(2, '0')
+    }
+
+    function calculateTotal() {
+        var total = 0
+
+        for (var i = 0; i <= 4; i++) {
+            var from = $('input[data-type=F][data-day=' + i + ']').val()
+            var to = $('input[data-type=T][data-day=' + i + ']').val()
+
+            var dayDuration = getMinutes(to) - getMinutes(from)
+
+            if (dayDuration >= 6 * 60) {
+                dayDuration -= 30
+            }
+
+            total += dayDuration
+
+            $('#day' + i + '-total').text(formatDuration(dayDuration))
+        }
+
+        $('#timetable-total strong').text(formatDuration(total))
+    }
+
     $(document).ready(function () {
         $('.clockpicker').clockpicker()
         $('#pvs').selectpicker();
@@ -29,19 +82,10 @@
             } else {
                 i = $('#pvs')[0].selectedIndex;
             }
-            $('#occupancy')[0].value = timetable[i].occupancy;
-            $('#dept')[0].value = timetable[i].department;
-            $('#monF')[0].value = timetable[i].days[0];
-            $('#monT')[0].value = timetable[i].days[1];
-            $('#tueF')[0].value = timetable[i].days[2];
-            $('#tueT')[0].value = timetable[i].days[3];
-            $('#wedF')[0].value = timetable[i].days[4];
-            $('#wedT')[0].value = timetable[i].days[5];
-            $('#thuF')[0].value = timetable[i].days[6];
-            $('#thuT')[0].value = timetable[i].days[7];
-            $('#friF')[0].value = timetable[i].days[8];
-            $('#friT')[0].value = timetable[i].days[9];
+
+            fillTimetable(timetable[i])
         })
+
         $.ajax({
             url: '/timetable_data',
         }).done(function (data) {
@@ -57,18 +101,7 @@
                 i = $('#pvs')[0].selectedIndex;
             }
 
-            $('#occupancy')[0].value = timetable[i].occupancy;
-            $('#dept')[0].value = timetable[i].department;
-            $('#monF')[0].value = timetable[i].days[0];
-            $('#monT')[0].value = timetable[i].days[1];
-            $('#tueF')[0].value = timetable[i].days[2];
-            $('#tueT')[0].value = timetable[i].days[3];
-            $('#wedF')[0].value = timetable[i].days[4];
-            $('#wedT')[0].value = timetable[i].days[5];
-            $('#thuF')[0].value = timetable[i].days[6];
-            $('#thuT')[0].value = timetable[i].days[7];
-            $('#friF')[0].value = timetable[i].days[8];
-            $('#friT')[0].value = timetable[i].days[9];
+            fillTimetable(timetable[i])
         })
     })
 </script>
@@ -91,128 +124,69 @@
             </div>
 
         </form>
-        <div class='form-group'>
-            <button class='btn btn-success' onclick="submit_timetable();">Uložit</button>
-            <button class='btn btn-warning' onclick='redirect("/timetable");'>Zrušit</button>
+    </div>
+
+    <div class='row buffer-top-md'>
+        <div class="col-xs-12 col-sm-8 col-sm-push-2 col-md-6 col-md-push-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Úprava pracovní doby
+                </div>
+                <div class="panel-body">
+                    <form class='form-inline' id='timetable-form' name='timetable-form' method='post'
+                        action='/timetable'>
+                        <div class="row">
+                            <div class="col-xs-12 col-md-2"></div>
+                            <div class="col-xs-12 col-md-2"><strong>Čas od</strong></div>
+                            <div class="col-xs-12 col-md-2"><strong>Čas do</strong></div>
+                            <div class="col-xs-12 col-md-4"><strong>Trvání</strong></div>
+
+                        </div>
+
+                        {% for day in ['mon', 'tue', 'wed', 'thu', 'fri'] %}
+                        {% set day_index = loop.index - 1 -%}
+
+                        <div class="row">
+                            <div class="col-xs-12 col-md-2 form-control-static">
+                                <strong>{{ day_names[day_index] }}</strong>
+                            </div>
+
+                            {% for dayPart in ['F', 'T'] %}
+                            <div class='form-group col-xs-12 col-md-2'>
+                                <div class='input-group clockpicker' id='{{day}}-{{dayPart}}-picker'
+                                    data-placement='right' data-align='top' data-autoclose='true'>
+                                    <input type="text" class="form-control" id='{{day}}{{dayPart}}'
+                                        onChange="calculateTotal()" name='{{day}}{{dayPart}}' data-day="{{day_index}}"
+                                        data-type="{{dayPart}}">
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-time"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="form-group col-xs-12 col-md-4" id="day{{day_index}}-total"></div>
+                        </div>
+                        {% endfor %}
+                        <div class="row">
+                            <div class="col-xs-12 col-md-6 form-control-static">
+                                <strong>Celkem</strong>
+                            </div>
+
+                            <div class="col-xs-12 col-md-6 form-control-static" id="timetable-total">
+                                <strong></strong>
+                            </div>
+                        </div>
+
+                        <input type='text' hidden='true' id='f_pvs' name='f_pvs'>
+                    </form>
+                </div>
+                <div class="panel-footer">
+                    <button class="btn btn-primary" onclick="submit_timetable()">Uložit</button>
+                </div>
+            </div>
         </div>
 
     </div>
-    <div class='row buffer-top-md'>
-        <form class='form-inline' id='timetable-form' name='timetable-form' method='post' action='/timetable'>
-            <div class='row'>
-                <div class='form-group col-xs-1'>
-                    <label for='mon-f-picker'>Pondělí od:</label>
-                    <div class='input-group clockpicker ' id='mon-f-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='monF' name='monF'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-                <div class='form-group col-xs-1'>
-                    <label for='mon-t-picker'>Pondělí do:</label>
-                    <div class='input-group clockpicker ' id='mon-t-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='monT' name='monT'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class='row'>
-                <div class='form-group col-xs-1'>
-                    <label for='tue-f-picker'>Úterý od:</label>
-                    <div class='input-group clockpicker ' id='tue-f-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='tueF' name='tueF'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-                <div class='form-group col-xs-1'>
-                    <label for='tue-t-picker'>Úterý do:</label>
-                    <div class='input-group clockpicker' id='tue-t-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='tueT' name='tueT'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class='row'>
-                <div class='form-group col-xs-1'>
-                    <label for='wed-f-picker'>Středa od:</label>
-                    <div class='input-group clockpicker' id='wef-f-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='wedF' name='wedF'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-                <div class='form-group col-xs-1'>
-                    <label for='wed-t-picker'>Středa do:</label>
-                    <div class='input-group clockpicker' id='wed-t-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='wedT' name='wedT'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class='row'>
-                <div class='form-group col-xs-1'>
-                    <label for='thu-f-picker'>Čtvrtek od:</label>
-                    <div class='input-group clockpicker' id='thu-f-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='thuF' name='thuF'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-                <div class='form-group col-xs-1'>
-                    <label for='thu-t-picker'>Čtvrtek do:</label>
-                    <div class='input-group clockpicker' id='thu-t-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='thuT' name='thuT'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class='row'>
-                <div class='form-group col-xs-1'>
-                    <label for='fri-f-picker'>Pátek od:</label>
-                    <div class='input-group clockpicker' id='fri-f-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='friF' name='friF'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-                <div class='form-group col-xs-1'>
-                    <label for='fri-t-picker'>Pátek do:</label>
-                    <div class='input-group clockpicker' id='fri-t-picker' data-placement='right' data-align='top'
-                        data-autoclose='true'>
-                        <input type="text" class="form-control" id='friT' name='friT'>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-time"></span>
-                        </span>
-                    </div>
-                </div>
-                <input type='text' hidden='true' id='f_pvs' name='f_pvs'>
-            </div>
-        </form>
-    </div>
-
 </div>
 
 {% endblock %}
