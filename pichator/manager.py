@@ -108,10 +108,9 @@ class Manager(object):
         pv_t = self.pich_db.pv
 
         pvs = self.pich_db.session.query(pv_t, time_t) \
-            .outerjoin(time_t, time_t.uid_pv == pv_t.uid) \
+            .outerjoin(time_t, and_(time_t.uid_pv == pv_t.uid, time_t.validity.contains(today))) \
             .filter(pv_t.validity.contains(today)) \
-            .filter(pv_t.uid_employee == emp_uid) \
-            .filter(time_t.validity.contains(today))
+            .filter(pv_t.uid_employee == emp_uid)
 
         for item in pvs.all():
             pv, tt = item
