@@ -34,6 +34,41 @@
         $('#thuT').val(timetable.days[7])
         $('#friF').val(timetable.days[8])
         $('#friT').val(timetable.days[9])
+
+        calculateTotal()
+    }
+
+    function getMinutes(time) {
+        var parts = time.split(':')
+        return parseInt(parts[0]) * 60 + parseInt(parts[1])
+    }
+
+    function formatDuration(total) {
+        var minutes = total % 60
+        var hours = (total - minutes) / 60
+
+        return hours + ':' + minutes.toString().padStart(2, '0')
+    }
+
+    function calculateTotal() {
+        var total = 0
+
+        for (var i = 0; i <= 4; i++) {
+            var from = $('input[data-type=F][data-day=' + i + ']').val()
+            var to = $('input[data-type=T][data-day=' + i + ']').val()
+
+            var dayDuration = getMinutes(to) - getMinutes(from)
+
+            if (dayDuration >= 6 * 60) {
+                dayDuration -= 30
+            }
+
+            total += dayDuration
+
+            $('#day' + i + '-total').text(formatDuration(dayDuration))
+        }
+
+        $('#timetable-total strong').text(formatDuration(total))
     }
 
     $(document).ready(function () {
@@ -104,28 +139,43 @@
                             <div class="col-xs-12 col-md-2"></div>
                             <div class="col-xs-12 col-md-2"><strong>Čas od</strong></div>
                             <div class="col-xs-12 col-md-2"><strong>Čas do</strong></div>
+                            <div class="col-xs-12 col-md-4"><strong>Trvání</strong></div>
+
                         </div>
 
                         {% for day in ['mon', 'tue', 'wed', 'thu', 'fri'] %}
+                        {% set day_index = loop.index - 1 -%}
+
                         <div class="row">
                             <div class="col-xs-12 col-md-2 form-control-static">
-                                <strong>{{ day_names[loop.index - 1] }}</strong>
+                                <strong>{{ day_names[day_index] }}</strong>
                             </div>
 
                             {% for dayPart in ['F', 'T'] %}
                             <div class='form-group col-xs-12 col-md-2'>
-                                <div class='input-group clockpicker ' id='{{day}}-{{dayPart}}-picker'
+                                <div class='input-group clockpicker' id='{{day}}-{{dayPart}}-picker'
                                     data-placement='right' data-align='top' data-autoclose='true'>
                                     <input type="text" class="form-control" id='{{day}}{{dayPart}}'
-                                        name='{{day}}{{dayPart}}'>
+                                        onChange="calculateTotal()" name='{{day}}{{dayPart}}' data-day="{{day_index}}"
+                                        data-type="{{dayPart}}">
                                     <span class="input-group-addon">
                                         <span class="glyphicon glyphicon-time"></span>
                                     </span>
                                 </div>
                             </div>
                             {% endfor %}
+                            <div class="form-group col-xs-12 col-md-4" id="day{{day_index}}-total"></div>
                         </div>
                         {% endfor %}
+                        <div class="row">
+                            <div class="col-xs-12 col-md-6 form-control-static">
+                                <strong>Celkem</strong>
+                            </div>
+
+                            <div class="col-xs-12 col-md-6 form-control-static" id="timetable-total">
+                                <strong></strong>
+                            </div>
+                        </div>
 
                         <input type='text' hidden='true' id='f_pvs' name='f_pvs'>
                     </form>
