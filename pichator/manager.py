@@ -85,7 +85,7 @@ class Manager(object):
 
         for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
             if str(employee[0].department)[0] == str(dept)[0] and (per_start in employee[0].validity or per_end in employee[0].validity):
-                retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name, 'PV':employee[0].pvid})
+                retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name, 'PV':employee[0].pvid, 'dept': employee[0].department, 'username': employee[1].username})
         return retval
         
     def threaded_init(self, period, source):
@@ -108,7 +108,7 @@ class Manager(object):
         today = date.today()
         pvs = self.pich_db.session.query(emp_t,
                                          pv_t, time_t).join(
-            pv_t).join(time_t, isouter=True).filter(emp_t.emp_no == emp_no).all()
+            pv_t, emp_t.uid == pv_t.uid_employee).join(time_t, time_t.uid_pv == pv_t.uid, isouter=True).filter(emp_t.emp_no == emp_no).all()
         for pv in pvs:
             work_rel = pv[1]
             if pv[2]:
@@ -150,7 +150,6 @@ class Manager(object):
         timetable_t = self.pich_db.timetable
         today = date.today()
         maxdate = date.max
-        log.msg(data)
         if not (data['monF'] and data['monT'] and data['tueF'] and data['tueT'] and data['wedF'] and data['wedT'] and data['thuF'] and data['thuT'] and data['friF'] and data['friT']):
             log.err('Attempt to upsert timetable without all days periods filled-in.\n\
                     To signify free day, please set start and end of workday to 00:00')
@@ -297,6 +296,10 @@ class Manager(object):
 
         self.pich_db.commit()
 
+    def get_department(self, dept, period):
+        emp_t = self.pich_db.employee
+        
+    
     def init_presence(self, period, source):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee

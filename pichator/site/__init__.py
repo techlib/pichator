@@ -118,8 +118,27 @@ def make_site(manager, access_model, debug=False):
         dept = flask.request.values.get('dept')
         period = flask.request.values.get('period')
         return flask.jsonify(manager.get_employees(dept, period))
-    
-    
+
+    @app.route('/dept_data')
+    @authorized_only('admin')
+    @pass_user_info
+    def get_dept(uid, username):
+        dept = flask.request.vlues.get('dept')
+        if not dept:
+            log.err(
+                'Geting data for department without mandatory parameter department number.')
+            raise NotAcceptable
+        acl = manager.get_acl(username)
+        if acl != str(dept)[0] and acl != 'admin':
+            log.err(
+                f'Trying to acces data of department {dept}, but has no authorization to do so.')
+            raise Forbidden
+        period = flask.request.values.get('period')
+        if not period:
+            today = datetime.datetime.today()
+            period = f'{today.month}-{today.year}'
+        return flask.jsonify(manager.get_department(dept, period))
+
     @app.route('/timetable', methods=['GET', 'POST'])
     @authorized_only('user')
     @pass_user_info
@@ -168,12 +187,14 @@ def make_site(manager, access_model, debug=False):
         nonlocal has_privilege
 
         pvid = flask.request.values.get('pvid')
+        if flask.request.values.get('username'):
+            username = flask.request.values.get('username')
         emp_no = manager.get_emp_no(username)
         if not pvid or not emp_no:
             log.err(
                 'Query for attendance data without required parameter pvid or emp_no.')
             raise NotAcceptable
-        if str(emp_no) != pvid.split('.')[0]:
+        if str(emp_no) != pvid.split('.')[0] and not manager.get_acl(username).isdigit():
             log.err('Requesting attendance data for user other than is logged-in.')
             raise Forbidden
         period = flask.request.values.get('period')
@@ -184,7 +205,7 @@ def make_site(manager, access_model, debug=False):
             raise NotAcceptable
 
         return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
-    
+
     @app.route('/attendance_submit')
     @authorized_only('admin')
     @pass_user_info

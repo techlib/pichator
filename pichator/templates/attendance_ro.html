@@ -17,37 +17,42 @@
         attendance = $('#attendance').DataTable({
             columns: [{
                     data: 'day',
+                    render: function (data, type, row) {
+                        return data + ' ' + row.weekday
+
+                    }
                 },
                 {
                     data: 'start',
+                    render: skipWeekend
                 },
                 {
                     data: 'end',
+                    render: skipWeekend
                 },
                 {
                     data: 'mode',
-                },
-                {
-                    data: 'weekday',
+                    render: skipWeekend
                 },
                 {
                     data: 'timetable',
-                },
-                {
-                    data: 'stamp',
+                    render: skipWeekend
                 },
             ],
             order: [
                 [0, "asc"]
             ],
             createdRow: function (row, data, dataIndex) {
-                if (data.mode == 'Absence' && data.weekday !=
-                    'Sobota' &&
-                    data.weekday !=
-                    'Neděle') {
-                    $(row).addClass('warning');
-                } else if (data.mode == 'Presence') {
-                    $(row).addClass('success');
+                period = $('#period').val();
+                today = new Date();
+                row_date = new Date(period.split('-')[1], period.split('-')[0] - 1, (dataIndex + 1))
+                in_future = row_date > today
+                if (row_date.getDate() == today.getDate()) {
+                    $(row).addClass('info');
+                } else if (data.weekday == 'Sobota' || data.weekday == 'Neděle') {
+                    $(row).addClass('weekend');
+                } else if (data.mode == 'Absence' && !in_future) {
+                    $(row).addClass('absence');
                 }
             },
             ajax: {
@@ -55,6 +60,7 @@
                 'data': function (d) {
                     d.pvid = pvs[i].PV;
                     d.period = $('#period').val();
+                    d.username = pvs[i].username;
 
                 },
             },
@@ -105,60 +111,7 @@
         $("#pvs")
             .selectpicker().on('change', function (e) {
                 refresh_dept();
-                if ($.fn.DataTable.isDataTable('#attendance')) {
-                    $('#attendance').DataTable().destroy();
-                }
-                $('#attendance tbody').empty();
-
-                attendance = $('#attendance').DataTable({
-                    columns: [{
-                            data: 'day',
-                        },
-                        {
-                            data: 'start',
-                        },
-                        {
-                            data: 'end',
-                        },
-                        {
-                            data: 'mode',
-                        },
-                        {
-                            data: 'weekday',
-                        },
-                        {
-                            data: 'timetable',
-                        },
-                        {
-                            data: 'stamp',
-                        },
-                    ],
-                    order: [
-                        [0, "asc"]
-                    ],
-                    createdRow: function (row, data, dataIndex) {
-                        if (data.weekday == 'Sobota' || data.weekday == 'Neděle') {
-                            data.mode = 'Mimo Evidenci';
-                        } else if (data.mode == 'Absence') {
-                            $(row).addClass('warning');
-                        } else if (data.mode == 'Presence') {
-                            $(row).addClass('success');
-                        }
-                    },
-                    ajax: {
-                        'url': '/attendance_data',
-                        'data': function (d) {
-                            d.pvid = pvs[i].PV;
-                            d.period = $('#period').val();
-
-                        },
-                    },
-                    paging: false,
-                    searching: false,
-                    bLengthChange: false,
-                    bInfo: false,
-                    ordering: false,
-                });
+                reload_table();
             });
         $('.clock-picker').clockpicker();
         $('#editForm-mode').selectpicker();
@@ -232,9 +185,7 @@
                         <th>Příchod</th>
                         <th>Odchod</th>
                         <th>Režim docházky</th>
-                        <th>Den v týdnu</th>
                         <th>Pracovní doba</th>
-                        <th>Nárok na stravenku</th>
                     </tr>
                 </thead>
                 <tbody>

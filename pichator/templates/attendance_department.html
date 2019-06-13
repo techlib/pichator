@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Docházka za oddělení{% endblock %}
+
+{% block content %}
+
+{% block scripts %}
+<script>
+    function reload_table() {
+        if ($.fn.DataTable.isDataTable('#attendance')) {
+            $('#attendance').DataTable().destroy();
+        }
+        $('#attendance tbody').empty();
+        $('#attendance').DataTable();
+    };
+
+    $(document).ready(function () {
+
+    });
+</script>
+{% endblock %}
+<div class='container-fluid'>
+    <div class='row buffer-top-md well'>
+        <form class='form-inline' id='attendance-form' method='post'>
+            <div class='form-group'>
+                <label for='period'>Období:</label>
+                <input class='form-control' name='period' id="period" type='text'>
+            </div>
+            <div class='form-group'>
+                <label for=''>Oddělení:</label>
+                <input class='form-control' id='dept' name='dept' type='text' readonly>
+            </div>
+        </form>
+    </div>
+    <div class="row">
+        <div class="col-md-6 col-md-push-3">
+
+            <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        {% for i in range(31)%}
+                        <th>{{i + 1}}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

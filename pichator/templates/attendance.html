@@ -72,7 +72,6 @@
                 period = $('#period').val();
                 today = new Date();
                 row_date = new Date(period.split('-')[1], period.split('-')[0] - 1, (dataIndex + 1))
-                console.log(row_date)
                 in_future = row_date > today
                 if (row_date.getDate() == today.getDate()) {
                     $(row).addClass('info');
