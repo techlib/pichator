@@ -61,12 +61,13 @@
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse-1">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" href="/"><b>NTK</b> Píchátor</a>
-            <a class="navbar-brand" href="/">Docházka</a>
+            <a class="navbar-brand" href="/">Docházka zaměstnance</a>
             <a class="navbar-brand" href="/timetable">Úprava pracovní doby</a>
+            {% if acl.isdigit() %}
+                <a class="navbar-brand" href="/dept">Docházka oddělení {{acl}}</a>
+            {% endif %}
         </div>
 
         {% block navigation %}
