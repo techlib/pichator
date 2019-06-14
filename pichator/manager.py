@@ -68,7 +68,7 @@ class Manager(object):
         try:
             emp_uid = emp_t.filter(
                 emp_t.emp_no == self.get_emp_no(username)).one().uid
-            return [i.dept for i in pv_t.filter(and_(pv_t.uid_employee == emp_uid, datetime.today().date() in pv_t.validity))]
+            return [i.department for i in pv_t.filter(pv_t.uid_employee == emp_uid).all() if datetime.today().date() in i.validity]
         except Exception as e:
             log.err(e)
             return []
@@ -85,7 +85,7 @@ class Manager(object):
             period + f'-{per_range[1]}', '%m-%Y-%d').date()
 
         for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
-            if str(employee[0].department)[0] == str(dept)[0] and (per_start in employee[0].validity or per_end in employee[0].validity):
+            if (str(employee[0].department)[0] == str(dept) or str(employee[0].department) == dept) and (per_start in employee[0].validity or per_end in employee[0].validity):
                 retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name,
                                'PV': employee[0].pvid, 'dept': employee[0].department, 'username': employee[1].username})
         return retval
@@ -261,6 +261,17 @@ class Manager(object):
                                        'weekday': WEEKDAYS[weekday]})
         return retval
 
+    def pvid_to_username(self, pvid):
+        emp_no = pvid.split('.')[0]
+        emp_t = self.pich_db.employee
+        try:
+            return emp_t.filter(emp_t.emp_no == emp_no).one().username
+        except Exception as e:
+            log.err(e)
+            log.err(f'User belonging to pvid {pvid} not found.')
+            raise NotAcceptable
+        return ''
+
     def set_attendance(self, day, period, username, start, end, mode):
         pres_t = self.pich_db.presence
         emp_t = self.pich_db.employee
@@ -303,19 +314,21 @@ class Manager(object):
             period + f'-{per_range[1]}', '%m-%Y-%d').date()
 
         for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
-            if str(employee[0].department)[0] == str(dept)[0] and (per_start in employee[0].validity or per_end in employee[0].validity):
+            if str(employee[0].department)[0] == str(dept) or str(employee[0].department) == str(dept) and (per_start in employee[0].validity or per_end in employee[0].validity):
                 retval_dict = {
                     'Jméno': f'{employee[1].first_name} {employee[1].last_name}'}
                 for day in range(per_range[1]):
                     curr_date = date(per_start.year, per_start.month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee == employee[1].uid, pres_t.date == curr_date)).first()
-                    if not presence or presence.presence_mode == 'Absence':
-                        retval_dict[str(day + 1)] = '-'
+                    if curr_date.isoweekday() in [6, 7]:
+                        retval_dict[str(day + 1)] = 'S'
+                    elif not presence or presence.presence_mode == 'Absence':
+                        retval_dict[str(day + 1)] = 'A'
                     elif presence.presence_mode == 'Presence':
                         retval_dict[str(day + 1)] = '/'
                     elif presence.presence_mode == 'Dovolená':
-                        retval_dict[str(day + 1)] = 'd'
+                        retval_dict[str(day + 1)] = 'D'
                     else:
                         retval_dict[str(day + 1)] = 'N/A'
                 retval['data'].append(retval_dict)
