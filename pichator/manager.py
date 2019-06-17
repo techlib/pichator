@@ -279,6 +279,41 @@ class Manager(object):
         per_month = int(period.split('-')[0])
         day_no = int(day.replace('.', ''))
         emp_no = self.get_emp_no(username)
+        mode_d = ''
+        if mode == 'Překážka na straně zaměstnavatele':
+            mode_d = 'Employer difficulties'
+        elif mode == 'Dovolená':
+            mode_d = 'Vacation'
+        elif mode == 'Dovolená 0.5 dne':
+            mode_d = 'Vacation 0.5'
+        elif mode == 'Presence':
+            mode_d = mode
+        elif mode == 'Absence':
+            mode_d = mode
+        elif mode == 'Pracovní pohotovost':
+            mode_d = 'On call time'
+        elif mode == 'Nemoc':
+            mode_d = 'Sickness'
+        elif mode == 'Náhradní volno':
+            mode_d = 'Compensatory time off'
+        elif mode == 'Ošetřování člena rodiny':
+            mode_d = 'Family member care'
+        elif mode == 'Osobní překážky':
+            mode_d = 'Personal difficulties'
+        elif mode == 'Služební cesta':
+            mode_d = 'Bussiness trip'
+        elif mode == 'Studium při zaměstnání':
+            mode_d = 'Study'
+        elif mode == 'Školení':
+            mode_d = 'Training'
+        elif mode == 'Úraz/nemoc z povolání':
+            mode_d = 'Injury and disease from profession'
+        elif mode == 'Neplacené volno':
+            mode_d = 'Unpaid leave'
+        elif mode == 'Obecný zájem':
+            mode_d = 'Public interest'
+        elif mode == 'Zdravotní volno':
+            mode_d = 'Sickday'
         start_t = datetime(per_year, per_month, day_no, int(
             start.split(':')[0]), int(start.split(':')[1]))
         end_t = datetime(per_year, per_month, day_no, int(
@@ -297,7 +332,7 @@ class Manager(object):
             presence_s = pres_t.filter(
                 and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
             presence_s.update({'arrival': start_t, 'departure': end_t,
-                               'food_stamp': food_stamp, 'presence_mode': mode})
+                               'food_stamp': food_stamp, 'presence_mode': mode_d})
 
         self.pich_db.commit()
 
@@ -321,14 +356,52 @@ class Manager(object):
                     curr_date = date(per_start.year, per_start.month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee == employee[1].uid, pres_t.date == curr_date)).first()
+                    length = (datetime.combine(curr_date, presence.departure) - datetime.combine(curr_date, presence.arrival)).seconds/3600
                     if curr_date.isoweekday() in [6, 7]:
                         retval_dict[str(day + 1)] = 'S'
                     elif not presence or presence.presence_mode == 'Absence':
                         retval_dict[str(day + 1)] = 'A'
                     elif presence.presence_mode == 'Presence':
-                        retval_dict[str(day + 1)] = '/'
-                    elif presence.presence_mode == 'Dovolená':
+                        if presence.stamp:
+                            retval_dict[str(day + 1)] = '/'
+                        else: 
+                            retval_dict[str(day + 1)] = '/-'
+                    elif presence.presence_mode == 'Vacation':
                         retval_dict[str(day + 1)] = 'D'
+                    elif presence.presence_mode == 'Vacation 0.5':
+                        retval_dict[str(day + 1)] = '0,5D'
+                    elif presence.presence_mode == 'Employer difficulties':
+                        retval_dict[str(day + 1)] = 'C'
+                    elif presence.presence_mode == 'On call time':
+                        retval_dict[str(day + 1)] = 'H'
+                    elif presence.presence_mode == 'Sickness':
+                        retval_dict[str(day + 1)] = 'N'
+                    elif presence.presence_mode == 'Compensatory time off':
+                        retval_dict[str(day + 1)] = 'NV'
+                    elif presence.presence_mode == 'Family member care':
+                        retval_dict[str(day + 1)] = 'O'
+                    elif presence.presence_mode == 'Personal trouble':
+                        retval_dict[str(day + 1)] = 'P'
+                    elif presence.presence_mode == 'Bussiness trip':
+                        if length < 4:
+                            retval_dict[str(day + 1)] = 'Sc'
+                        else:
+                            retval_dict[str(day + 1)] = 'Sc+'
+                    elif presence.presence_mode == 'Study':
+                        retval_dict[str(day + 1)] = 'St'
+                    elif presence.presence_mode == 'Training':
+                        if presence.stamp:
+                            retval_dict[str(day + 1)] = 'Sk'
+                        else:
+                            retval_dict[str(day + 1)] = 'Sk-'
+                    elif presence.presence_mode == 'Injury and disease from profession':
+                        retval_dict[str(day + 1)] = 'U'
+                    elif presence.presence_mode == 'Unpaid leave':
+                        retval_dict[str(day + 1)] = 'V'
+                    elif presence.presence_mode == 'Public benefit':
+                        retval_dict[str(day + 1)] = 'Z'
+                    elif presence.presence_mode == 'Sickday':
+                        retval_dict[str(day + 1)] = 'ZV'
                     else:
                         retval_dict[str(day + 1)] = 'N/A'
                 retval['data'].append(retval_dict)
