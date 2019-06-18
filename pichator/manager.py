@@ -200,7 +200,7 @@ class Manager(object):
             }
 
             if tt:
-                for day in ('monday', 'tuesday', 'wedensday', 'thursday', 'friday'):
+                for day in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'):
                     pv_data['days'].append(
                         tt.__getattribute__(day).lower.strftime('%H:%M'))
                     pv_data['days'].append(
@@ -225,11 +225,11 @@ class Manager(object):
             raise NotAcceptable
         monday_v = TimeRange(data['monF'], data['monT'])
         tuesday_v = TimeRange(data['tueF'], data['tueT'])
-        wedensday_v = TimeRange(data['wedF'], data['wedT'])
+        wednesday_v = TimeRange(data['wedF'], data['wedT'])
         thursday_v = TimeRange(data['thuF'], data['thuT'])
         friday_v = TimeRange(data['friF'], data['friT'])
         hours_in_week = (monday_v.len() + tuesday_v.len() +
-                         wedensday_v.len() + thursday_v.len() + friday_v.len()) / 60
+                         wednesday_v.len() + thursday_v.len() + friday_v.len()) / 60
         validity_v = DateRange(today, maxdate)
         pvid_v = data['f_pvs']
         pvs = pv_t.filter(pv_t.pvid == pvid_v).all()
@@ -256,7 +256,7 @@ class Manager(object):
 
         try:
             timetable_t.insert(monday=monday_v, tuesday=tuesday_v,
-                               wedensday=wedensday_v, thursday=thursday_v,
+                               wednesday=wednesday_v, thursday=thursday_v,
                                friday=friday_v, validity=validity_v,
                                uid_pv=valid_pv_uid)
             self.pich_db.commit()
@@ -319,7 +319,7 @@ class Manager(object):
                     break
             if curr_time:
                 timetable_list = [curr_time.monday, curr_time.tuesday,
-                                  curr_time.wedensday, curr_time.thursday, curr_time.friday, TimeRange('00:00', '00:00'), TimeRange('00:00', '00:00')]
+                                  curr_time.wednesday, curr_time.thursday, curr_time.friday, TimeRange('00:00', '00:00'), TimeRange('00:00', '00:00')]
             else:
                 timetable_list = [TimeRange('00:00', '00:00')] * 7
             attend = pres_t.filter(

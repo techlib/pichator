@@ -163,7 +163,7 @@ ALTER TABLE public.pv OWNER TO pichator;
 CREATE TABLE public.timetable(
 	monday public.timerange,
 	tuesday public.timerange,
-	wedensday public.timerange,
+	wednesday public.timerange,
 	thursday public.timerange,
 	friday public.timerange,
 	timeid bigint NOT NULL DEFAULT nextval('public.timetable_timeid_seq'::regclass),
