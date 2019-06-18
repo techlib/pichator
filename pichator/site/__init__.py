@@ -116,6 +116,7 @@ def make_site(manager, access_model, debug=False):
     @authorized_only('admin')
     @pass_user_info
     def employees(uid, username):
+        acl = manager.get_acl(username)
         dept = flask.request.values.get('dept')
         period = flask.request.values.get('period')
         return flask.jsonify(manager.get_employees(dept, period))
@@ -125,6 +126,8 @@ def make_site(manager, access_model, debug=False):
     @pass_user_info
     def display_dept(uid, username):
         acl = manager.get_acl(username)
+        if not acl.isdigit():
+            raise Forbidden
         return flask.render_template('attendance_department.html', **locals())
 
     @app.route('/dept_data')

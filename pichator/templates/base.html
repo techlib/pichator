@@ -65,7 +65,7 @@
             <a class="navbar-brand" href="/"><b>NTK</b> Píchátor</a>
             <a class="navbar-brand" href="/">Docházka zaměstnance</a>
             <a class="navbar-brand" href="/timetable">Úprava pracovní doby</a>
-            {% if acl.isdigit() %}
+            {% if acl and acl.isdigit() %}
                 <a class="navbar-brand" href="/dept">Docházka oddělení {{acl}}</a>
             {% endif %}
         </div>
