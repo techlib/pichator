@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Docházka za oddělení{% endblock %}
+{% block title %}Docházka za oddělení {{ acl }}{% endblock %}
 
 {% block content %}
 
@@ -52,6 +52,7 @@
                 buttons:[
                     'pdf'
                 ],
+                dom:'Bt',
             });
         });
     };
