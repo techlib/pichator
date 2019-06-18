@@ -42,40 +42,77 @@ class TIMERANGE(postgresql.ranges.RangeOperators, sqltypes.UserDefinedType):
 
 def czech_to_eng(mode):
     if mode == 'Překážka na straně zaměstnavatele':
-        mode_d = 'Employer difficulties'
+        return 'Employer difficulties'
     elif mode == 'Dovolená':
-        mode_d = 'Vacation'
-    elif mode == 'Dovolená 0.5 dne':
-        mode_d = 'Vacation 0.5'
-    elif mode == 'Presence':
-        mode_d = mode
-    elif mode == 'Absence':
-        mode_d = mode
-    elif mode == 'Pracovní pohotovost':
-        mode_d = 'On call time'
-    elif mode == 'Nemoc':
-        mode_d = 'Sickness'
-    elif mode == 'Náhradní volno':
-        mode_d = 'Compensatory time off'
-    elif mode == 'Ošetřování člena rodiny':
-        mode_d = 'Family member care'
-    elif mode == 'Osobní překážky':
-        mode_d = 'Personal difficulties'
-    elif mode == 'Služební cesta':
-        mode_d = 'Bussiness trip'
-    elif mode == 'Studium při zaměstnání':
-        mode_d = 'Study'
-    elif mode == 'Školení':
-        mode_d = 'Training'
-    elif mode == 'Úraz/nemoc z povolání':
-        mode_d = 'Injury and disease from profession'
-    elif mode == 'Neplacené volno':
-        mode_d = 'Unpaid leave'
-    elif mode == 'Obecný zájem':
-        mode_d = 'Public interest'
-    elif mode == 'Zdravotní volno':
-        mode_d = 'Sickday'
-    return mode_d
+        return 'Vacation'
+    if mode == 'Dovolená 0.5 dne':
+        return 'Vacation 0.5'
+    if mode == 'Presence':
+        return mode
+    if mode == 'Absence':
+        return mode
+    if mode == 'Pracovní pohotovost':
+        return 'On call time'
+    if mode == 'Nemoc':
+        return 'Sickness'
+    if mode == 'Náhradní volno':
+        return 'Compensatory time off'
+    if mode == 'Ošetřování člena rodiny':
+        return 'Family member care'
+    if mode == 'Osobní překážky':
+        return 'Personal difficulties'
+    if mode == 'Služební cesta':
+        return 'Bussiness trip'
+    if mode == 'Studium při zaměstnání':
+        return 'Study'
+    if mode == 'Školení':
+        return 'Training'
+    if mode == 'Úraz/nemoc z povolání':
+        return 'Injury and disease from profession'
+    if mode == 'Neplacené volno':
+        return 'Unpaid leave'
+    if mode == 'Obecný zájem':
+        return 'Public interest'
+    if mode == 'Zdravotní volno':
+        return 'Sickday'
+    return ''
+
+def eng_to_czech(mode):
+    if mode == 'Employer difficulties':
+         'Překážka na straně zaměstnavatele'
+    if mode == 'Vacation':
+        return 'Dovolená'
+    if mode == 'Vacation 0.5':
+        return 'Dovolená 0.5 dne'
+    if mode == 'Presence':
+        return mode
+    if mode == 'Absence':
+        return mode
+    if mode == 'On call time':
+        return 'Pracovní pohotovost'
+    if mode == 'Sickness':
+        return 'Nemoc'
+    if mode == 'Compensatory time off':
+        return 'Náhradní volno'
+    if mode == 'Family member care':
+        return 'Ošetřování člena rodiny'
+    if mode == 'Personal difficulties':
+        return 'Osobní překážky'
+    if mode == 'Bussiness trip':
+        return 'Služební cesta'
+    if mode == 'Study':
+        return 'Studium při zaměstnání'
+    if mode == 'Training':
+        return 'Školení'
+    if mode == 'Injury and disease from profession':
+        return 'Úraz/nemoc z povolání'
+    if mode == 'Unpaid leave':
+        return 'Neplacené volno'
+    if mode == 'Public interest':
+        return 'Obecný zájem'
+    if mode == 'Sickday':
+        return 'Zdravotní volno'
+    return ''
 
 
 class Manager(object):
@@ -289,7 +326,7 @@ class Manager(object):
                 and_(pres_t.date == day_date, pres_t.uid_employee == uid)).first()
             if attend:
                 retval['data'].append({'day': f'{day}. ', 'start': f'{attend.arrival}', 'end': f'{attend.departure}',
-                                       'mode': attend.presence_mode, 'stamp': 'Ano' if attend.food_stamp else 'Ne',
+                                       'mode': eng_to_czech(attend.presence_mode), 'stamp': 'Ano' if attend.food_stamp else 'Ne',
                                        'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                                        'weekday': WEEKDAYS[weekday]})
             else:
@@ -317,41 +354,7 @@ class Manager(object):
         per_month = int(period.split('-')[0])
         day_no = int(day.replace('.', ''))
         emp_no = self.get_emp_no(username)
-        mode_d = ''
-        if mode == 'Překážka na straně zaměstnavatele':
-            mode_d = 'Employer difficulties'
-        elif mode == 'Dovolená':
-            mode_d = 'Vacation'
-        elif mode == 'Dovolená 0.5 dne':
-            mode_d = 'Vacation 0.5'
-        elif mode == 'Presence':
-            mode_d = mode
-        elif mode == 'Absence':
-            mode_d = mode
-        elif mode == 'Pracovní pohotovost':
-            mode_d = 'On call time'
-        elif mode == 'Nemoc':
-            mode_d = 'Sickness'
-        elif mode == 'Náhradní volno':
-            mode_d = 'Compensatory time off'
-        elif mode == 'Ošetřování člena rodiny':
-            mode_d = 'Family member care'
-        elif mode == 'Osobní překážky':
-            mode_d = 'Personal difficulties'
-        elif mode == 'Služební cesta':
-            mode_d = 'Bussiness trip'
-        elif mode == 'Studium při zaměstnání':
-            mode_d = 'Study'
-        elif mode == 'Školení':
-            mode_d = 'Training'
-        elif mode == 'Úraz/nemoc z povolání':
-            mode_d = 'Injury and disease from profession'
-        elif mode == 'Neplacené volno':
-            mode_d = 'Unpaid leave'
-        elif mode == 'Obecný zájem':
-            mode_d = 'Public interest'
-        elif mode == 'Zdravotní volno':
-            mode_d = 'Sickday'
+        mode_d = czech_to_eng(mode)
         start_t = datetime(per_year, per_month, day_no, int(
             start.split(':')[0]), int(start.split(':')[1]))
         end_t = datetime(per_year, per_month, day_no, int(
