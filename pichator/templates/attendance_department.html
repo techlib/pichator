@@ -23,7 +23,7 @@
         if ($.fn.DataTable.isDataTable('#attendance')) {
             $('#attendance').DataTable().destroy();
         }
-        $('#attendance tbody').empty();
+        $('#attendance').empty();
         getData(function (data) {
             var column_defs = [{
                 data: 'Jméno',
@@ -49,6 +49,9 @@
                 order: [
                     [0, "asc"]
                 ],
+                buttons:[
+                    'pdf'
+                ],
             });
         });
     };
@@ -59,7 +62,10 @@
             format: 'mm-yyyy',
             minViewMode: 'months',
         });
-        $('#period').datepicker().on('changeDate', reload_table())
+         
+        $("#period").datepicker().on('changeDate', function(e){
+            reload_table();
+        })
         $('#period').datepicker('setDate', new Date());
 
     });
