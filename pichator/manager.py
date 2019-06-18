@@ -390,21 +390,24 @@ class Manager(object):
             period + f'-{per_range[1]}', '%m-%Y-%d').date()
 
         for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
-            if str(employee[0].department)[0] == str(dept) or str(employee[0].department) == str(dept) and (per_start in employee[0].validity or per_end in employee[0].validity):
+            if (str(employee[0].department)[0] == str(dept) or str(employee[0].department) == str(dept)) and (per_start in employee[0].validity or per_end in employee[0].validity):
                 retval_dict = {
                     'Jméno': f'{employee[1].first_name} {employee[1].last_name}'}
                 for day in range(per_range[1]):
                     curr_date = date(per_start.year, per_start.month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee == employee[1].uid, pres_t.date == curr_date)).first()
-                    length = (datetime.combine(curr_date, presence.departure) -
-                              datetime.combine(curr_date, presence.arrival)).seconds/3600
+                    if presence:
+                        length = (datetime.combine(curr_date, presence.departure) -
+                                  datetime.combine(curr_date, presence.arrival)).seconds/3600
+                    else:
+                        length = 0
                     if curr_date.isoweekday() in [6, 7]:
                         retval_dict[str(day + 1)] = 'S'
                     elif not presence or presence.presence_mode == 'Absence':
                         retval_dict[str(day + 1)] = 'A'
                     elif presence.presence_mode == 'Presence':
-                        if presence.stamp:
+                        if presence.food_stamp:
                             retval_dict[str(day + 1)] = '/'
                         else:
                             retval_dict[str(day + 1)] = '/-'
@@ -432,7 +435,7 @@ class Manager(object):
                     elif presence.presence_mode == 'Study':
                         retval_dict[str(day + 1)] = 'St'
                     elif presence.presence_mode == 'Training':
-                        if presence.stamp:
+                        if presence.food_stamp:
                             retval_dict[str(day + 1)] = 'Sk'
                         else:
                             retval_dict[str(day + 1)] = 'Sk-'

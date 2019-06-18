@@ -8,6 +8,14 @@
 <script>
     var pvs = [];
 
+    function skipWeekend(data, type, row) {
+        if (row.weekday == 'Sobota' || row.weekday == 'Neděle') {
+            return null
+        }
+
+        return data
+    }
+
     function reload_table() {
         if ($.fn.DataTable.isDataTable('#attendance')) {
             $('#attendance').DataTable().destroy();
