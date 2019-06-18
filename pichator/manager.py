@@ -40,6 +40,44 @@ class TIMERANGE(postgresql.ranges.RangeOperators, sqltypes.UserDefinedType):
         return 'timerange'
 
 
+def czech_to_eng(mode):
+    if mode == 'Překážka na straně zaměstnavatele':
+        mode_d = 'Employer difficulties'
+    elif mode == 'Dovolená':
+        mode_d = 'Vacation'
+    elif mode == 'Dovolená 0.5 dne':
+        mode_d = 'Vacation 0.5'
+    elif mode == 'Presence':
+        mode_d = mode
+    elif mode == 'Absence':
+        mode_d = mode
+    elif mode == 'Pracovní pohotovost':
+        mode_d = 'On call time'
+    elif mode == 'Nemoc':
+        mode_d = 'Sickness'
+    elif mode == 'Náhradní volno':
+        mode_d = 'Compensatory time off'
+    elif mode == 'Ošetřování člena rodiny':
+        mode_d = 'Family member care'
+    elif mode == 'Osobní překážky':
+        mode_d = 'Personal difficulties'
+    elif mode == 'Služební cesta':
+        mode_d = 'Bussiness trip'
+    elif mode == 'Studium při zaměstnání':
+        mode_d = 'Study'
+    elif mode == 'Školení':
+        mode_d = 'Training'
+    elif mode == 'Úraz/nemoc z povolání':
+        mode_d = 'Injury and disease from profession'
+    elif mode == 'Neplacené volno':
+        mode_d = 'Unpaid leave'
+    elif mode == 'Obecný zájem':
+        mode_d = 'Public interest'
+    elif mode == 'Zdravotní volno':
+        mode_d = 'Sickday'
+    return mode_d
+
+
 class Manager(object):
     def __init__(self, pich_db):
         self.pich_db = pich_db
@@ -356,7 +394,8 @@ class Manager(object):
                     curr_date = date(per_start.year, per_start.month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee == employee[1].uid, pres_t.date == curr_date)).first()
-                    length = (datetime.combine(curr_date, presence.departure) - datetime.combine(curr_date, presence.arrival)).seconds/3600
+                    length = (datetime.combine(curr_date, presence.departure) -
+                              datetime.combine(curr_date, presence.arrival)).seconds/3600
                     if curr_date.isoweekday() in [6, 7]:
                         retval_dict[str(day + 1)] = 'S'
                     elif not presence or presence.presence_mode == 'Absence':
@@ -364,7 +403,7 @@ class Manager(object):
                     elif presence.presence_mode == 'Presence':
                         if presence.stamp:
                             retval_dict[str(day + 1)] = '/'
-                        else: 
+                        else:
                             retval_dict[str(day + 1)] = '/-'
                     elif presence.presence_mode == 'Vacation':
                         retval_dict[str(day + 1)] = 'D'

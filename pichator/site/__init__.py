@@ -103,6 +103,7 @@ def make_site(manager, access_model, debug=False):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
         acl = manager.get_acl(username)
+        log.msg(f'acl is {acl}')
         if acl == 'readonly':
             return flask.render_template('attendance_ro.html', **locals())
         elif acl.isdigit():
@@ -222,9 +223,9 @@ def make_site(manager, access_model, debug=False):
         acl = manager.get_acl(username)
         if acl.isdigit():
             username = manager.pvid_to_username(pvid)
-        if acl not in manager.get_depts(username) and acl not in [str(i)[0] for i in manager.get_depts(username)]:
-            log.err('Submiting data for person not in your department.')
-            raise Forbidden
+            if acl not in manager.get_depts(username) and acl not in [str(i)[0] for i in manager.get_depts(username)]:
+                log.err('Submiting data for person not in your department.')
+                raise Forbidden
         emp_no = manager.get_emp_no(username)
         if not pvid or not emp_no:
             log.err(
