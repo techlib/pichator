@@ -151,6 +151,7 @@ def make_site(manager, access_model, debug=False):
     @authorized_only('user')
     @pass_user_info
     def show_timetable(uid, username):
+        acl = manager.get_acl(username)
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
         if flask.request.method == 'GET':
@@ -166,6 +167,7 @@ def make_site(manager, access_model, debug=False):
     @authorized_only('admin')
     @pass_user_info
     def get_timetables_data(uid, username):
+        acl = manager.get_acl(username)
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
         if not emp_no:
