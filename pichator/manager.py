@@ -125,21 +125,20 @@ class Manager(object):
             log.err(e)
             return []
 
-    def get_employees(self, dept, period):
+    def get_employees(self, dept, month, year):
         retval = []
+
         emp_t = self.pich_db.employee
         pv_t = self.pich_db.pv
-        per_range = monthrange(
-            int(period.split('-')[1]), int(period.split('-')[0]))
-        per_start = datetime.strptime(
-            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
-        per_end = datetime.strptime(
-            period + f'-{per_range[1]}', '%m-%Y-%d').date()
-        query = self.pich_db.session.query(emp_t, pv_t)
 
-        employees_with_pvs = query.join(pv_t)\
-            .filter(or_(pv_t.validity.contains(per_start),
-                        pv_t.validity.contains(per_end))).all()
+        per_range = monthrange(year, month)
+        query = self.pich_db.session.query(emp_t, pv_t)
+        month_period = DateRange(date(year, month, 1), date(
+            year, month, per_range[1]), '[]')
+
+        employees_with_pvs = query.join(pv_t) \
+            .filter(pv_t.validity.ovelaps(month_period)) \
+            .all()
 
         for employee, pv in employees_with_pvs:
             if (str(pv.department)[0] == str(dept) or str(pv.department) == dept):
@@ -414,30 +413,30 @@ class Manager(object):
 
         self.pich_db.commit()
 
-    def get_department(self, dept, period):
+    def get_department(self, dept, month, year):
         retval = {'data': []}
+
         emp_t = self.pich_db.employee
         pv_t = self.pich_db.pv
         pres_t = self.pich_db.presence
-        per_range = monthrange(
-            int(period.split('-')[1]), int(period.split('-')[0]))
-        per_start = datetime.strptime(
-            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
-        per_end = datetime.strptime(
-            period + f'-{per_range[1]}', '%m-%Y-%d').date()
+
+        per_range = monthrange(year, month)
         query = self.pich_db.session.query(pv_t, emp_t).join(emp_t)
-        pv_with_emp = query.filter(
-            or_(pv_t.validity.contains(per_start),
-                pv_t.validity.contains(per_end))
-        ).all()
+        month_period = DateRange(date(year, month, 1), date(
+            year, month, per_range[1]), '[]')
+
+        pv_with_emp = query \
+            .filter(pv_t.validity.overlaps(month_period)) \
+            .all()
+
         for pv, employee in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
-            if str(pv.department)[0] == str(dept) or str(pv.department) == str(dept):
+            if str(pv.department).startswith(str(dept)):
                 retval_dict = {
                     'Jméno': f'{employee.first_name} {employee.last_name}'}
 
                 for day in range(per_range[1]):
-                    curr_date = date(per_start.year, per_start.month, day + 1)
+                    curr_date = date(year, month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee ==
                              employee.uid, pres_t.date == curr_date)

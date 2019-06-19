@@ -144,11 +144,11 @@ def make_site(manager, access_model, debug=False):
             log.err(
                 f'Trying to acces data of department {dept}, but has no authorization to do so.')
             raise Forbidden
-        period = flask.request.values.get('period')
-        if not period:
+        period = flask.request.values.get('period', '').split('-')
+        if len(period) != 2:
             today = datetime.today()
-            period = f'{today.month}-{today.year}'
-        return flask.jsonify(manager.get_department(dept, period))
+            period = (today.month, today.year)
+        return flask.jsonify(manager.get_department(dept, int(period[0]), int(period[1])))
 
     @app.route('/timetable', methods=['GET', 'POST'])
     @authorized_only('user')
