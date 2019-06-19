@@ -261,7 +261,7 @@ def make_site(manager, access_model, debug=False):
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
-        manager.pich_db.rollback()
+        manager.db.rollback()
 
     return app
 
