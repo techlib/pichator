@@ -6,7 +6,7 @@ __all__ = ['Manager']
 from twisted.python import log
 from twisted.internet.task import LoopingCall
 from threading import Thread
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import types as sqltypes
 from datetime import timedelta, datetime, date, time
@@ -40,86 +40,59 @@ class TIMERANGE(postgresql.ranges.RangeOperators, sqltypes.UserDefinedType):
         return 'timerange'
 
 
-def czech_to_eng(mode):
-    if mode == 'Překážka na straně zaměstnavatele':
-        return 'Employer difficulties'
-    elif mode == 'Dovolená':
-        return 'Vacation'
-    if mode == 'Dovolená 0.5 dne':
-        return 'Vacation 0.5'
-    if mode == 'Presence':
-        return mode
-    if mode == 'Absence':
-        return mode
-    if mode == 'Pracovní pohotovost':
-        return 'On call time'
-    if mode == 'Nemoc':
-        return 'Sickness'
-    if mode == 'Náhradní volno':
-        return 'Compensatory time off'
-    if mode == 'Ošetřování člena rodiny':
-        return 'Family member care'
-    if mode == 'Osobní překážky':
-        return 'Personal difficulties'
-    if mode == 'Služební cesta':
-        return 'Bussiness trip'
-    if mode == 'Studium při zaměstnání':
-        return 'Study'
-    if mode == 'Školení':
-        return 'Training'
-    if mode == 'Úraz/nemoc z povolání':
-        return 'Injury and disease from profession'
-    if mode == 'Neplacené volno':
-        return 'Unpaid leave'
-    if mode == 'Obecný zájem':
-        return 'Public interest'
-    if mode == 'Zdravotní volno':
-        return 'Sickday'
-    return ''
+def eng_to_symbol(mode, stamp):
+    obj_mapping = {
+        'Employer difficulties': 'C',
+        'Vacation': 'D',
+        'Vacation 0.5': '0,5D',
+        'Presence': '/' if stamp else '/-',
+        'Absence': 'A',
+        'On call time': 'H',
+        'Sickness': 'N',
+        'Compensatory time off': 'NV',
+        'Family member care': 'O',
+        'Personal difficulties': 'P',
+        'Bussiness trip': 'Sc+' if stamp else 'Sc',
+        'Study': 'St',
+        'Training': 'Šk' if stamp else 'Šk-',
+        'Injury and disease from profession': 'Ú',
+        'Unpaid leave': 'V',
+        'Public interest': 'Z',
+        'Sickday': 'ZV'
+    }
+
+    return obj_mapping[mode]
+
 
 def eng_to_czech(mode):
-    if mode == 'Employer difficulties':
-         'Překážka na straně zaměstnavatele'
-    if mode == 'Vacation':
-        return 'Dovolená'
-    if mode == 'Vacation 0.5':
-        return 'Dovolená 0.5 dne'
-    if mode == 'Presence':
-        return mode
-    if mode == 'Absence':
-        return mode
-    if mode == 'On call time':
-        return 'Pracovní pohotovost'
-    if mode == 'Sickness':
-        return 'Nemoc'
-    if mode == 'Compensatory time off':
-        return 'Náhradní volno'
-    if mode == 'Family member care':
-        return 'Ošetřování člena rodiny'
-    if mode == 'Personal difficulties':
-        return 'Osobní překážky'
-    if mode == 'Bussiness trip':
-        return 'Služební cesta'
-    if mode == 'Study':
-        return 'Studium při zaměstnání'
-    if mode == 'Training':
-        return 'Školení'
-    if mode == 'Injury and disease from profession':
-        return 'Úraz/nemoc z povolání'
-    if mode == 'Unpaid leave':
-        return 'Neplacené volno'
-    if mode == 'Public interest':
-        return 'Obecný zájem'
-    if mode == 'Sickday':
-        return 'Zdravotní volno'
-    return ''
+    obj_mapping = {
+        'Employer difficulties': 'Překážka na straně zaměstnavatele',
+        'Vacation': 'Dovolená',
+        'Vacation 0.5': 'Dovolená 0.5 dne',
+        'Presence': 'Presence',
+        'Absence': 'Absence',
+        'On call time': 'Pracovní pohotovost',
+        'Sickness': 'Nemoc',
+        'Compensatory time off': 'Náhradní volno',
+        'Family member care': 'Ošetřování člena rodiny',
+        'Personal difficulties': 'Osobní překážky',
+        'Bussiness trip': 'Služební cesta',
+        'Study': 'Studium při zaměstnání',
+        'Training': 'Školení',
+        'Injury and disease from profession': 'Úraz/nemoc z povolání',
+        'Unpaid leave': 'Neplacené volno',
+        'Public interest': 'Obecný zájem',
+        'Sickday': 'Zdravotní volno'
+    }
+    return obj_mapping[mode]
 
 
 class Manager(object):
     def __init__(self, pich_db):
         self.pich_db = pich_db
         register_range('timerange', TimeRange,
-                       self.pich_db.engine.raw_connection().cursor(), globally=True)
+                       self.pich_db.engine.raw_connection().cursor(),
+                       globally=True)
 
     def get_emp_no(self, username):
         emp_t = self.pich_db.employee
@@ -143,7 +116,11 @@ class Manager(object):
         try:
             emp_uid = emp_t.filter(
                 emp_t.emp_no == self.get_emp_no(username)).one().uid
-            return [i.department for i in pv_t.filter(pv_t.uid_employee == emp_uid).all() if datetime.today().date() in i.validity]
+            today = date.today()
+            pvs = pv_t.filter(and_(pv_t.uid_employee == emp_uid,
+                                   pv_t.validity.contains(today))).all()
+
+            return [pv.department for pv in pvs]
         except Exception as e:
             log.err(e)
             return []
@@ -158,11 +135,21 @@ class Manager(object):
             period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
         per_end = datetime.strptime(
             period + f'-{per_range[1]}', '%m-%Y-%d').date()
+        query = self.pich_db.session.query(emp_t, pv_t)
 
-        for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
-            if (str(employee[0].department)[0] == str(dept) or str(employee[0].department) == dept) and (per_start in employee[0].validity or per_end in employee[0].validity):
-                retval.append({'first_name': employee[1].first_name, 'last_name': employee[1].last_name,
-                               'PV': employee[0].pvid, 'dept': employee[0].department, 'username': employee[1].username})
+        employees_with_pvs = query.join(pv_t)\
+            .filter(or_(pv_t.validity.contains(per_start),
+                        pv_t.validity.contains(per_end))).all()
+
+        for employee, pv in employees_with_pvs:
+            if (str(pv.department)[0] == str(dept) or str(pv.department) == dept):
+                retval.append({
+                    'first_name': employee.first_name,
+                    'last_name': employee.last_name,
+                    'PV': pv.pvid,
+                    'dept': pv.department,
+                    'username': employee.username
+                })
         return retval
 
     def threaded_init(self, period, source):
@@ -219,42 +206,57 @@ class Manager(object):
         timetable_t = self.pich_db.timetable
         today = date.today()
         maxdate = date.max
-        if not (data['monF'] and data['monT'] and data['tueF'] and data['tueT'] and data['wedF'] and data['wedT'] and data['thuF'] and data['thuT'] and data['friF'] and data['friT']):
+        valid_mon = data['monF'] and data['monT']
+        valid_tue = data['tueF'] and data['tueT']
+        valid_wed = data['wedF'] and data['wedT']
+        valid_thu = data['thuF'] and data['thuT']
+        valid_fri = data['friF'] and data['friT']
+        valid = valid_mon and valid_tue and valid_wed and valid_thu and valid_fri
+        if not valid:
             log.err('Attempt to upsert timetable without all days periods filled-in.\n\
                     To signify free day, please set start and end of workday to 00:00')
             raise NotAcceptable
+
         monday_v = TimeRange(data['monF'], data['monT'])
         tuesday_v = TimeRange(data['tueF'], data['tueT'])
         wednesday_v = TimeRange(data['wedF'], data['wedT'])
         thursday_v = TimeRange(data['thuF'], data['thuT'])
         friday_v = TimeRange(data['friF'], data['friT'])
+
         hours_in_week = (monday_v.len() + tuesday_v.len() +
                          wednesday_v.len() + thursday_v.len() + friday_v.len()) / 60
         validity_v = DateRange(today, maxdate)
         pvid_v = data['f_pvs']
-        pvs = pv_t.filter(pv_t.pvid == pvid_v).all()
-        for pv in pvs:
-            if today in pv.validity:
-                valid_pv_uid = pv.uid
-                occupancy = pv.occupancy
-                break
-        if not hours_in_week == 40 * occupancy:
-            return False
-        if not valid_pv_uid:
+        pv = pv_t.filter(pv_t.pvid == pvid_v).filter(
+            pv_t.validity.contains(today)).first()
+        if not pv:
             log.err('Attempt to upsert timetable for user who doesn\'t have valid PV')
             raise NotAcceptable
-        pv_w_tt = self.pich_db.session().query(
-            timetable_t, pv_t).join(pv_t).filter(pv_t.pvid == pvid_v).all()
-        for pv_w_tt_it in pv_w_tt:
-            if today in pv_w_tt_it[0].validity and today in pv_w_tt_it[1].validity:
-                tt_timeid = pv_w_tt_it[0].timeid
-                cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid)
-                validity_from = cur_tt.one().validity.lower
-                new_validity = DateRange(validity_from, today)
-                cur_tt.update({'validity': new_validity})
-                break
+
+        valid_pv_uid = pv.uid
+        occupancy = pv.occupancy
+
+        if not hours_in_week == 40 * occupancy:
+            # Filled in hours are not matching occupancy
+            return False
+
+        query = self.pich_db.session().query(pv_t, timetable_t).join(pv_t)
+        pv_with_timetable = query.filter(and_(pv_t.pvid == pvid_v), pv_t.validity.contains(
+            today), timetable_t.validity.contains(today)).first()
+
+
+
+        if pv_with_timetable:
+            pv, timetable = pv_with_timetable
+            # Timetable already exist so we end its validty before new timetable is valid
+            tt_timeid = timetable.timeid
+            cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid).one()
+            validity_from = cur_tt.validity.lower
+            new_validity = DateRange(validity_from, today)
+            cur_tt.update({'validity': new_validity})
 
         try:
+            # Insert new timetable
             timetable_t.insert(monday=monday_v, tuesday=tuesday_v,
                                wednesday=wednesday_v, thursday=thursday_v,
                                friday=friday_v, validity=validity_v,
@@ -276,14 +278,13 @@ class Manager(object):
             period + f'-{per_range[1]}', '%m-%Y-%d').date()
         pv_t = self.pich_db.pv
         emp_t = self.pich_db.employee
-        pvs = self.pich_db.session.query(emp_t,
-                                         pv_t).join(
-            pv_t).filter(emp_t.emp_no == emp_no).all()
-        for pv in pvs:
-            work_rel = pv[1]
-            if per_start in work_rel.validity or per_end in work_rel.validity:
+        employee_with_pv = self.pich_db.session.query(emp_t, pv_t).join(pv_t).filter(
+            emp_t.emp_no == emp_no
+        ).all()
+        for employee, pv in employee_with_pv:
+            if per_start in pv.validity or per_end in pv.validity:
                 retval['data'].append(
-                    {'PV': work_rel.pvid, 'dept': work_rel.department})
+                    {'PV': pv.pvid, 'dept': pv.department})
         return retval
 
     def get_attendance(self, uid, pvid, period, username):
@@ -302,38 +303,57 @@ class Manager(object):
         uid = emp_t.filter(emp_t.emp_no == emp_no).one().uid
         pvs = pv_t.filter(pv_t.pvid == pvid).all()
         uid_pv = ''
+
         for day in per_range_list:
             curr_time = ''
             day_date = date(per_year, per_month, day)
             weekday = day_date.weekday()
             for pv in pvs:
+                # Get pv valid for the date
                 if day_date in pv.validity:
                     uid_pv = pv.uid
                     break
+            # If there's no valid pv for date, continue to next day
             if not uid_pv:
-                return {'data': []}
-            timetables = time_t.filter(time_t.uid_pv == uid_pv).all()
-            for timetable in timetables:
-                if day_date in timetable.validity:
-                    curr_time = timetable
-                    break
+                continue
+            # Get timetable corresponding to the date
+            curr_time = time_t.filter(
+                time_t.uid_pv == uid_pv, time_t.validity.contains(day_date)).first()
             if curr_time:
-                timetable_list = [curr_time.monday, curr_time.tuesday,
-                                  curr_time.wednesday, curr_time.thursday, curr_time.friday, TimeRange('00:00', '00:00'), TimeRange('00:00', '00:00')]
+                timetable_list = [
+                    curr_time.monday,
+                    curr_time.tuesday,
+                    curr_time.wednesday,
+                    curr_time.thursday,
+                    curr_time.friday,
+                    TimeRange('00:00', '00:00'),
+                    TimeRange('00:00', '00:00')
+                ]
             else:
                 timetable_list = [TimeRange('00:00', '00:00')] * 7
             attend = pres_t.filter(
-                and_(pres_t.date == day_date, pres_t.uid_employee == uid)).first()
+                and_(pres_t.date == day_date, pres_t.uid_employee == uid)
+            ).first()
             if attend:
-                retval['data'].append({'day': f'{day}. ', 'start': f'{attend.arrival}', 'end': f'{attend.departure}',
-                                       'mode': eng_to_czech(attend.presence_mode), 'stamp': 'Ano' if attend.food_stamp else 'Ne',
-                                       'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
-                                       'weekday': WEEKDAYS[weekday]})
+                retval['data'].append({
+                    'day': f'{day}. ',
+                    'start': f'{attend.arrival}',
+                    'end': f'{attend.departure}',
+                    'mode': eng_to_czech(attend.presence_mode),
+                    'stamp': 'Ano' if attend.food_stamp else 'Ne',
+                    'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
+                    'weekday': WEEKDAYS[weekday]
+                })
             else:
-                retval['data'].append({'day': f'{day}. ', 'start': '00:00', 'end': '00:00',
-                                       'mode': 'Absence', 'stamp': 'Ne',
-                                       'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
-                                       'weekday': WEEKDAYS[weekday]})
+                retval['data'].append({
+                    'day': f'{day}. ',
+                    'start': '00:00',
+                    'end': '00:00',
+                    'mode': 'Absence',
+                    'stamp': 'Ne',
+                    'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
+                    'weekday': WEEKDAYS[weekday]
+                })
         return retval
 
     def pvid_to_username(self, pvid):
@@ -354,26 +374,45 @@ class Manager(object):
         per_month = int(period.split('-')[0])
         day_no = int(day.replace('.', ''))
         emp_no = self.get_emp_no(username)
-        mode_d = czech_to_eng(mode)
-        start_t = datetime(per_year, per_month, day_no, int(
-            start.split(':')[0]), int(start.split(':')[1]))
-        end_t = datetime(per_year, per_month, day_no, int(
-            end.split(':')[0]), int(end.split(':')[1]))
+
+        start_split = start.split(':')
+        start_hour = int(start_split[0])
+        start_minute = int(start_split[1])
+
+        end_split = end.split(':')
+        end_hour = int(end_split[0])
+        end_minute = int(end_split[1])
+
+        start_t = datetime(per_year, per_month, day_no,
+                           start_hour, start_minute)
+        end_t = datetime(per_year, per_month, day_no, end_hour, end_minute)
         date = start_t.date()
+
         length = (end_t - start_t).seconds / 3600
-        food_stamp = length >= 6
+        # If attendance is longer than 6 hrs employee has food stamp claim
+        # If attendance is longer than 4 hrs during business trip dtto
+        food_stamp = length >= 6 or (mode == 'Business trip' and length >= 4)
         employee = emp_t.filter(emp_t.emp_no == emp_no).one()
-        if not pres_t.filter(
-                and_(pres_t.uid_employee == employee.uid, pres_t.date == date)).first():
-            pres_t.insert(date=date, arrival=start_t,
-                          departure=end_t,
-                          presence_mode=mode,
-                          uid_employee=employee.uid, food_stamp=food_stamp)
+
+        presence = pres_t.filter(
+            and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
+        # If there was no presence that day, insert one. Otherwise update existing one
+        if not presence.first():
+            pres_t.insert(
+                date=date,
+                arrival=start_t,
+                departure=end_t,
+                presence_mode=mode,
+                uid_employee=employee.uid,
+                food_stamp=food_stamp
+            )
         else:
-            presence_s = pres_t.filter(
-                and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
-            presence_s.update({'arrival': start_t, 'departure': end_t,
-                               'food_stamp': food_stamp, 'presence_mode': mode_d})
+            presence.update({
+                'arrival': start_t,
+                'departure': end_t,
+                'food_stamp': food_stamp,
+                'presence_mode': mode
+            })
 
         self.pich_db.commit()
 
@@ -388,68 +427,33 @@ class Manager(object):
             period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
         per_end = datetime.strptime(
             period + f'-{per_range[1]}', '%m-%Y-%d').date()
-
-        for employee in self.pich_db.session.query(pv_t, emp_t).join(emp_t).all():
-            if (str(employee[0].department)[0] == str(dept) or str(employee[0].department) == str(dept)) and (per_start in employee[0].validity or per_end in employee[0].validity):
+        query = self.pich_db.session.query(pv_t, emp_t).join(emp_t)
+        pv_with_emp = query.filter(
+            or_(pv_t.validity.contains(per_start),
+                pv_t.validity.contains(per_end))
+        ).all()
+        for pv, employee in pv_with_emp:
+            # Select pvs in the department itself or subordinate departments
+            if str(pv.department)[0] == str(dept) or str(pv.department) == str(dept):
                 retval_dict = {
                     'Jméno': f'{employee[1].first_name} {employee[1].last_name}'}
+
                 for day in range(per_range[1]):
                     curr_date = date(per_start.year, per_start.month, day + 1)
                     presence = pres_t.filter(
-                        and_(pres_t.uid_employee == employee[1].uid, pres_t.date == curr_date)).first()
-                    if presence:
-                        length = (datetime.combine(curr_date, presence.departure) -
-                                  datetime.combine(curr_date, presence.arrival)).seconds/3600
-                    else:
-                        length = 0
+                        and_(pres_t.uid_employee ==
+                             employee[1].uid, pres_t.date == curr_date)
+                    ).first()
+                    symbol = eng_to_symbol(
+                        presence.presence_mode, presence.food_stamp
+                    )
                     if curr_date.isoweekday() in [6, 7]:
                         retval_dict[str(day + 1)] = 'S'
-                    elif not presence or presence.presence_mode == 'Absence':
-                        retval_dict[str(day + 1)] = 'A'
-                    elif presence.presence_mode == 'Presence':
-                        if presence.food_stamp:
-                            retval_dict[str(day + 1)] = '/'
-                        else:
-                            retval_dict[str(day + 1)] = '/-'
-                    elif presence.presence_mode == 'Vacation':
-                        retval_dict[str(day + 1)] = 'D'
-                    elif presence.presence_mode == 'Vacation 0.5':
-                        retval_dict[str(day + 1)] = '0,5D'
-                    elif presence.presence_mode == 'Employer difficulties':
-                        retval_dict[str(day + 1)] = 'C'
-                    elif presence.presence_mode == 'On call time':
-                        retval_dict[str(day + 1)] = 'H'
-                    elif presence.presence_mode == 'Sickness':
-                        retval_dict[str(day + 1)] = 'N'
-                    elif presence.presence_mode == 'Compensatory time off':
-                        retval_dict[str(day + 1)] = 'NV'
-                    elif presence.presence_mode == 'Family member care':
-                        retval_dict[str(day + 1)] = 'O'
-                    elif presence.presence_mode == 'Personal trouble':
-                        retval_dict[str(day + 1)] = 'P'
-                    elif presence.presence_mode == 'Bussiness trip':
-                        if length < 4:
-                            retval_dict[str(day + 1)] = 'Sc'
-                        else:
-                            retval_dict[str(day + 1)] = 'Sc+'
-                    elif presence.presence_mode == 'Study':
-                        retval_dict[str(day + 1)] = 'St'
-                    elif presence.presence_mode == 'Training':
-                        if presence.food_stamp:
-                            retval_dict[str(day + 1)] = 'Sk'
-                        else:
-                            retval_dict[str(day + 1)] = 'Sk-'
-                    elif presence.presence_mode == 'Injury and disease from profession':
-                        retval_dict[str(day + 1)] = 'U'
-                    elif presence.presence_mode == 'Unpaid leave':
-                        retval_dict[str(day + 1)] = 'V'
-                    elif presence.presence_mode == 'Public benefit':
-                        retval_dict[str(day + 1)] = 'Z'
-                    elif presence.presence_mode == 'Sickday':
-                        retval_dict[str(day + 1)] = 'ZV'
                     else:
-                        retval_dict[str(day + 1)] = 'N/A'
+                        retval_dict[str(day+1)] = symbol
+
                 retval['data'].append(retval_dict)
+
         return retval
 
     def init_presence(self, period, source):
@@ -459,6 +463,7 @@ class Manager(object):
         per_month = int(period.split('-')[0])
         per_range = monthrange(per_year, per_month)
         per_range_list = [i for i in range(1, per_range[1] + 1)]
+
         for employee in emp_t.all():
             for day in per_range_list:
                 datetm = datetime.strptime(
@@ -471,16 +476,25 @@ class Manager(object):
                 length = (depart - arriv).seconds / 3600
                 presence_mode = 'Presence'
                 food_stamp = length >= 6
+
                 if not pres_t.filter(
-                        and_(pres_t.uid_employee == employee.uid, pres_t.date == date)).first():
-                    pres_t.insert(date=date, arrival=arriv.time(),
-                                  departure=depart.time(),
-                                  presence_mode=presence_mode,
-                                  uid_employee=employee.uid, food_stamp=food_stamp)
+                    and_(pres_t.uid_employee == employee.uid,
+                         pres_t.date == date)
+                ).first():
+                    pres_t.insert(
+                        date=date,
+                        arrival=arriv.time(),
+                        departure=depart.time(),
+                        presence_mode=presence_mode,
+                        uid_employee=employee.uid,
+                        food_stamp=food_stamp
+                    )
 
                 else:
                     presence_s = pres_t.filter(
-                        and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
+                        and_(pres_t.uid_employee ==
+                             employee.uid, pres_t.date == date)
+                    )
                     presence = presence_s.one()
                     if presence.arrival > arriv.time():
                         presence_s.update(
@@ -504,21 +518,31 @@ class Manager(object):
             presence_mode = 'Presence'
             food_stamp = length >= 6
             if not pres_t.filter(
-                    and_(pres_t.uid_employee == employee.uid, pres_t.date == date)).first():
-                pres_t.insert(date=date, arrival=arriv.time(),
-                              departure=depart.time(),
-                              presence_mode=presence_mode,
-                              uid_employee=employee.uid, food_stamp=food_stamp)
+                    and_(pres_t.uid_employee == employee.uid, pres_t.date == date)
+            ).first():
+                pres_t.insert(
+                    date=date,
+                    arrival=arriv.time(),
+                    departure=depart.time(),
+                    presence_mode=presence_mode,
+                    uid_employee=employee.uid,
+                    food_stamp=food_stamp
+                )
             else:
                 presence_s = pres_t.filter(
-                    and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
+                    and_(pres_t.uid_employee == employee.uid, pres_t.date == date)
+                )
                 presence = presence_s.one()
                 if presence.arrival > arriv.time():
-                    presence_s.update(
-                        {'arrival': arriv.time(), 'food_stamp': food_stamp})
+                    presence_s.update({
+                        'arrival': arriv.time(),
+                        'food_stamp': food_stamp
+                    })
                 if presence.departure < depart.time():
-                    presence_s.update(
-                        {'departure': depart.time(), 'food_stamp': food_stamp})
+                    presence_s.update({
+                        'departure': depart.time(),
+                        'food_stamp': food_stamp
+                    })
 
         self.pich_db.commit()
 
@@ -541,16 +565,33 @@ class Manager(object):
                 valid = DateRange(
                     lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
-                if not pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
-                                        pv_t.department == pv['department'], pv_t.validity == valid,
-                                        pv_t.uid_employee == uid_emp)).first():
-                    if pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
-                                        pv_t.department == pv['department'], pv_t.uid_employee == uid_emp)).first():
-                        pv_t.filter(and_(pv_t.pvid == pv['pvid'], pv_t.occupancy == pv['occupancy'],
-                                         pv_t.department == pv['department'], pv_t.uid_employee == uid_emp
-                                         )).update({'validity': valid})
+                if not pv_t.filter(
+                    and_(pv_t.pvid == pv['pvid'],
+                         pv_t.occupancy == pv['occupancy'],
+                         pv_t.department == pv['department'],
+                         pv_t.validity == valid,
+                         pv_t.uid_employee == uid_emp)
+                ).first():
+                    if pv_t.filter(
+                        and_(pv_t.pvid == pv['pvid'],
+                             pv_t.occupancy == pv['occupancy'],
+                             pv_t.department == pv['department'],
+                             pv_t.uid_employee == uid_emp)
+                    ).first():
+                        pv_t.filter(
+                            and_(pv_t.pvid == pv['pvid'],
+                                 pv_t.occupancy == pv['occupancy'],
+                                 pv_t.department == pv['department'],
+                                 pv_t.uid_employee == uid_emp
+                                 )
+                        ).update({'validity': valid})
                     else:
-                        pv_t.insert(pvid=pv['pvid'], occupancy=pv['occupancy'],
-                                    department=pv['department'], validity=valid, uid_employee=uid_emp)
+                        pv_t.insert(
+                            pvid=pv['pvid'],
+                            occupancy=pv['occupancy'],
+                            department=pv['department'],
+                            validity=valid,
+                            uid_employee=uid_emp
+                        )
 
         self.pich_db.commit()
