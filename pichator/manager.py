@@ -267,23 +267,22 @@ class Manager(object):
             self.pich_db.rollback()
             raise InternalServerError
 
-    def get_pvs(self, emp_no, period):
+    def get_pvs(self, emp_uid, month, year):
         retval = {'data': []}
-        per_range = monthrange(
-            int(period.split('-')[1]), int(period.split('-')[0]))
-        per_start = datetime.strptime(
-            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
-        per_end = datetime.strptime(
-            period + f'-{per_range[1]}', '%m-%Y-%d').date()
+
         pv_t = self.pich_db.pv
-        emp_t = self.pich_db.employee
-        employee_with_pv = self.pich_db.session.query(emp_t, pv_t).join(pv_t).filter(
-            emp_t.emp_no == emp_no
-        ).all()
-        for employee, pv in employee_with_pv:
-            if per_start in pv.validity or per_end in pv.validity:
-                retval['data'].append(
-                    {'PV': pv.pvid, 'dept': pv.department})
+
+        pvs = self.pich_db.session \
+            .query(pv_t) \
+            .filter(pv_t.uid_employee == emp_uid) \
+            .filter(pv_t.validity.overlaps(self.month_range(month, year)))
+
+        for pv in pvs.all():
+            retval['data'].append({
+                'PV': pv.pvid,
+                'dept': pv.department
+            })
+
         return retval
 
     def get_attendance(self, uid, pvid, period, username):

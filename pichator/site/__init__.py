@@ -183,15 +183,13 @@ def make_site(manager, access_model, debug=False):
     @pass_user_info
     def get_pvs(uid, username):
         nonlocal has_privilege
-        period = flask.request.values.get('period')
+        period = flask.request.values.get('period').split('-')
 
         if not period:
             log.err('Query for list of PVs without required period parameter.')
             raise NotAcceptable
 
-        emp_no = manager.get_emp_no(username)
-
-        return flask.jsonify(manager.get_pvs(emp_no, period))
+        return flask.jsonify(manager.get_pvs(uid, int(period[0]), int(period[1]) ))
 
     @app.route('/attendance_data')
     @authorized_only('admin')
