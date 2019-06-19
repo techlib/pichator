@@ -9,11 +9,12 @@ from threading import Thread
 from sqlalchemy import and_, or_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import types as sqltypes
+from sqlalchemy.sql.expression import cast
 from datetime import timedelta, datetime, date, time
 from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
-from calendar import monthrange
+from calendar import monthrange, monthlen
 
 
 class TimeRange(Range):
@@ -125,30 +126,31 @@ class Manager(object):
             log.err(e)
             return []
 
+    def month_range(self, year, month):
+        days = monthlen(year, month)
+        return DateRange(date(year, month, 1), date(year, month, days), '[]')
+
     def get_employees(self, dept, month, year):
         retval = []
 
         emp_t = self.pich_db.employee
         pv_t = self.pich_db.pv
 
-        per_range = monthrange(year, month)
-        query = self.pich_db.session.query(emp_t, pv_t)
-        month_period = DateRange(date(year, month, 1), date(
-            year, month, per_range[1]), '[]')
+        employees_with_pvs = self.pich_db.session \
+            .query(emp_t, pv_t) \
+            .join(pv_t) \
+            .filter(pv_t.validity.overlaps(self.month_range(year, month))) \
+            .filter(cast(pv_t.department, sqltypes.String).startswith(dept))
 
-        employees_with_pvs = query.join(pv_t) \
-            .filter(pv_t.validity.overlaps(month_period)) \
-            .all()
+        for employee, pv in employees_with_pvs.all():
+            retval.append({
+                'first_name': employee.first_name,
+                'last_name': employee.last_name,
+                'PV': pv.pvid,
+                'dept': pv.department,
+                'username': employee.username
+            })
 
-        for employee, pv in employees_with_pvs:
-            if str(pv.department).startswith(str(dept)):
-                retval.append({
-                    'first_name': employee.first_name,
-                    'last_name': employee.last_name,
-                    'PV': pv.pvid,
-                    'dept': pv.department,
-                    'username': employee.username
-                })
         return retval
 
     def threaded_init(self, period, source):
