@@ -244,8 +244,6 @@ class Manager(object):
         pv_with_timetable = query.filter(and_(pv_t.pvid == pvid_v), pv_t.validity.contains(
             today), timetable_t.validity.contains(today)).first()
 
-
-
         if pv_with_timetable:
             pv, timetable = pv_with_timetable
             # Timetable already exist so we end its validty before new timetable is valid
@@ -436,20 +434,23 @@ class Manager(object):
             # Select pvs in the department itself or subordinate departments
             if str(pv.department)[0] == str(dept) or str(pv.department) == str(dept):
                 retval_dict = {
-                    'Jméno': f'{employee[1].first_name} {employee[1].last_name}'}
+                    'Jméno': f'{employee.first_name} {employee.last_name}'}
 
                 for day in range(per_range[1]):
                     curr_date = date(per_start.year, per_start.month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee ==
-                             employee[1].uid, pres_t.date == curr_date)
+                             employee.uid, pres_t.date == curr_date)
                     ).first()
-                    symbol = eng_to_symbol(
-                        presence.presence_mode, presence.food_stamp
-                    )
                     if curr_date.isoweekday() in [6, 7]:
                         retval_dict[str(day + 1)] = 'S'
                     else:
+                        if not presence:
+                            symbol = 'A'
+                        else:
+                            symbol = eng_to_symbol(
+                                presence.presence_mode, presence.food_stamp
+                            )
                         retval_dict[str(day+1)] = symbol
 
                 retval['data'].append(retval_dict)
