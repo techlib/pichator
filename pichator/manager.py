@@ -137,7 +137,7 @@ class Manager(object):
             year, month, per_range[1]), '[]')
 
         employees_with_pvs = query.join(pv_t) \
-            .filter(pv_t.validity.ovelaps(month_period)) \
+            .filter(pv_t.validity.overlaps(month_period)) \
             .all()
 
         for employee, pv in employees_with_pvs:
