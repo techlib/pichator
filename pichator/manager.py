@@ -141,7 +141,7 @@ class Manager(object):
             .all()
 
         for employee, pv in employees_with_pvs:
-            if (str(pv.department)[0] == str(dept) or str(pv.department) == dept):
+            if str(pv.department).startswith(str(dept)):
                 retval.append({
                     'first_name': employee.first_name,
                     'last_name': employee.last_name,
