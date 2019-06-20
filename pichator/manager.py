@@ -332,12 +332,18 @@ class Manager(object):
             attend = pres_t.filter(
                 and_(pres_t.date == day_date, pres_t.uid_employee == uid)
             ).first()
+            if timetable_list[weekday].lower == timetable_list[weekday].upper:
+                mode = 'Presence'
+            elif attend:
+                mode = eng_to_czech(attend.presence_mode)
+            else:
+                mode = 'Absence'
             if attend:
                 retval['data'].append({
                     'day': f'{day}. ',
                     'start': f'{attend.arrival}',
                     'end': f'{attend.departure}',
-                    'mode': eng_to_czech(attend.presence_mode),
+                    'mode': mode,
                     'stamp': 'Ano' if attend.food_stamp else 'Ne',
                     'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                     'weekday': WEEKDAYS[weekday]
@@ -347,7 +353,7 @@ class Manager(object):
                     'day': f'{day}. ',
                     'start': '00:00',
                     'end': '00:00',
-                    'mode': 'Absence',
+                    'mode': mode,
                     'stamp': 'Ne',
                     'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                     'weekday': WEEKDAYS[weekday]
