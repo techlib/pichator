@@ -51,6 +51,11 @@ def make_site(manager, access_model, debug=False):
 
         return t.strftime('%H:%M')
 
+    @app.template_filter('month_name')
+    def month_name(t):
+        return ('', 'Leden', 'Únor', 'Březen', 'Duben', 'Květen',
+                'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec')[t]
+
     @app.template_global('attendance_class')
     def attendance_row_class(day):
         date = day['date']
