@@ -9,11 +9,12 @@ from threading import Thread
 from sqlalchemy import and_, or_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import types as sqltypes
+from sqlalchemy.sql.expression import cast
 from datetime import timedelta, datetime, date, time
 from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
-from calendar import monthrange
+from calendar import monthrange, monthlen
 
 
 class TimeRange(Range):
@@ -88,14 +89,14 @@ def eng_to_czech(mode):
 
 
 class Manager(object):
-    def __init__(self, pich_db):
-        self.pich_db = pich_db
+    def __init__(self, db):
+        self.db = db
         register_range('timerange', TimeRange,
-                       self.pich_db.engine.raw_connection().cursor(),
+                       self.db.engine.raw_connection().cursor(),
                        globally=True)
 
     def get_emp_no(self, username):
-        emp_t = self.pich_db.employee
+        emp_t = self.db.employee
         try:
             return emp_t.filter(emp_t.username == username).one().emp_no
         except NoResultFound:
@@ -103,7 +104,7 @@ class Manager(object):
             raise NotAcceptable
 
     def get_acl(self, username):
-        emp_t = self.pich_db.employee
+        emp_t = self.db.employee
         try:
             return emp_t.filter(emp_t.username == username).one().acl
         except NoResultFound:
@@ -111,8 +112,8 @@ class Manager(object):
             raise NotAcceptable
 
     def get_depts(self, username):
-        emp_t = self.pich_db.employee
-        pv_t = self.pich_db.pv
+        emp_t = self.db.employee
+        pv_t = self.db.pv
         try:
             emp_uid = emp_t.filter(
                 emp_t.emp_no == self.get_emp_no(username)).one().uid
@@ -125,31 +126,31 @@ class Manager(object):
             log.err(e)
             return []
 
-    def get_employees(self, dept, period):
+    def month_range(self, year, month):
+        days = monthlen(year, month)
+        return DateRange(date(year, month, 1), date(year, month, days), '[]')
+
+    def get_employees(self, dept, month, year):
         retval = []
-        emp_t = self.pich_db.employee
-        pv_t = self.pich_db.pv
-        per_range = monthrange(
-            int(period.split('-')[1]), int(period.split('-')[0]))
-        per_start = datetime.strptime(
-            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
-        per_end = datetime.strptime(
-            period + f'-{per_range[1]}', '%m-%Y-%d').date()
-        query = self.pich_db.session.query(emp_t, pv_t)
 
-        employees_with_pvs = query.join(pv_t)\
-            .filter(or_(pv_t.validity.contains(per_start),
-                        pv_t.validity.contains(per_end))).all()
+        emp_t = self.db.employee
+        pv_t = self.db.pv
 
-        for employee, pv in employees_with_pvs:
-            if (str(pv.department)[0] == str(dept) or str(pv.department) == dept):
-                retval.append({
-                    'first_name': employee.first_name,
-                    'last_name': employee.last_name,
-                    'PV': pv.pvid,
-                    'dept': pv.department,
-                    'username': employee.username
-                })
+        employees_with_pvs = self.db.session \
+            .query(emp_t, pv_t) \
+            .join(pv_t) \
+            .filter(pv_t.validity.overlaps(self.month_range(year, month))) \
+            .filter(cast(pv_t.department, sqltypes.String).startswith(dept))
+
+        for employee, pv in employees_with_pvs.all():
+            retval.append({
+                'first_name': employee.first_name,
+                'last_name': employee.last_name,
+                'PV': pv.pvid,
+                'dept': pv.department,
+                'username': employee.username
+            })
+
         return retval
 
     def threaded_init(self, period, source):
@@ -168,10 +169,10 @@ class Manager(object):
         payload = {'data': []}
         today = date.today()
 
-        time_t = self.pich_db.timetable
-        pv_t = self.pich_db.pv
+        time_t = self.db.timetable
+        pv_t = self.db.pv
 
-        pvs = self.pich_db.session.query(pv_t, time_t) \
+        pvs = self.db.session.query(pv_t, time_t) \
             .outerjoin(time_t, and_(time_t.uid_pv == pv_t.uid, time_t.validity.contains(today))) \
             .filter(pv_t.validity.contains(today)) \
             .filter(pv_t.uid_employee == emp_uid)
@@ -202,8 +203,8 @@ class Manager(object):
 
     def set_timetables(self, data):
         # returns True if commit succeeds, False otherwise
-        pv_t = self.pich_db.pv
-        timetable_t = self.pich_db.timetable
+        pv_t = self.db.pv
+        timetable_t = self.db.timetable
         today = date.today()
         maxdate = date.max
         valid_mon = data['monF'] and data['monT']
@@ -240,7 +241,7 @@ class Manager(object):
             # Filled in hours are not matching occupancy
             return False
 
-        query = self.pich_db.session().query(pv_t, timetable_t).join(pv_t)
+        query = self.db.session().query(pv_t, timetable_t).join(pv_t)
         pv_with_timetable = query.filter(and_(pv_t.pvid == pvid_v), pv_t.validity.contains(
             today), timetable_t.validity.contains(today)).first()
 
@@ -259,30 +260,29 @@ class Manager(object):
                                wednesday=wednesday_v, thursday=thursday_v,
                                friday=friday_v, validity=validity_v,
                                uid_pv=valid_pv_uid)
-            self.pich_db.commit()
+            self.db.commit()
             return True
         except Exception as e:
             log.err(e)
-            self.pich_db.rollback()
+            self.db.rollback()
             raise InternalServerError
 
-    def get_pvs(self, emp_no, period):
+    def get_pvs(self, emp_uid, month, year):
         retval = {'data': []}
-        per_range = monthrange(
-            int(period.split('-')[1]), int(period.split('-')[0]))
-        per_start = datetime.strptime(
-            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
-        per_end = datetime.strptime(
-            period + f'-{per_range[1]}', '%m-%Y-%d').date()
-        pv_t = self.pich_db.pv
-        emp_t = self.pich_db.employee
-        employee_with_pv = self.pich_db.session.query(emp_t, pv_t).join(pv_t).filter(
-            emp_t.emp_no == emp_no
-        ).all()
-        for employee, pv in employee_with_pv:
-            if per_start in pv.validity or per_end in pv.validity:
-                retval['data'].append(
-                    {'PV': pv.pvid, 'dept': pv.department})
+
+        pv_t = self.db.pv
+
+        pvs = self.db.session \
+            .query(pv_t) \
+            .filter(pv_t.uid_employee == emp_uid) \
+            .filter(pv_t.validity.overlaps(self.month_range(month, year)))
+
+        for pv in pvs.all():
+            retval['data'].append({
+                'PV': pv.pvid,
+                'dept': pv.department
+            })
+
         return retval
 
     def get_attendance(self, uid, pvid, period, username):
@@ -293,10 +293,10 @@ class Manager(object):
         per_month = int(period.split('-')[0])
         per_range = monthrange(per_year, per_month)
         per_range_list = [i for i in range(1, per_range[1] + 1)]
-        pv_t = self.pich_db.pv
-        emp_t = self.pich_db.employee
-        pres_t = self.pich_db.presence
-        time_t = self.pich_db.timetable
+        pv_t = self.db.pv
+        emp_t = self.db.employee
+        pres_t = self.db.presence
+        time_t = self.db.timetable
         emp_no = self.get_emp_no(username)
         uid = emp_t.filter(emp_t.emp_no == emp_no).one().uid
         pvs = pv_t.filter(pv_t.pvid == pvid).all()
@@ -362,7 +362,7 @@ class Manager(object):
 
     def pvid_to_username(self, pvid):
         emp_no = pvid.split('.')[0]
-        emp_t = self.pich_db.employee
+        emp_t = self.db.employee
         try:
             return emp_t.filter(emp_t.emp_no == emp_no).one().username
         except Exception as e:
@@ -372,8 +372,8 @@ class Manager(object):
         return ''
 
     def set_attendance(self, day, period, username, start, end, mode):
-        pres_t = self.pich_db.presence
-        emp_t = self.pich_db.employee
+        pres_t = self.db.presence
+        emp_t = self.db.employee
         per_year = int(period.split('-')[1])
         per_month = int(period.split('-')[0])
         day_no = int(day.replace('.', ''))
@@ -418,32 +418,32 @@ class Manager(object):
                 'presence_mode': mode
             })
 
-        self.pich_db.commit()
+        self.db.commit()
 
-    def get_department(self, dept, period):
+    def get_department(self, dept, month, year):
         retval = {'data': []}
-        emp_t = self.pich_db.employee
-        pv_t = self.pich_db.pv
-        pres_t = self.pich_db.presence
-        per_range = monthrange(
-            int(period.split('-')[1]), int(period.split('-')[0]))
-        per_start = datetime.strptime(
-            period + f'-{per_range[0] + 1}', '%m-%Y-%d').date()
-        per_end = datetime.strptime(
-            period + f'-{per_range[1]}', '%m-%Y-%d').date()
-        query = self.pich_db.session.query(pv_t, emp_t).join(emp_t)
-        pv_with_emp = query.filter(
-            or_(pv_t.validity.contains(per_start),
-                pv_t.validity.contains(per_end))
-        ).all()
+
+        emp_t = self.db.employee
+        pv_t = self.db.pv
+        pres_t = self.db.presence
+
+        per_range = monthrange(year, month)
+        query = self.db.session.query(pv_t, emp_t).join(emp_t)
+        month_period = DateRange(date(year, month, 1), date(
+            year, month, per_range[1]), '[]')
+
+        pv_with_emp = query \
+            .filter(pv_t.validity.overlaps(month_period)) \
+            .all()
+
         for pv, employee in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
-            if str(pv.department)[0] == str(dept) or str(pv.department) == str(dept):
+            if str(pv.department).startswith(str(dept)):
                 retval_dict = {
                     'Jméno': f'{employee.first_name} {employee.last_name}'}
 
                 for day in range(per_range[1]):
-                    curr_date = date(per_start.year, per_start.month, day + 1)
+                    curr_date = date(year, month, day + 1)
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee ==
                              employee.uid, pres_t.date == curr_date)
@@ -464,8 +464,8 @@ class Manager(object):
         return retval
 
     def init_presence(self, period, source):
-        pres_t = self.pich_db.presence
-        emp_t = self.pich_db.employee
+        pres_t = self.db.presence
+        emp_t = self.db.employee
         per_year = int(period.split('-')[1])
         per_month = int(period.split('-')[0])
         per_range = monthrange(per_year, per_month)
@@ -511,11 +511,11 @@ class Manager(object):
                         presence_s.update(
                             {'departure': depart.time(), 'food_stamp': food_stamp})
 
-        self.pich_db.commit()
+        self.db.commit()
 
     def update_presence(self, date, source):
-        pres_t = self.pich_db.presence
-        emp_t = self.pich_db.employee
+        pres_t = self.db.presence
+        emp_t = self.db.employee
         for employee in emp_t.all():
             arriv = source.get_arrival(date, employee.uid)
             depart = source.get_departure(date, employee.uid)
@@ -551,7 +551,7 @@ class Manager(object):
                         'food_stamp': food_stamp
                     })
 
-        self.pich_db.commit()
+        self.db.commit()
 
     def sync(self, date, source, src_name, elanor):
         self.check_loop = LoopingCall(
@@ -563,8 +563,8 @@ class Manager(object):
         self.check_loop_2.start(3600)
 
     def update_pvs(self, elanor):
-        pv_t = self.pich_db.pv
-        emp_t = self.pich_db.employee
+        pv_t = self.db.pv
+        emp_t = self.db.employee
         for employee in emp_t.all():
             for pv in elanor.get_pvs(employee.emp_no):
                 uid_emp = emp_t.filter(
@@ -601,4 +601,4 @@ class Manager(object):
                             uid_employee=uid_emp
                         )
 
-        self.pich_db.commit()
+        self.db.commit()
