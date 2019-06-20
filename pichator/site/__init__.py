@@ -56,6 +56,11 @@ def make_site(manager, access_model, debug=False):
         return ('', 'Leden', 'Únor', 'Březen', 'Duben', 'Květen',
                 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec')[t]
 
+    @app.template_filter('day_name')
+    def day_name(t):
+        return ('Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle')[t]
+
+
     @app.template_global('attendance_class')
     def attendance_row_class(day):
         date = day['date']
