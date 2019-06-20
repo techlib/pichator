@@ -249,8 +249,8 @@ class Manager(object):
             pv, timetable = pv_with_timetable
             # Timetable already exist so we end its validty before new timetable is valid
             tt_timeid = timetable.timeid
-            cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid).one()
-            validity_from = cur_tt.validity.lower
+            cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid)
+            validity_from = cur_tt.one().validity.lower
             new_validity = DateRange(validity_from, today)
             cur_tt.update({'validity': new_validity})
 
@@ -445,7 +445,7 @@ class Manager(object):
             .all()
             
         if not pv_with_emp:
-            log.msg(f'No valid employees for period {month_period.lower} - {month_period.upper}')
+            log.msg(f'No valid employees with timetable for period {month_period.lower} - {month_period.upper}')
             return retval
         
         for pv, employee, timetable in pv_with_emp:
@@ -468,7 +468,7 @@ class Manager(object):
                             TimeRange('00:00', '00:00')
                         ]
                     else:
-                        timetable = None
+                        timetable_list = [TimeRange('00:00', '00:00')]*7
                     
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee ==
@@ -476,11 +476,10 @@ class Manager(object):
                     ).first()
                     if curr_date.isoweekday() in [6, 7]:
                         symbol = 'S'
+                    elif timetable_list[curr_date.weekday()].lower == timetable_list[curr_date.weekday()].upper:
+                        symbol = '-'
                     elif not presence:
                         symbol = 'A'
-                    elif timetable and\
-                    timetable_list[curr_date.isoweekday()].lower == timetable_list[curr_date.isoweekday()].upper:
-                        symbol = '-'
                     else:
                         symbol = eng_to_symbol(
                             presence.presence_mode, presence.food_stamp
