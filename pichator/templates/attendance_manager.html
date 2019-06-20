@@ -41,10 +41,15 @@
             viewMode: 'months',
             format: 'mm-yyyy',
             minViewMode: 'months',
-        });
+            todayHighlight: false,
+            todayBtn: 'linked',
+            language: 'cs',
+        })
+
+        $('#period').datepicker('setDate', '{{ month }}-{{ year }}');
 
         $("#period").datepicker().on('changeDate', function (e) {
-            const date = $(this).val().split('-')
+            const date = e.format().split('-')
             const url = '/' + parseInt(date[1]) + '/' + parseInt(date[0]) + '/{{ pvid }}';
             window.location.href = url
         });
@@ -59,7 +64,7 @@
         <form class='form-inline' id='attendance-form' method='post'>
             <div class='form-group'>
                 <label for='period'>Období:</label>
-                <input class='form-control' name='period' id="period" type='text' value="{{ month }}-{{ year }}">
+                <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
             </div>
             <div class='form-group'>
                 <label for='pvs'>PV:</label>
