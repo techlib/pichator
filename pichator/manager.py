@@ -332,6 +332,8 @@ class Manager(object):
             attend = pres_t.filter(
                 and_(pres_t.date == day_date, pres_t.uid_employee == uid)
             ).first()
+
+
             if timetable_list[weekday].lower == timetable_list[weekday].upper:
                 mode = 'Presence'
             elif attend:
