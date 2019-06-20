@@ -8,14 +8,6 @@
 <script>
     var pvs = [];
 
-    function skipWeekend(data, type, row) {
-        if (row.weekday == 'Sobota' || row.weekday == 'Neděle') {
-            return null
-        }
-
-        return data
-    }
-
     function submit_data() {
         i = 0
         if ($('#pvs')[0].length != 1) {
@@ -34,127 +26,29 @@
         });
     }
 
-    function reload_table() {
-        if ($.fn.DataTable.isDataTable('#attendance')) {
-            $('#attendance').DataTable().destroy();
-        }
-        $('#attendance tbody').empty();
-
-        attendance = $('#attendance').DataTable({
-            columns: [{
-                    data: 'day',
-                    render: function (data, type, row) {
-                        return data + ' ' + row.weekday
-
-                    }
-                },
-                {
-                    data: 'start',
-                    render: skipWeekend
-                },
-                {
-                    data: 'end',
-                    render: skipWeekend
-                },
-                {
-                    data: 'mode',
-                    render: skipWeekend
-                },
-                {
-                    data: 'timetable',
-                    render: skipWeekend
-                },
-            ],
-            order: [
-                [0, "asc"]
-            ],
-            createdRow: function (row, data, dataIndex) {
-                period = $('#period').val();
-                today = new Date();
-                row_date = new Date(period.split('-')[1], period.split('-')[0] - 1, (dataIndex + 1))
-                in_future = row_date > today
-                if (row_date.getDate() == today.getDate()) {
-                    $(row).addClass('info');
-                } else if (data.weekday == 'Sobota' || data.weekday == 'Neděle') {
-                    $(row).addClass('weekend');
-                } else if (data.mode == 'Absence' && !in_future) {
-                    $(row).addClass('absence');
-                }
-            },
-            ajax: {
-                'url': '/attendance_data',
-                'data': function (d) {
-                    d.pvid = pvs[i].PV;
-                    d.period = $('#period').val();
-                    d.username = pvs[i].username;
-
-                },
-            },
-            paging: false,
-            searching: false,
-            bLengthChange: false,
-            bInfo: false,
-            ordering: false,
-        });
-    }
-
-    function refresh_dept() {
-        i = 0
-        if ($('#pvs')[0].length != 1) {
-            i = $('#pvs')[0].selectedIndex;
-        }
-        $('#dept')[0].value = pvs[i].dept;
-    }
-
     $(document).ready(function () {
+        $('#attendance tbody tr').on('click', function () {
+            const data = $(this).data()
+            $('#editForm-day').val(data.day);
+            $('#editForm-start').val(data.arrival);
+            $('#editForm-end').val(data.departure);
+            $('#editForm-mode').val(data.mode);
+            $('#editForm-weekday').val(data.weekday);
+            $('#modalEditForm').modal('show');
+        })
+
         $('#period').datepicker({
             viewMode: 'months',
             format: 'mm-yyyy',
             minViewMode: 'months',
         });
+
         $("#period").datepicker().on('changeDate', function (e) {
-            $.get('/get_emp?' + $.param({
-                    period: $("#period").val(),
-                    dept: "{{ dept }}"
-                }))
-                .done(function (data) {
-                    $('#pvs').empty();
-                    pvs = data
-                    for (i = 0; i < pvs.length; i++) {
-                        $('#pvs').append('<option value = ' + pvs[i].first_name + ' ' + pvs[i]
-                            .last_name + ' - ' + pvs[i].PV + '>' + pvs[i].first_name + ' ' +
-                            pvs[i]
-                            .last_name + ' - ' + pvs[i].PV +
-                            '</option>')
-                    }
-                    refresh_dept();
-                    $('#pvs').selectpicker('refresh');
-                    i = 0
-                    if ($('#pvs')[0].length != 1) {
-                        i = $('#pvs')[0].selectedIndex;
-                    }
-                    reload_table();
-                });
+            const date = $(this).val().split('-')
+            const url = '/' + parseInt(date[1]) + '/' + parseInt(date[0]) + '/{{ pvid }}';
+            window.location.href = url
         });
-        $('#period').datepicker('setDate', new Date());
-        $("#pvs").selectpicker();
-        $("#pvs")
-            .selectpicker().on('change', function (e) {
-                refresh_dept();
-                reload_table();
-            });
-        $('#attendance tbody').on('click', 'tr', function (e) {
-            e.stopPropagation();
-            var data = attendance.row(this).data();
-            if (data.weekday != 'Sobota' && data.weekday != 'Neděle') {
-                $('#editForm-day').val(data.day);
-                $('#editForm-start').val(data.start);
-                $('#editForm-end').val(data.end);
-                $('#editForm-mode').val(data.mode);
-                $('#editForm-weekday').val(data.weekday);
-                $('#modalEditForm').modal('show');
-            }
-        });
+
         $('.clock-picker').clockpicker();
         $('#editForm-mode').selectpicker();
     });
@@ -165,15 +59,13 @@
         <form class='form-inline' id='attendance-form' method='post'>
             <div class='form-group'>
                 <label for='period'>Období:</label>
-                <input class='form-control' name='period' id="period" type='text'>
+                <input class='form-control' name='period' id="period" type='text' value="{{ month }}-{{ year }}">
             </div>
             <div class='form-group'>
                 <label for='pvs'>PV:</label>
-                <select class='form-control' name='pvs' id="pvs"></select>
-            </div>
-            <div class='form-group'>
-                <label for=''>Oddělení:</label>
-                <input class='form-control' id='dept' name='dept' type='text' readonly>
+                {% for pv in pvs %}
+                <a href="/{{ year }}/{{ month }}/{{ pv.pvid }}">Útvar {{ pv.department }}</a>
+                {% endfor %}
             </div>
         </form>
     </div>
@@ -238,7 +130,8 @@
     </div>
     <div class="row">
         <div class="col-md-6 col-md-push-3">
-            <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
+            <table class='table-hover table-striped table table-bordered table-responsive' id='attendance'
+                name='attendance'>
                 <thead>
                     <tr>
                         <th>Den v měsíci</th>
@@ -249,6 +142,25 @@
                     </tr>
                 </thead>
                 <tbody>
+                <tbody>
+                    {% for index, day in attendance.items() %}
+                    <tr class="{{ attendance_class(day) }}" data-date="" data-arrival="" data-departure="" data-mode="">
+                        <td>{{ day.day }}. {{ day.date.weekday() }}</td>
+
+                        {% if day.timetable %}
+                        <td>{{ day.arrival|short_time }}</td>
+                        <td>{{ day.departure|short_time }}</td>
+                        <td>{{ day.mode }}</td>
+                        <td>{{ day.timetable.lower|short_time }} - {{ day.timetable.upper|short_time }}</td>
+                        {% else %}
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
                 </tbody>
             </table>
         </div>

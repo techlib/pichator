@@ -5,6 +5,7 @@
 {% block content %}
 
 {% block scripts %}
+
 <script>
     var pvs = [];
 
@@ -42,28 +43,28 @@
 
         attendance = $('#attendance').DataTable({
             columns: [{
-                    data: 'day',
-                    render: function (data, type, row) {
-                        return data + ' ' + row.weekday
+                data: 'day',
+                render: function (data, type, row) {
+                    return data + ' ' + row.weekday
 
-                    }
-                },
-                {
-                    data: 'start',
-                    render: skipWeekend
-                },
-                {
-                    data: 'end',
-                    render: skipWeekend
-                },
-                {
-                    data: 'mode',
-                    render: skipWeekend
-                },
-                {
-                    data: 'timetable',
-                    render: skipWeekend
-                },
+                }
+            },
+            {
+                data: 'start',
+                render: skipWeekend
+            },
+            {
+                data: 'end',
+                render: skipWeekend
+            },
+            {
+                data: 'mode',
+                render: skipWeekend
+            },
+            {
+                data: 'timetable',
+                render: skipWeekend
+            },
             ],
             order: [
                 [0, "asc"]
@@ -113,8 +114,8 @@
         });
         $("#period").datepicker().on('changeDate', function (e) {
             $.get('/pvs?' + $.param({
-                    period: $("#period").val()
-                }))
+                period: $("#period").val()
+            }))
                 .done(function (data) {
                     $('#pvs').empty();
                     pvs = data.data
@@ -245,6 +246,15 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for day in attendance %}
+                    <tr class="{{ day_class(day) }}">
+                        <td>Den v měsíci</td>
+                        <td>Příchod</td>
+                        <td>Odchod</td>
+                        <td>Režim docházky</td>
+                        <td>Pracovní doba</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

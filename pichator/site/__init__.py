@@ -44,6 +44,29 @@ def make_site(manager, access_model, debug=False):
             'error': 'pficon-error-circle-o',
         }[category]
 
+    @app.template_filter('short_time')
+    def short_time(t):
+        if not t:
+            return ''
+
+        return t.strftime('%H:%M')
+
+    @app.template_global('attendance_class')
+    def attendance_row_class(day):
+        date = day['date']
+        today = datetime.today().date()
+
+        if date.weekday() in (5, 6):
+            return 'weekend'
+
+        if date == today:
+            return 'info'
+
+        if day['mode'] == 'absence':
+            return 'absence'
+
+        return ''
+
     def has_privilege(privilege):
         roles = flask.request.headers.get('X-Roles', '')
 
@@ -96,21 +119,35 @@ def make_site(manager, access_model, debug=False):
     def internalservererror(e):
         return flask.render_template('internal_server_error.html')
 
-    @app.route('/')
+    @app.route('/', defaults={'year': None, 'month': None, 'pvid': None})
+    @app.route('/<int:year>/<int:month>/<pvid>')
     @authorized_only('admin')
     @pass_user_info
-    def index(uid, username):
+    def index(uid, username, year, month, pvid):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
         acl = manager.get_acl(username)
-        log.msg(f'acl is {acl}')
-        if acl == 'readonly':
-            return flask.render_template('attendance_ro.html', **locals())
+        today = datetime.today().date()
+
+        year = year or today.year
+        month = month or today.month
+
+        pvs = manager.get_pvs(uid, month, year)
+        pvid = pvid or pvs[0]['pvid']
+
+        attendance = manager.get_attendance2(uid, pvid, month, year, username)
+        readonly = acl == 'readonly'
+
+        return flask.render_template('attendance_manager.html', **locals())
+
+        """
         elif acl.isdigit():
             dept = int(acl)
-            return flask.render_template('attendance_manager.html', **locals())
+            employess = manager.get_employees(dept, month, year)
+
         else:
             return flask.render_template('attendance.html', **locals())
+        """
 
     @app.route('/get_emp')
     @authorized_only('admin')
@@ -120,7 +157,7 @@ def make_site(manager, access_model, debug=False):
         dept = flask.request.values.get('dept')
         period = flask.request.values.get('period').split('-')
         return flask.jsonify(manager.get_employees(dept, int(period[0]), int(period[1])))
-    
+
     @app.route('/dept')
     @authorized_only('admin')
     @pass_user_info
@@ -189,7 +226,7 @@ def make_site(manager, access_model, debug=False):
             log.err('Query for list of PVs without required period parameter.')
             raise NotAcceptable
 
-        return flask.jsonify(manager.get_pvs(uid, int(period[0]), int(period[1]) ))
+        return flask.jsonify(manager.get_pvs(uid, int(period[0]), int(period[1])))
 
     @app.route('/attendance_data')
     @authorized_only('admin')
@@ -208,14 +245,14 @@ def make_site(manager, access_model, debug=False):
         if str(emp_no) != pvid.split('.')[0] and not manager.get_acl(username).isdigit():
             log.err('Requesting attendance data for user other than is logged-in.')
             raise Forbidden
-        period = flask.request.values.get('period')
+        period = flask.request.values.get('period').split('-')
 
         if not pvid or not period:
             log.err(
                 'Query for attendance data without required parameter pvid or period.')
             raise NotAcceptable
 
-        return flask.jsonify(manager.get_attendance(uid, pvid, period, username))
+        return flask.jsonify(manager.get_attendance2(uid, pvid, int(period[0]), int(period[1]), username))
 
     @app.route('/attendance_submit')
     @authorized_only('admin')
