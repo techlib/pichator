@@ -59,7 +59,7 @@ def eng_to_symbol(mode, stamp):
         'Injury and disease from profession': 'Ú',
         'Unpaid leave': 'V',
         'Public interest': 'Z',
-        'Sickday': 'ZV'
+        'Sickday': 'ZV',
     }
 
     return obj_mapping[mode]
@@ -256,8 +256,8 @@ class Manager(object):
             pv, timetable = pv_with_timetable
             # Timetable already exist so we end its validty before new timetable is valid
             tt_timeid = timetable.timeid
-            cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid).one()
-            validity_from = cur_tt.validity.lower
+            cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid)
+            validity_from = cur_tt.one().validity.lower
             new_validity = DateRange(validity_from, today)
             cur_tt.update({'validity': new_validity})
 
@@ -391,12 +391,20 @@ class Manager(object):
             attend = pres_t.filter(
                 and_(pres_t.date == day_date, pres_t.uid_employee == uid)
             ).first()
+
+
+            if timetable_list[weekday].lower == timetable_list[weekday].upper:
+                mode = 'Presence'
+            elif attend:
+                mode = eng_to_czech(attend.presence_mode)
+            else:
+                mode = 'Absence'
             if attend:
                 retval['data'].append({
                     'day': f'{day}. ',
                     'start': f'{attend.arrival}',
                     'end': f'{attend.departure}',
-                    'mode': eng_to_czech(attend.presence_mode),
+                    'mode': mode,
                     'stamp': 'Ano' if attend.food_stamp else 'Ne',
                     'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                     'weekday': WEEKDAYS[weekday]
@@ -406,7 +414,7 @@ class Manager(object):
                     'day': f'{day}. ',
                     'start': '00:00',
                     'end': '00:00',
-                    'mode': 'Absence',
+                    'mode': mode,
                     'stamp': 'Ne',
                     'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
                     'weekday': WEEKDAYS[weekday]
@@ -479,17 +487,27 @@ class Manager(object):
         emp_t = self.db.employee
         pv_t = self.db.pv
         pres_t = self.db.presence
+        timetable_t = self.db.timetable
 
         per_range = monthrange(year, month)
-        query = self.db.session.query(pv_t, emp_t).join(emp_t)
+        query = self.db.session.query(pv_t, emp_t, timetable_t)\
+        .join(emp_t)\
+        .outerjoin(timetable_t)
+        
+        log.msg(query)
+        
         month_period = DateRange(date(year, month, 1), date(
             year, month, per_range[1]), '[]')
 
         pv_with_emp = query \
-            .filter(pv_t.validity.overlaps(month_period)) \
+            .filter(and_(pv_t.validity.overlaps(month_period), timetable_t.validity.overlaps(month_period))) \
             .all()
-
-        for pv, employee in pv_with_emp:
+            
+        if not pv_with_emp:
+            log.msg(f'No valid employees with timetable for period {month_period.lower} - {month_period.upper}')
+            return retval
+        
+        for pv, employee, timetable in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
             if str(pv.department).startswith(str(dept)):
                 retval_dict = {
@@ -497,20 +515,35 @@ class Manager(object):
 
                 for day in range(per_range[1]):
                     curr_date = date(year, month, day + 1)
+                    
+                    if timetable and curr_date in timetable.validity:
+                        timetable_list = [
+                            timetable.monday,
+                            timetable.tuesday,
+                            timetable.wednesday,
+                            timetable.thursday,
+                            timetable.friday,
+                            TimeRange('00:00', '00:00'),
+                            TimeRange('00:00', '00:00')
+                        ]
+                    else:
+                        timetable_list = [TimeRange('00:00', '00:00')]*7
+                    
                     presence = pres_t.filter(
                         and_(pres_t.uid_employee ==
                              employee.uid, pres_t.date == curr_date)
                     ).first()
                     if curr_date.isoweekday() in [6, 7]:
-                        retval_dict[str(day + 1)] = 'S'
+                        symbol = 'S'
+                    elif timetable_list[curr_date.weekday()].lower == timetable_list[curr_date.weekday()].upper:
+                        symbol = '-'
+                    elif not presence:
+                        symbol = 'A'
                     else:
-                        if not presence:
-                            symbol = 'A'
-                        else:
-                            symbol = eng_to_symbol(
-                                presence.presence_mode, presence.food_stamp
-                            )
-                        retval_dict[str(day+1)] = symbol
+                        symbol = eng_to_symbol(
+                            presence.presence_mode, presence.food_stamp
+                        )
+                    retval_dict[str(day+1)] = symbol
 
                 retval['data'].append(retval_dict)
 
