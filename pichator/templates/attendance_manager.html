@@ -61,19 +61,31 @@
 </script>
 {% endblock %}
 <div class='container-fluid'>
-    <div class='row buffer-top-md well'>
-        <form class='form-inline' id='attendance-form' method='post'>
-            <div class='form-group'>
-                <label for='period'>Období:</label>
-                <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
+    <div class="row pichator-toolbar toolbar-pf">
+        <div class="col-sm-12">
+            <div class="row toolbar-pf-results">
+                <div class="col-sm-12">
+                    <h5>Období</h5>
+                    <p>
+                        <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
+                    </p>
+
+                    <h5>PV</h5>
+                    <ul class="list-inline">
+                        {% for pv in pvs %}
+                        <li>
+                            {% if pv.pvid == pvid %}
+                            Útvar {{ pv.department }}
+                            {% else %}
+                            <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">Útvar
+                                {{ pv.department }}</a>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-            <div class='form-group'>
-                <label for='pvs'>PV:</label>
-                {% for pv in pvs %}
-                <a href="/{{ year }}/{{ month }}/{{ pv.pvid }}">Útvar {{ pv.department }}</a>
-                {% endfor %}
-            </div>
-        </form>
+        </div>
     </div>
     <div class="modal fade" id="modalEditForm" tabindex="-1" role="dialog" aria-labelledby="Editace docházky"
         aria-hidden="true">
@@ -134,7 +146,7 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row buffer-top-md">
         <div class="col-md-6 col-md-push-3">
             <table class='table-hover table-striped table table-bordered table-responsive' id='attendance'
                 name='attendance'>

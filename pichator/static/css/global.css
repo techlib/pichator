@@ -14,3 +14,27 @@
 .weekend td:first-child{
     font-weight: bold !important
 }
+
+.pichator-toolbar.toolbar-pf {
+    padding-top: 0px !important;
+}
+
+.pichator-toolbar .toolbar-pf-results {
+    margin-top: 0px !important;
+    border-top: 0 !important;
+}
+
+
+.pichator-toolbar .toolbar-pf-results h5:not(:first-child)  {
+    margin-left: 40px;
+}
+
+
+.pichator-toolbar .toolbar-pf-results ul.list-inline > * + * {
+    margin-left: 10px;
+}
+
+
+.pichator-toolbar .toolbar-pf-results ul.list-inline li.active {
+    font-weight: bold;
+}
