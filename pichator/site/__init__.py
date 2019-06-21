@@ -61,6 +61,15 @@ def make_site(manager, access_model, debug=False):
         return ('Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle')[t]
 
 
+    @app.template_filter('unit_type')
+    def unit_type(t):
+        types = {
+            1: 'Odbor',
+            2: 'Oddělení',
+            3: 'Referát'
+        }
+        return '{} {}'.format(types[len(str(t))], t)
+
     @app.template_global('attendance_class')
     def attendance_row_class(day):
         date = day['date']

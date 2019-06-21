@@ -75,10 +75,11 @@
                         {% for pv in pvs %}
                         <li>
                             {% if pv.pvid == pvid %}
-                            Útvar {{ pv.department }}
+                                {{ pv.department|unit_type }}
                             {% else %}
-                            <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">Útvar
-                                {{ pv.department }}</a>
+                            <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">
+                                {{ pv.department|unit_type }}
+                            </a>
                             {% endif %}
                         </li>
                         {% endfor %}
