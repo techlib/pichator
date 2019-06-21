@@ -90,10 +90,10 @@
             <div class='form-group' id="modes">
                 <div class='pf-c-radio'>
                     <input class='form-control pf-c-radio__input' name='modes' id='auto' type='radio' value='auto'
-                        {% if not mode or mode == 'auto' %} checked {% endif %}>
+                        {% if mode == 'auto' %} checked {% endif %}>
                     <label class='pf-c-radio__label' for="auto">Automaticky generovaná</label>
                     <input class='form-control pf-c-radio__input' name='modes' id='edit' type='radio' value='edit'
-                        {% if mode == 'edit' %} checked {% endif %}>
+                        {% if not mode or mode == 'edit' %} checked {% endif %}>
                     <label class='pf-c-radio__label' for="edit">S editací docházky</label>
                     <input class='form-control pf-c-radio__input' name='modes' id='readonly' type='radio'
                         value='readonly' {% if mode == 'readonly' %} checked {% endif %}>

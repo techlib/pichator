@@ -153,9 +153,14 @@ def make_site(manager, access_model, debug=False):
 
         pvs = manager.get_pvs(uid, month, year)
         pvid = pvid or pvs[0]['pvid']
+        department = manager.get_dept(pvid, date(year, month, 1)) or manager.get_dept(pvid, date(year, month, 28))
 
         attendance = manager.get_attendance2(uid, pvid, month, year, username)
-        readonly = acl == 'readonly'
+        
+        # Restrictive mode - if one of your superiors blocked edit mode on any level of hierarchy you cant edit.
+        readonly = False
+        for i in range(1, 4):
+            readonly = readonly or manager.get_dept_mode(str(department)[:i]) == 'readonly'
 
         return flask.render_template('attendance.html', **locals())
 

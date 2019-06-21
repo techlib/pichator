@@ -210,7 +210,7 @@ class Manager(object):
     
     def get_dept_mode(self, dept):
         helper_t = self.db.helper_variables
-        mode_row = helper_t.filter(helper_t.key == dept).first()
+        mode_row = helper_t.filter(helper_t.key == str(dept)).first()
         if not mode_row:
             return
         else:
@@ -502,7 +502,15 @@ class Manager(object):
             })
 
         self.db.commit()
-
+        
+    def get_dept(self, pvid, date):
+        pv_t = self.db.pv
+        pv = pv_t.filter(and_(pv_t.pvid == pvid, pv_t.validity.contains(date))).first()
+        if not pv:
+            log.msg(f'PV {pvid} is not valid at {date}. Cannot return department.')
+            return
+        return pv.department
+    
     def get_department(self, dept, month, year):
         retval = {'data': []}
 
