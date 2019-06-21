@@ -88,6 +88,9 @@ def eng_to_czech(mode):
     return obj_mapping[mode]
 
 
+def get_dayname(number):
+    return ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')[number]
+
 class Manager(object):
     def __init__(self, db):
         self.db = db
@@ -129,6 +132,10 @@ class Manager(object):
     def month_range(self, year, month):
         days = monthlen(year, month)
         return DateRange(date(year, month, 1), date(year, month, days), '[]')
+
+    def daterange_iter(self, dr):
+        for n in range(int((dr.upper - dr.lower).days)):
+            yield dr.lower + timedelta(n)
 
     def get_employees(self, dept, month, year):
         retval = []
@@ -290,22 +297,74 @@ class Manager(object):
             raise InternalServerError
 
     def get_pvs(self, emp_uid, month, year):
-        retval = {'data': []}
+        retval = []
 
         pv_t = self.db.pv
 
         pvs = self.db.session \
             .query(pv_t) \
             .filter(pv_t.uid_employee == emp_uid) \
-            .filter(pv_t.validity.overlaps(self.month_range(month, year)))
+            .filter(pv_t.validity.overlaps(self.month_range(year, month)))
 
         for pv in pvs.all():
-            retval['data'].append({
-                'PV': pv.pvid,
-                'dept': pv.department
+            retval.append({
+                'pvid': pv.pvid,
+                'department': pv.department
             })
 
         return retval
+
+    def get_attendance2(self, uid, pvid, month, year, username):
+        result = {}
+        days = monthlen(year, month)
+
+        time_t = self.db.timetable
+        pres_t = self.db.presence
+        pv_t   = self.db.pv
+
+        month_range = self.month_range(year, month)
+
+        # generate empty month with no presence
+        for day in range(1, days + 1):
+            result[day] = {
+                'day': day,
+                'mode': None,
+                'timetable': None,
+                'date': date(year, month, day),
+                'arrival': None,
+                'departure': None,
+            }
+
+        # fill in actual presence
+        presence = pres_t \
+            .filter(pres_t.date >= month_range.lower) \
+            .filter(pres_t.date <= month_range.upper) \
+            .filter(pres_t.uid_employee == uid)
+
+        for p in presence.all():
+            result[p.date.day] = {**result[p.date.day], **{
+                'mode':  p.presence_mode,
+                'arrival': p.arrival,
+                'departure': p.departure
+            }}
+
+        # add timetable information
+        timetables = time_t \
+            .join(pv_t) \
+            .filter(pv_t.pvid == pvid) \
+            .filter(time_t.validity.overlaps(month_range))
+
+        all_timetables = timetables.all()
+        for _, day in result.items():
+            for timetable in all_timetables:
+                weekday = day['date'].weekday()
+                if day['date'] in timetable.validity and weekday < 5:
+                    day['timetable'] = getattr(timetable, get_dayname(weekday))
+                    day['mode'] = day['mode'] or ('absence' if day['timetable'] else None)
+                    break
+
+        return result
+
 
     def get_attendance(self, uid, pvid, period, username):
         WEEKDAYS = ['Pondělí', 'Úterý', 'Středa',
