@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Docházka za oddělení {{ acl }}{% endblock %}
+{% block title %}Docházka za útvar {{ acl }}{% endblock %}
 {%- set active_page = 'department' %}
 
 {% block content %}
@@ -50,14 +50,12 @@
                 order: [
                     [0, "asc"]
                 ],
-                buttons:[
-                    {
-                        extend: 'pdfHtml5',
-                        orientation: 'landscape',
-                        pageSize: 'A4',
-                    }
-                ],
-                dom:'Bt',
+                buttons: [{
+                    extend: 'pdfHtml5',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                }],
+                dom: 'Bt',
             });
         });
     };
@@ -68,8 +66,8 @@
             format: 'mm-yyyy',
             minViewMode: 'months',
         });
-         
-        $("#period").datepicker().on('changeDate', function(e){
+
+        $("#period").datepicker().on('changeDate', function (e) {
             reload_table();
         })
         $('#period').datepicker('setDate', new Date());
@@ -87,6 +85,23 @@
             <div class='form-group'>
                 <label for=''>Oddělení:</label>
                 <input class='form-control' id='dept' name='dept' type='text' readonly value='{{ acl }}'>
+            </div>
+            <label for='modes'>Mód docházky:</label>
+            <div class='form-group' id="modes">
+                <div class='pf-c-radio'>
+                    <input class='form-control pf-c-radio__input' name='modes' id='auto' type='radio' value='auto'
+                        {% if not mode or mode == 'auto' %} checked {% endif %}>
+                    <label class='pf-c-radio__label' for="auto">Automaticky generovaná</label>
+                    <input class='form-control pf-c-radio__input' name='modes' id='edit' type='radio' value='edit'
+                        {% if mode == 'edit' %} checked {% endif %}>
+                    <label class='pf-c-radio__label' for="edit">S editací docházky</label>
+                    <input class='form-control pf-c-radio__input' name='modes' id='readonly' type='radio'
+                        value='readonly' {% if mode == 'readonly' %} checked {% endif %}>
+                    <label class='pf-c-radio__label' for="readonly">Pouze prohlížení docházky</label>
+                </div>
+            </div>
+            <div class col-md-2>
+                <input class='btn btn-success' type='submit' value='Uložit'>
             </div>
         </form>
     </div>

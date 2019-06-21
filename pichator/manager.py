@@ -218,13 +218,13 @@ class Manager(object):
         
     def set_dept_mode(self, dept, mode):
         helper_t = self.db.helper_variables
-        prev_mode_row = helper_t.filter(helper_t.key == dept).first()
-        if prev_mode_row:
-            value = prev_mode_row.value
+        prev_mode_row = helper_t.filter(helper_t.key == dept)
+        if prev_mode_row.first():
+            value = prev_mode_row.first().value
             if mode == value:
                 return
             else:
-                prev_mode_row.first().update({'value': mode})
+                prev_mode_row.update({'value': mode})
         else:
             helper_t.insert(key = dept, value = mode)
             
@@ -515,8 +515,6 @@ class Manager(object):
         query = self.db.session.query(pv_t, emp_t, timetable_t)\
         .join(emp_t)\
         .outerjoin(timetable_t)
-        
-        log.msg(query)
         
         month_period = DateRange(date(year, month, 1), date(
             year, month, per_range[1]), '[]')

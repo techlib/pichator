@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="13,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="797,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -89,17 +89,13 @@ Jakub•Chalupa•952•jakubch•595067]]>
 	<role name="pichator"/>
 </sequence>
 
-<table name="helper_variables">
+<sequence name="helper_variables_uid_seq"
+	 start="1" increment="1"
+	 min-value="0" max-value="2147483647"
+	 cache="1" cycle="false">
 	<schema name="public"/>
 	<role name="pichator"/>
-	<position x="1160" y="480"/>
-	<column name="key">
-		<type name="character varying" length="0"/>
-	</column>
-	<column name="value">
-		<type name="character varying" length="0"/>
-	</column>
-</table>
+</sequence>
 
 <table name="presence">
 	<schema name="public"/>
@@ -232,5 +228,23 @@ Jakub•Chalupa•952•jakubch•595067]]>
 	 src-table="public.pv"
 	 dst-table="public.timetable"
 	 src-required="true" dst-required="false"/>
+
+<table name="helper_variables">
+	<schema name="public"/>
+	<role name="pichator"/>
+	<position x="1160" y="480"/>
+	<column name="key">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="value">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="uid" not-null="true" sequence="public.helper_variables_uid_seq">
+		<type name="smallint" length="0"/>
+	</column>
+	<constraint name="helper_variables_pk" type="pk-constr" table="public.helper_variables">
+		<columns names="uid" ref-type="src-columns"/>
+	</constraint>
+</table>
 
 </dbmodel>
