@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrační rozhraní pro útvar {{ acl }}{% endblock %}
+
+{% block content %}
+
+{% block scripts %}
+<script type='javascript/html'>
+
+</script>
+{% endblock %}
+<div class='container-fluid'>
+    <div class='row buffer-top-md well'>
+        <form class='form-inline' id='mode-form' method='post'>
+            <label for='modes'>Mód docházky:</label>
+            <div class='form-group' id="modes">
+                <div class='pf-c-radio'>
+                    <input class='form-control pf-c-radio__input' name='modes' id='auto' type='radio' value='auto'
+                        {% if not mode or mode == 'auto' %} checked {% endif %}>
+                    <label class='pf-c-radio__label' for="auto">Automaticky generovaná</label>
+                </div>
+                <div class='pf-c-radio'>
+                    <input class='form-control pf-c-radio__input' name='modes' id='edit' type='radio' value='edit' {% if mode == 'edit' %}
+                        checked {% endif %}>
+                    <label class='pf-c-radio__label' for="edit">S editací docházky</label>
+                </div>
+                <div class='pf-c-radio'>
+                    <input class='form-control pf-c-radio__input' name='modes' id='readonly' type='radio' value='readonly'
+                        {% if mode == 'readonly' %} checked {% endif %}>
+                    <label class='pf-c-radio__label' for="readonly">Pouze prohlížení docházky</label>
+                </div>
+            </div>
+            <div class col-md-2>
+                <input class='btn btn-success' type='submit' value='Uložit'>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

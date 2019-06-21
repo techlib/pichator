@@ -130,6 +130,19 @@ def make_site(manager, access_model, debug=False):
             raise Forbidden
         return flask.render_template('attendance_department.html', **locals())
 
+    @app.route('/admin/<dept>', methods=['GET', 'POST'])
+    @authorized_only('admin')
+    @pass_user_info
+    def show_dept(uid, username, dept):
+        acl = manager.get_acl(username)
+        mode = manager.get_dept_mode(dept)
+        if not acl.isdigit() or not dept == acl:
+            raise Forbidden
+        if flask.request.method == 'POST':
+            mode = flask.request.form['modes']
+            manager.set_dept_mode(dept, mode)
+        return flask.render_template('department_administration.html', **locals())
+    
     @app.route('/dept_data')
     @authorized_only('admin')
     @pass_user_info

@@ -200,7 +200,29 @@ class Manager(object):
             payload['data'].append(pv_data)
 
         return payload
-
+    
+    def get_dept_mode(self, dept):
+        helper_t = self.db.helper_variables
+        mode_row = helper_t.filter(helper_t.key == dept).first()
+        if not mode_row:
+            return
+        else:
+            return mode_row.value
+        
+    def set_dept_mode(self, dept, mode):
+        helper_t = self.db.helper_variables
+        prev_mode_row = helper_t.filter(helper_t.key == dept).first()
+        if prev_mode_row:
+            value = prev_mode_row.value
+            if mode == value:
+                return
+            else:
+                prev_mode_row.first().update({'value': mode})
+        else:
+            helper_t.insert(key = dept, value = mode)
+            
+        self.db.commit()
+            
     def set_timetables(self, data):
         # returns True if commit succeeds, False otherwise
         pv_t = self.db.pv

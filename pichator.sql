@@ -108,14 +108,18 @@ CREATE SEQUENCE public.timetable_timeid_seq
 ALTER SEQUENCE public.timetable_timeid_seq OWNER TO pichator;
 -- ddl-end --
 
--- object: public.helper_variables | type: TABLE --
--- DROP TABLE IF EXISTS public.helper_variables CASCADE;
-CREATE TABLE public.helper_variables(
-	key character varying,
-	value character varying
-);
+-- object: public.helper_variables_uid_seq | type: SEQUENCE --
+-- DROP SEQUENCE IF EXISTS public.helper_variables_uid_seq CASCADE;
+CREATE SEQUENCE public.helper_variables_uid_seq
+	INCREMENT BY 1
+	MINVALUE 0
+	MAXVALUE 2147483647
+	START WITH 1
+	CACHE 1
+	NO CYCLE
+	OWNED BY NONE;
 -- ddl-end --
-ALTER TABLE public.helper_variables OWNER TO pichator;
+ALTER SEQUENCE public.helper_variables_uid_seq OWNER TO pichator;
 -- ddl-end --
 
 -- object: public.presence | type: TABLE --
@@ -188,6 +192,19 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE public.timetable ADD CONSTRAINT pv_fk FOREIGN KEY (uid_pv)
 REFERENCES public.pv (uid) MATCH FULL
 ON DELETE RESTRICT ON UPDATE CASCADE;
+-- ddl-end --
+
+-- object: public.helper_variables | type: TABLE --
+-- DROP TABLE IF EXISTS public.helper_variables CASCADE;
+CREATE TABLE public.helper_variables(
+	key character varying,
+	value character varying,
+	uid smallint NOT NULL DEFAULT nextval('public.helper_variables_uid_seq'::regclass),
+	CONSTRAINT helper_variables_pk PRIMARY KEY (uid)
+
+);
+-- ddl-end --
+ALTER TABLE public.helper_variables OWNER TO pichator;
 -- ddl-end --
 
 
