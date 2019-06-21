@@ -1,21 +1,13 @@
 {% extends 'base.html' %}
 
 {% block title %}Docházka{% endblock %}
+{%- set active_page = 'attendance' %}
 
 {% block content %}
 
 {% block scripts %}
-
 <script>
     var pvs = [];
-
-    function skipWeekend(data, type, row) {
-        if (row.weekday == 'Sobota' || row.weekday == 'Neděle') {
-            return null
-        }
-
-        return data
-    }
 
     function submit_data() {
         i = 0
@@ -35,143 +27,68 @@
         });
     }
 
-    function reload_table() {
-        if ($.fn.DataTable.isDataTable('#attendance')) {
-            $('#attendance').DataTable().destroy();
-        }
-        $('#attendance tbody').empty();
-
-        attendance = $('#attendance').DataTable({
-            columns: [{
-                data: 'day',
-                render: function (data, type, row) {
-                    return data + ' ' + row.weekday
-
-                }
-            },
-            {
-                data: 'start',
-                render: skipWeekend
-            },
-            {
-                data: 'end',
-                render: skipWeekend
-            },
-            {
-                data: 'mode',
-                render: skipWeekend
-            },
-            {
-                data: 'timetable',
-                render: skipWeekend
-            },
-            ],
-            order: [
-                [0, "asc"]
-            ],
-            createdRow: function (row, data, dataIndex) {
-                period = $('#period').val();
-                today = new Date();
-                row_date = new Date(period.split('-')[1], period.split('-')[0] - 1, (dataIndex + 1))
-                in_future = row_date > today
-                if (row_date.getDate() == today.getDate()) {
-                    $(row).addClass('info');
-                } else if (data.weekday == 'Sobota' || data.weekday == 'Neděle') {
-                    $(row).addClass('weekend');
-                } else if (data.mode == 'Absence' && !in_future) {
-                    $(row).addClass('absence');
-                }
-            },
-            ajax: {
-                'url': '/attendance_data',
-                'data': function (d) {
-                    d.pvid = pvs[i].PV;
-                    d.period = $('#period').val();
-
-                },
-            },
-            paging: false,
-            searching: false,
-            bLengthChange: false,
-            bInfo: false,
-            ordering: false,
-        });
-    }
-
-    function refresh_dept() {
-        i = 0
-        if ($('#pvs')[0].length != 1) {
-            i = $('#pvs')[0].selectedIndex;
-        }
-        $('#dept')[0].value = pvs[i].dept;
-    }
-
     $(document).ready(function () {
+        {% if not readonly %}
+        $('#attendance tbody tr').on('click', function () {
+            const data = $(this).data()
+            $('#editForm-day').val(data.day);
+            $('#editForm-start').val(data.arrival);
+            $('#editForm-end').val(data.departure);
+            $('#editForm-mode').val(data.mode);
+            $('#editForm-weekday').val(data.weekday);
+            $('#modalEditForm').modal('show');
+        })
+        {% endif %}
+
         $('#period').datepicker({
             viewMode: 'months',
             format: 'mm-yyyy',
             minViewMode: 'months',
-        });
+            todayHighlight: false,
+            todayBtn: 'linked',
+            language: 'cs',
+        })
+
+        $('#period').datepicker('setDate', '{{ month }}-{{ year }}');
+
         $("#period").datepicker().on('changeDate', function (e) {
-            $.get('/pvs?' + $.param({
-                period: $("#period").val()
-            }))
-                .done(function (data) {
-                    $('#pvs').empty();
-                    pvs = data.data
-                    for (i = 0; i < pvs.length; i++) {
-                        $('#pvs').append('<option value = ' + pvs[i].PV + '>' + pvs[i].PV +
-                            '</option>')
-                    }
-                    refresh_dept();
-                    $('#pvs').selectpicker('refresh');
-                    i = 0
-                    if ($('#pvs')[0].length != 1) {
-                        i = $('#pvs')[0].selectedIndex;
-                    }
-                    reload_table();
-                });
+            const date = e.format().split('-')
+            const url = '/' + parseInt(date[1]) + '/' + parseInt(date[0]) + '/{{ pvid }}';
+            window.location.href = url
         });
-        $('#period').datepicker('setDate', new Date());
-        $("#pvs").selectpicker();
-        $("#pvs")
-            .selectpicker().on('change', function (e) {
-                refresh_dept();
-                reload_table();
-            });
-        $('#attendance tbody').on('click', 'tr', function (e) {
-            e.stopPropagation();
-            var data = attendance.row(this).data();
-            if (data.weekday != 'Sobota' && data.weekday != 'Neděle') {
-                $('#editForm-day').val(data.day);
-                $('#editForm-start').val(data.start);
-                $('#editForm-end').val(data.end);
-                $('#editForm-mode').val(data.mode);
-                $('#editForm-weekday').val(data.weekday);
-                $('#modalEditForm').modal('show');
-            }
-        });
+
         $('.clock-picker').clockpicker();
         $('#editForm-mode').selectpicker();
     });
 </script>
 {% endblock %}
 <div class='container-fluid'>
-    <div class='row buffer-top-md well'>
-        <form class='form-inline' id='attendance-form' method='post'>
-            <div class='form-group'>
-                <label for='period'>Období:</label>
-                <input class='form-control' name='period' id="period" type='text'>
+    <div class="row pichator-toolbar toolbar-pf">
+        <div class="col-sm-12">
+            <div class="row toolbar-pf-results">
+                <div class="col-sm-12">
+                    <h5>Období</h5>
+                    <p>
+                        <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
+                    </p>
+
+                    <h5>PV</h5>
+                    <ul class="list-inline">
+                        {% for pv in pvs %}
+                        <li>
+                            {% if pv.pvid == pvid %}
+                                {{ pv.department|unit_type }}
+                            {% else %}
+                            <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">
+                                {{ pv.department|unit_type }}
+                            </a>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-            <div class='form-group'>
-                <label for='pvs'>PV:</label>
-                <select class='form-control' name='pvs' id="pvs"></select>
-            </div>
-            <div class='form-group'>
-                <label for=''>Oddělení:</label>
-                <input class='form-control' id='dept' name='dept' type='text' readonly>
-            </div>
-        </form>
+        </div>
     </div>
     <div class="modal fade" id="modalEditForm" tabindex="-1" role="dialog" aria-labelledby="Editace docházky"
         aria-hidden="true">
@@ -200,23 +117,23 @@
                         <div class="form-group">
                             <label for="editForm-mode">Režim docházky</label>
                             <select id="editForm-mode" class="form-control">
-                                <option value='Absence'>Absence</option>
-                                <option value='Presence'>Presence</option>
-                                <option value='Employer difficulties'>Překážka na straně zaměstnavatele</option>
-                                <option value='Vacation'>Dovolená</option>
-                                <option value='Vacation 0.5'>Dovolená 0.5 dne</option>
-                                <option value='On call time'>Pracovní pohotovost</option>
-                                <option value='Sickness'>Nemoc</option>
-                                <option value='Compensatory time off'>Náhradní volno</option>
-                                <option value='Family member care'>Ošetřování člena rodiny</option>
-                                <option value='Personal difficulties'>Osobní překážky</option>
-                                <option value='Business trip'>Služební cesta</option>
-                                <option value='Study'>Studium při zaměstnání</option>
-                                <option value='Training'>Školení</option>
-                                <option value='Injury and disease from proffesion'>Úraz/nemoc z povolání</option>
-                                <option value='Unpaid leave'>Neplacené volno</option>
-                                <option value='Public interest'>Obecný zájem</option>
-                                <option value='Sickday'>Zdravotní volno</option>
+                                <option>Absence</option>
+                                <option>Presence</option>
+                                <option>Překážka na straně zaměstnavatele</option>
+                                <option>Dovolená</option>
+                                <option>Dovolená 0.5 dne</option>
+                                <option>Pracovní pohotovost</option>
+                                <option>Nemoc</option>
+                                <option>Náhradní volno</option>
+                                <option>Ošetřování člena rodiny</option>
+                                <option>Osobní překážky</option>
+                                <option>Služební cesta</option>
+                                <option>Studium při zaměstnání</option>
+                                <option>Školení</option>
+                                <option>Úraz/nemoc z povolání</option>
+                                <option>Neplacené volno</option>
+                                <option>Obecný zájem</option>
+                                <option>Zdravotní volno</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -232,10 +149,10 @@
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row buffer-top-md">
         <div class="col-md-6 col-md-push-3">
-
-            <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
+            <table class='table-hover table-striped table table-bordered table-responsive' id='attendance'
+                name='attendance'>
                 <thead>
                     <tr>
                         <th>Den v měsíci</th>
@@ -246,15 +163,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for day in attendance %}
-                    <tr class="{{ day_class(day) }}">
-                        <td>Den v měsíci</td>
-                        <td>Příchod</td>
-                        <td>Odchod</td>
-                        <td>Režim docházky</td>
-                        <td>Pracovní doba</td>
+                <tbody>
+                    {% for index, day in attendance.items() %}
+                    <tr class="{{ attendance_class(day) }}" data-date="" data-arrival="{{ day.arrival|short_time }}"
+                        data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}">
+                        <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
+
+                        {% if day.timetable %}
+                        <td>{{ day.arrival|short_time }}</td>
+                        <td>{{ day.departure|short_time }}</td>
+                        <td>{{ day.mode }}</td>
+                        <td>{{ day.timetable.lower|short_time }} - {{ day.timetable.upper|short_time }}</td>
+                        {% else %}
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
+                </tbody>
                 </tbody>
             </table>
         </div>

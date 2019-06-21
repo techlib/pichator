@@ -157,7 +157,7 @@ def make_site(manager, access_model, debug=False):
         attendance = manager.get_attendance2(uid, pvid, month, year, username)
         readonly = acl == 'readonly'
 
-        return flask.render_template('attendance_manager.html', **locals())
+        return flask.render_template('attendance.html', **locals())
 
         """
         elif acl.isdigit():
