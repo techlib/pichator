@@ -166,7 +166,8 @@
                 <tbody>
                     {% for index, day in attendance.items() %}
                     <tr class="{{ attendance_class(day) }}" data-date="" data-arrival="{{ day.arrival|short_time }}"
-                        data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}">
+                        data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
+                        data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}">
                         <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
 
                         {% if day.timetable %}
