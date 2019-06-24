@@ -5,7 +5,7 @@ __all__ = ['make_site']
 
 from sqlalchemy import *
 from sqlalchemy.exc import *
-from werkzeug.exceptions import *
+from werkzeug.exceptions import NotAcceptable, Forbidden, InternalServerError
 from pichator.site.util import *
 from functools import wraps
 
@@ -73,7 +73,7 @@ def make_site(manager, access_model, debug=False):
     @app.template_global('attendance_class')
     def attendance_row_class(day):
         date = day['date']
-        today = datetime.today().date()
+        today = date.today()
 
         if date.weekday() in (5, 6):
             return 'weekend'
@@ -126,10 +126,6 @@ def make_site(manager, access_model, debug=False):
     def unauthorized(e):
         return flask.render_template('forbidden.html')
 
-    @app.errorhandler(ImATeapot.code)
-    def imateapot(e):
-        return flask.render_template('teapot.html')
-
     @app.errorhandler(NotAcceptable.code)
     def notacceptable(e):
         return flask.render_template('not_acceptable.html')
@@ -146,7 +142,7 @@ def make_site(manager, access_model, debug=False):
         nonlocal has_privilege
         emp_no = manager.get_emp_no(username)
         acl = manager.get_acl(username)
-        today = datetime.today().date()
+        today = date.today()
 
         year = year or today.year
         month = month or today.month
@@ -188,7 +184,7 @@ def make_site(manager, access_model, debug=False):
     def display_dept(uid, username):
         acl = manager.get_acl(username)
         if not acl.isdigit():
-            log.msg(f'User {username} tried to access department {dept} with acl {acl}.')
+            log.msg(f'User {username} tried to access department view with acl {acl}.')
             raise Forbidden
         if flask.request.method == 'POST':
             new_mode = flask.request.form['modes']
@@ -212,7 +208,7 @@ def make_site(manager, access_model, debug=False):
             raise Forbidden
         period = flask.request.values.get('period', '').split('-')
         if len(period) != 2:
-            today = datetime.today()
+            today = date.today()
             period = (today.month, today.year)
         return flask.jsonify(manager.get_department(dept, int(period[0]), int(period[1])))
 
