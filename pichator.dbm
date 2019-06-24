@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="797,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="15,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -243,6 +243,32 @@ Jakub•Chalupa•952•jakubch•595067]]>
 		<type name="smallint" length="0"/>
 	</column>
 	<constraint name="helper_variables_pk" type="pk-constr" table="public.helper_variables">
+		<columns names="uid" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="acls_uid_seq"
+	 start="1" increment="1"
+	 min-value="0" max-value="2147483647"
+	 cache="1" cycle="false">
+	<schema name="public"/>
+	<role name="pichator"/>
+</sequence>
+
+<table name="acls">
+	<schema name="public"/>
+	<role name="pichator"/>
+	<position x="1100" y="120"/>
+	<column name="uid" not-null="true" sequence="public.acls_uid_seq">
+		<type name="smallint" length="0"/>
+	</column>
+	<column name="dept" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="acl" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<constraint name="acls_pk" type="pk-constr" table="public.acls">
 		<columns names="uid" ref-type="src-columns"/>
 	</constraint>
 </table>

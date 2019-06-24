@@ -207,4 +207,31 @@ CREATE TABLE public.helper_variables(
 ALTER TABLE public.helper_variables OWNER TO pichator;
 -- ddl-end --
 
+-- object: public.acls_uid_seq | type: SEQUENCE --
+-- DROP SEQUENCE IF EXISTS public.acls_uid_seq CASCADE;
+CREATE SEQUENCE public.acls_uid_seq
+	INCREMENT BY 1
+	MINVALUE 0
+	MAXVALUE 2147483647
+	START WITH 1
+	CACHE 1
+	NO CYCLE
+	OWNED BY NONE;
+-- ddl-end --
+ALTER SEQUENCE public.acls_uid_seq OWNER TO pichator;
+-- ddl-end --
+
+-- object: public.acls | type: TABLE --
+-- DROP TABLE IF EXISTS public.acls CASCADE;
+CREATE TABLE public.acls(
+	uid smallint NOT NULL DEFAULT nextval('public.acls_uid_seq'::regclass),
+	dept character varying NOT NULL,
+	acl character varying NOT NULL,
+	CONSTRAINT acls_pk PRIMARY KEY (uid)
+
+);
+-- ddl-end --
+ALTER TABLE public.acls OWNER TO pichator;
+-- ddl-end --
+
 

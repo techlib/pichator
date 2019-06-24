@@ -15,7 +15,6 @@ from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, monthlen
-from copy import deepcopy
 
 class TimeRange(Range):
     def len(self):
@@ -224,24 +223,24 @@ class Manager(object):
         return payload
     
     def get_dept_mode(self, dept):
-        helper_t = self.db.helper_variables
-        mode_row = helper_t.filter(helper_t.key == str(dept)).first()
+        acls_t = self.db.acls
+        mode_row = acls_t.filter(acls_t.dept == str(dept)).first()
         if not mode_row:
             return
         else:
-            return mode_row.value
+            return mode_row.acl
         
     def set_dept_mode(self, dept, mode):
-        helper_t = self.db.helper_variables
-        prev_mode_row = helper_t.filter(helper_t.key == dept)
+        acls_t = self.db.acls_variables
+        prev_mode_row = acls_t.filter(acls_t.dept == dept)
         if prev_mode_row.first():
-            value = prev_mode_row.first().value
-            if mode == value:
+            acl = prev_mode_row.first().acl
+            if mode == acl:
                 return
             else:
-                prev_mode_row.update({'value': mode})
+                prev_mode_row.update({'acl': mode})
         else:
-            helper_t.insert(key = dept, value = mode)
+            acls_t.insert(dept = dept, acl = mode)
             
         self.db.commit()
             
