@@ -15,7 +15,7 @@ from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, monthlen
-
+from copy import deepcopy
 
 class TimeRange(Range):
     def len(self):
@@ -97,6 +97,7 @@ class Manager(object):
         register_range('timerange', TimeRange,
                        self.db.engine.raw_connection().cursor(),
                        globally=True)
+        self.depts = []
 
     def get_emp_no(self, username):
         emp_t = self.db.employee
@@ -128,6 +129,20 @@ class Manager(object):
         except Exception as e:
             log.err(e)
             return []
+        
+    def get_all_depts(self):
+        return self.depts
+    
+    def get_all_employees(self):
+        retval = []
+        for emp in self.db.employee.all():
+            retval.append({
+                'first_name': emp.first_name,
+                'last_name': emp.last_name,
+                'uid': emp.uid,
+                'acl': emp.acl,
+                    })
+        return retval
 
     def month_range(self, year, month):
         days = monthlen(year, month)
@@ -365,7 +380,12 @@ class Manager(object):
 
         return result
 
-
+    def set_acls(self, datadict):
+        emp_t = self.db.employee
+        for emp_uid in datadict.keys():
+            emp_t.filter(emp_t.uid == emp_uid).update({'acl': datadict[emp_uid]})
+        self.db.commit()
+    
     def get_attendance(self, uid, pvid, period, username):
         WEEKDAYS = ['Pondělí', 'Úterý', 'Středa',
                     'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
@@ -626,6 +646,8 @@ class Manager(object):
                             {'departure': depart.time(), 'food_stamp': food_stamp})
 
         self.db.commit()
+        
+        
 
     def update_presence(self, date, source):
         pres_t = self.db.presence
@@ -679,10 +701,13 @@ class Manager(object):
     def update_pvs(self, elanor):
         pv_t = self.db.pv
         emp_t = self.db.employee
+        departments = []
         for employee in emp_t.all():
             for pv in elanor.get_pvs(employee.emp_no):
                 uid_emp = emp_t.filter(
                     emp_t.emp_no == pv['emp_no']).first().uid
+                if pv['department'] not in departments:
+                    departments.append(pv['department'])
                 valid = DateRange(
                     lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
@@ -713,6 +738,7 @@ class Manager(object):
                             department=pv['department'],
                             validity=valid,
                             uid_employee=uid_emp
-                        )
-
+                        )      
+        self.depts = departments
+        self.depts.sort()
         self.db.commit()

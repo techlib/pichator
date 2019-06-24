@@ -178,11 +178,20 @@ def make_site(manager, access_model, debug=False):
         period = flask.request.values.get('period').split('-')
         return flask.jsonify(manager.get_employees(dept, int(period[0]), int(period[1])))
 
-    @app.route('/dept', methods=['GET', 'POST'])
+    @app.route('/dept', methods=['GET', 'POST'], defaults={'dept':None})
+    @app.route('/dept/<dept>')
     @authorized_only('admin')
     @pass_user_info
-    def display_dept(uid, username):
+    def display_dept(uid, username, dept):
         acl = manager.get_acl(username)
+        if acl == 'admin' and dept:
+            if flask.request.method == 'POST':
+                new_mode = flask.request.form['modes']
+                manager.set_dept_mode(dept, new_mode)
+            mode = manager.get_dept_mode(dept)
+            acl = dept
+            return flask.render_template('attendance_department.html', **locals())
+        
         if not acl.isdigit():
             log.msg(f'User {username} tried to access department view with acl {acl}.')
             raise Forbidden
@@ -227,6 +236,25 @@ def make_site(manager, access_model, debug=False):
                 flask.flash(
                     'Počet hodin v rozvrhu neodpovídá úvazku.', 'error')
             return flask.render_template('timetable.html', **locals())
+
+    @app.route('/admin', methods=['GET', 'POST'])
+    @authorized_only('admin')
+    @pass_user_info
+    def admin(uid, username):
+        acl = manager.get_acl(username)
+        if acl != 'admin':
+            raise Forbidden
+        if flask.request.method == 'POST':
+            manager.set_acls(flask.request.form.to_dict())
+        
+        # Check if user is still admin after change of acls
+        acl = manager.get_acl(username)
+        if acl != 'admin':
+            raise Forbidden
+        employees = manager.get_all_employees()
+        depts = manager.get_all_depts()
+        
+        return flask.render_template('admin.html', **locals())
 
     @app.route('/timetable_data')
     @authorized_only('admin')
