@@ -231,7 +231,7 @@ class Manager(object):
             return mode_row.acl
         
     def set_dept_mode(self, dept, mode):
-        acls_t = self.db.acls_variables
+        acls_t = self.db.acls
         prev_mode_row = acls_t.filter(acls_t.dept == dept)
         if prev_mode_row.first():
             acl = prev_mode_row.first().acl
@@ -532,7 +532,8 @@ class Manager(object):
     
     def get_department(self, dept, month, year):
         retval = {'data': []}
-
+        gen_mode = self.get_dept_mode(dept)
+        
         emp_t = self.db.employee
         pv_t = self.db.pv
         pres_t = self.db.presence
@@ -559,7 +560,6 @@ class Manager(object):
             if str(pv.department).startswith(str(dept)):
                 retval_dict = {
                     'Jméno': f'{employee.first_name} {employee.last_name}'}
-
                 for day in range(per_range[1]):
                     curr_date = date(year, month, day + 1)
                     
@@ -582,10 +582,13 @@ class Manager(object):
                     ).first()
                     if curr_date.isoweekday() in [6, 7]:
                         symbol = 'S'
-                    elif timetable_list[curr_date.weekday()].lower == timetable_list[curr_date.weekday()].upper:
+                    elif timetable_list[curr_date.weekday()] == None:
                         symbol = '-'
                     elif not presence:
-                        symbol = 'A'
+                        if gen_mode == 'auto':
+                            symbol = '/'
+                        else:
+                            symbol = 'A'
                     else:
                         symbol = eng_to_symbol(
                             presence.presence_mode, presence.food_stamp

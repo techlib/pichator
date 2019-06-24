@@ -179,7 +179,7 @@ def make_site(manager, access_model, debug=False):
         return flask.jsonify(manager.get_employees(dept, int(period[0]), int(period[1])))
 
     @app.route('/dept', methods=['GET', 'POST'], defaults={'dept':None})
-    @app.route('/dept/<dept>')
+    @app.route('/dept/<dept>', methods=['GET', 'POST'])
     @authorized_only('admin')
     @pass_user_info
     def display_dept(uid, username, dept):
