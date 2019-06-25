@@ -307,47 +307,43 @@ def make_site(manager, access_model, debug=False):
 
         return flask.jsonify(manager.get_attendance2(uid, pvid, int(period[0]), int(period[1]), username))
 
-    @app.route('/attendance_submit')
+    @app.route('/attendance_submit', methods=['POST'])
     @authorized_only('admin')
     @pass_user_info
     def set_attendance_data(uid, username):
         nonlocal has_privilege
-        pvid = flask.request.values.get('pvid')
+
         acl = manager.get_acl(username)
-        if acl.isdigit():
-            username = manager.pvid_to_username(pvid)
-            if acl not in manager.get_depts(username) and acl not in [str(i)[0] for i in manager.get_depts(username)]:
+        data = flask.request.get_json()
+
+        user_uid = data.get('user_uid')
+
+        # check access
+        if acl.isdigit() and uid != user_uid:
+            if not manager.is_supervisor(uid, user_uid):
                 log.err('Submiting data for person not in your department.')
                 raise Forbidden
-        emp_no = manager.get_emp_no(username)
-        if not pvid or not emp_no:
-            log.err(
-                'Query for attendance data without required parameter pvid or emp_no.')
-            raise NotAcceptable
-        if str(emp_no) != pvid.split('.')[0]:
+        elif uid != user_uid:
             log.err('Submiting attendance data for user other than is logged-in.')
             raise Forbidden
-        period = flask.request.values.get('period')
 
-        if not period:
-            log.err(
-                'Query for attendance data without required parameter period.')
-            raise NotAcceptable
-        start = flask.request.values.get('start')
-        end = flask.request.values.get('end')
+        start = data.get('start')
+        end = data.get('end')
         if not start or not end:
             log.err(
                 'Query for attendance data without required parameter start or end.')
             raise NotAcceptable
-        mode = flask.request.values.get('mode')
+
+        mode = data.get('mode')
         if not mode:
             mode = 'Absence'
-        day = flask.request.values.get('day')
-        if not day:
-            log.err('Query without required parameter day.')
+
+        date = data.get('date')
+        if not date:
+            log.err('Query without required parameter date.')
             raise NotAcceptable
 
-        return flask.jsonify(manager.set_attendance(day, period, username, start, end, mode))
+        return flask.jsonify(manager.set_attendance(date, int(user_uid), start, end, mode))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):

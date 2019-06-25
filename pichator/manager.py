@@ -328,6 +328,7 @@ class Manager(object):
         pv_t   = self.db.pv
 
         month_range = self.month_range(year, month)
+        today = date.today()
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -365,7 +366,7 @@ class Manager(object):
                 weekday = day['date'].weekday()
                 if day['date'] in timetable.validity and weekday < 5:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
-                    day['mode'] = day['mode'] or ('absence' if day['timetable'] else None)
+                    day['mode'] = day['mode'] or ('absence' if day['timetable'] and day['date'] <= today else None)
                     break
 
         return result
@@ -464,55 +465,50 @@ class Manager(object):
             raise NotAcceptable
         return ''
 
-    def set_attendance(self, day, period, username, start, end, mode):
-        pres_t = self.db.presence
+    def is_supervisor(self, user_uid, employee_uid):
         emp_t = self.db.employee
-        per_year = int(period.split('-')[1])
-        per_month = int(period.split('-')[0])
-        day_no = int(day.replace('.', ''))
-        emp_no = self.get_emp_no(username)
 
-        start_split = start.split(':')
-        start_hour = int(start_split[0])
-        start_minute = int(start_split[1])
+        acl = emp_t.get(user_uid).acl
+        user = emp_t.filter(emp_t.uid == employee_uid).one().username
 
-        end_split = end.split(':')
-        end_hour = int(end_split[0])
-        end_minute = int(end_split[1])
+        for dept in self.get_depts(user):
+            if str(dept).startswith(acl):
+                return True
 
-        start_t = datetime(per_year, per_month, day_no,
-                           start_hour, start_minute)
-        end_t = datetime(per_year, per_month, day_no, end_hour, end_minute)
-        date = start_t.date()
+        return False
 
-        length = (end_t - start_t).seconds / 3600
-        # If attendance is longer than 6 hrs employee has food stamp claim
-        # If attendance is longer than 4 hrs during business trip dtto
-        food_stamp = length >= 6 or (mode == 'Business trip' and length >= 4)
-        employee = emp_t.filter(emp_t.emp_no == emp_no).one()
+    def set_attendance(self, date, employee_uid, start, end, mode):
+        pres_t = self.db.presence
 
-        presence = pres_t.filter(
-            and_(pres_t.uid_employee == employee.uid, pres_t.date == date))
-        # If there was no presence that day, insert one. Otherwise update existing one
-        if not presence.first():
-            pres_t.insert(
-                date=date,
-                arrival=start_t,
-                departure=end_t,
-                presence_mode=mode,
-                uid_employee=employee.uid,
-                food_stamp=food_stamp
-            )
-        else:
+        length = datetime.strptime(start, "%H:%M") - datetime.strptime(end, "%H:%M")
+        duration = length.seconds / 3600
+
+        # If attendance is longer than 6 hours (or 4 on business trip) employee can haz food stamp
+        food_stamp = duration >= 6 or (mode == 'Business trip' and duration >= 4)
+
+        presence = pres_t \
+            .filter(pres_t.uid_employee == employee_uid) \
+            .filter(pres_t.date == date)
+
+        if presence.first():
             presence.update({
-                'arrival': start_t,
-                'departure': end_t,
+                'arrival': start,
+                'departure': end,
                 'food_stamp': food_stamp,
-                'presence_mode': mode
+                'presence_mode': mode,
+            })
+        else:
+            pres_t.insert(**{
+                'arrival': start,
+                'departure': end,
+                'food_stamp': food_stamp,
+                'presence_mode': mode,
+                'uid_employee': employee_uid,
+                'date': date,
             })
 
         self.db.commit()
-        
+
     def get_dept(self, pvid, date):
         pv_t = self.db.pv
         pv = pv_t.filter(and_(pv_t.pvid == pvid, pv_t.validity.contains(date))).first()
