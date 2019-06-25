@@ -10,19 +10,14 @@
     var pvs = [];
 
     function submit_data() {
-        i = 0
-        if ($('#pvs')[0].length != 1) {
-            i = $('#pvs')[0].selectedIndex;
-        }
         $.get('/attendance_submit?' + $.param({
-            'period': $('#period').val(),
+            'period': "{{ month }}-{{ year }}",
             'start': $('#editForm-start').val(),
             'end': $('#editForm-end').val(),
             'mode': $('#editForm-mode').val(),
             'day': $('#editForm-day').val(),
-            'pvid': pvs[i].PV
+            'pvid': "{{ pvid }}"
         })).done(function () {
-            reload_table();
             $('#modalEditForm').modal('hide');
         });
     }
@@ -31,11 +26,12 @@
         {% if not readonly %}
         $('#attendance tbody tr').on('click', function () {
             const data = $(this).data()
-            $('#editForm-day').val(data.day);
+            $('#dialog-title-day').html(data.day);
             $('#editForm-start').val(data.arrival);
             $('#editForm-end').val(data.departure);
             $('#editForm-mode').val(data.mode);
-            $('#editForm-weekday').val(data.weekday);
+            $('#dialog-title-weekday').html(data.weekday);
+            $('#dialog-title-month').html(data.month);
             $('#modalEditForm').modal('show');
         })
         {% endif %}
@@ -57,7 +53,7 @@
             window.location.href = url
         });
 
-        $('.clock-picker').clockpicker();
+        $('.clock-picker').clockpicker({});
         $('#editForm-mode').selectpicker();
     });
 </script>
@@ -94,25 +90,22 @@
         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header text-center">
-                    <h4 class="modal-title w-100 font-weight-bold">Editace docházky</h4>
+                <div class="modal-header">
+                    <h4 class="modal-title w-100 font-weight-bold"><span id="dialog-title-weekday"></span> <span id="dialog-title-day"></span>. <span id="dialog-title-month"></span>.</h4>
                 </div>
                 <div class="modal-body">
                     <form id='updateForm'>
-                        <div class="form-group">
-                            <label for="editForm-day">Den v měsíci</label>
-                            <input type="text" id="editForm-day" class="form-control" disabled>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="editForm-start">Příchod</label>
-                            <input type="time" id="editForm-start" class="form-control clock-picker"
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <label for="editForm-start">Příchod</label>
+                                <input type="time" id="editForm-start" class="form-control clock-picker"
                                 data-placement='right' data-align='top' data-autoclose='true'>
-                        </div>
-                        <div class="form-group">
-                            <label for="editForm-end">Odchod</label>
-                            <input type="time" id="editForm-end" class="form-control clock-picker"
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="editForm-end">Odchod</label>
+                                <input type="time" id="editForm-end" class="form-control clock-picker"
                                 data-placement='right' data-align='top' data-autoclose='true'>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="editForm-mode">Režim docházky</label>
@@ -135,10 +128,6 @@
                                 <option>Obecný zájem</option>
                                 <option>Zdravotní volno</option>
                             </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="editForm-start">Den v týdnu</label>
-                            <input type="text" id="editForm-weekday" class="form-control" disabled>
                         </div>
                     </form>
                 </div>
@@ -167,10 +156,11 @@
                     {% for index, day in attendance.items() %}
                     <tr class="{{ attendance_class(day) }}" data-date="" data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
-                        data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}">
+                        data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
+                        data-month={{ day.date.month }}>
                         <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
 
-                        {% if day.timetable %}
+                        {% if day.timetable and day.mode %}
                         <td>{{ day.arrival|short_time }}</td>
                         <td>{{ day.departure|short_time }}</td>
                         <td>{{ day.mode }}</td>
