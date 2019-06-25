@@ -251,12 +251,17 @@ class Manager(object):
             log.err('Attempt to upsert timetable without all days periods filled-in.\n\
                     To signify free day, please set start and end of workday to 00:00')
             raise NotAcceptable
-
-        monday_v = TimeRange(data['monF'], data['monT'])
-        tuesday_v = TimeRange(data['tueF'], data['tueT'])
-        wednesday_v = TimeRange(data['wedF'], data['wedT'])
-        thursday_v = TimeRange(data['thuF'], data['thuT'])
-        friday_v = TimeRange(data['friF'], data['friT'])
+        mon_time_f, mon_time_t = datetime.strptime(data['monF'], '%H:%M').time(), datetime.strptime(data['monT'], '%H:%M').time()
+        tue_time_f, tue_time_t = datetime.strptime(data['tueF'], '%H:%M').time(), datetime.strptime(data['tueT'], '%H:%M').time()
+        wed_time_f, wed_time_t = datetime.strptime(data['wedF'], '%H:%M').time(), datetime.strptime(data['wedT'], '%H:%M').time()
+        thu_time_f, thu_time_t = datetime.strptime(data['thuF'], '%H:%M').time(), datetime.strptime(data['thuT'], '%H:%M').time()
+        fri_time_f, fri_time_t = datetime.strptime(data['friF'], '%H:%M').time(), datetime.strptime(data['friT'], '%H:%M').time()
+        
+        monday_v = TimeRange(mon_time_f, mon_time_t)
+        tuesday_v = TimeRange(tue_time_f, tue_time_t)
+        wednesday_v = TimeRange(wed_time_f, wed_time_t)
+        thursday_v = TimeRange(thu_time_f, thu_time_t)
+        friday_v = TimeRange(fri_time_f, fri_time_t)
 
         hours_in_week = (monday_v.len() + tuesday_v.len() +
                          wednesday_v.len() + thursday_v.len() + friday_v.len()) / 60
@@ -571,7 +576,8 @@ class Manager(object):
                 if curr_date.isoweekday() in [6, 7]:
                     symbol = 'S'
                     
-                # This timetable is not valid on this day or it is non working day for the employee
+                # This timetable is not valid on this day,
+                # it is non working day for the employee or the day is in future
                 elif timetable_list[curr_date.weekday()] == None or curr_date > date.today():
                     symbol = '-'
                 
