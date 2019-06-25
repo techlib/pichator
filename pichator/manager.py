@@ -16,7 +16,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, monthlen
 
-
 class TimeRange(Range):
     def len(self):
         # Returns number of minutes in timerange
@@ -97,6 +96,7 @@ class Manager(object):
         register_range('timerange', TimeRange,
                        self.db.engine.raw_connection().cursor(),
                        globally=True)
+        self.depts = []
 
     def get_emp_no(self, username):
         emp_t = self.db.employee
@@ -128,6 +128,20 @@ class Manager(object):
         except Exception as e:
             log.err(e)
             return []
+        
+    def get_all_depts(self):
+        return self.depts
+    
+    def get_all_employees(self):
+        retval = []
+        for emp in self.db.employee.all():
+            retval.append({
+                'first_name': emp.first_name,
+                'last_name': emp.last_name,
+                'uid': emp.uid,
+                'acl': emp.acl,
+                    })
+        return retval
 
     def month_range(self, year, month):
         days = monthlen(year, month)
@@ -209,24 +223,24 @@ class Manager(object):
         return payload
     
     def get_dept_mode(self, dept):
-        helper_t = self.db.helper_variables
-        mode_row = helper_t.filter(helper_t.key == str(dept)).first()
+        acls_t = self.db.acls
+        mode_row = acls_t.filter(acls_t.dept == str(dept)).first()
         if not mode_row:
             return
         else:
-            return mode_row.value
+            return mode_row.acl
         
     def set_dept_mode(self, dept, mode):
-        helper_t = self.db.helper_variables
-        prev_mode_row = helper_t.filter(helper_t.key == dept)
+        acls_t = self.db.acls
+        prev_mode_row = acls_t.filter(acls_t.dept == dept)
         if prev_mode_row.first():
-            value = prev_mode_row.first().value
-            if mode == value:
+            acl = prev_mode_row.first().acl
+            if mode == acl:
                 return
             else:
-                prev_mode_row.update({'value': mode})
+                prev_mode_row.update({'acl': mode})
         else:
-            helper_t.insert(key = dept, value = mode)
+            acls_t.insert(dept = dept, acl = mode)
             
         self.db.commit()
             
@@ -366,7 +380,12 @@ class Manager(object):
 
         return result
 
-
+    def set_acls(self, datadict):
+        emp_t = self.db.employee
+        for emp_uid in datadict.keys():
+            emp_t.filter(emp_t.uid == emp_uid).update({'acl': datadict[emp_uid]})
+        self.db.commit()
+    
     def get_attendance(self, uid, pvid, period, username):
         WEEKDAYS = ['Pondělí', 'Úterý', 'Středa',
                     'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
@@ -509,7 +528,8 @@ class Manager(object):
     
     def get_department(self, dept, month, year):
         retval = {'data': []}
-
+        gen_mode = self.get_dept_mode(dept)
+        
         emp_t = self.db.employee
         pv_t = self.db.pv
         pres_t = self.db.presence
@@ -536,7 +556,6 @@ class Manager(object):
             if str(pv.department).startswith(str(dept)):
                 retval_dict = {
                     'Jméno': f'{employee.first_name} {employee.last_name}'}
-
                 for day in range(per_range[1]):
                     curr_date = date(year, month, day + 1)
                     
@@ -559,10 +578,13 @@ class Manager(object):
                     ).first()
                     if curr_date.isoweekday() in [6, 7]:
                         symbol = 'S'
-                    elif timetable_list[curr_date.weekday()].lower == timetable_list[curr_date.weekday()].upper:
+                    elif timetable_list[curr_date.weekday()] == None:
                         symbol = '-'
                     elif not presence:
-                        symbol = 'A'
+                        if gen_mode == 'auto':
+                            symbol = '/'
+                        else:
+                            symbol = 'A'
                     else:
                         symbol = eng_to_symbol(
                             presence.presence_mode, presence.food_stamp
@@ -622,6 +644,8 @@ class Manager(object):
                             {'departure': depart.time(), 'food_stamp': food_stamp})
 
         self.db.commit()
+        
+        
 
     def update_presence(self, date, source):
         pres_t = self.db.presence
@@ -675,10 +699,13 @@ class Manager(object):
     def update_pvs(self, elanor):
         pv_t = self.db.pv
         emp_t = self.db.employee
+        departments = []
         for employee in emp_t.all():
             for pv in elanor.get_pvs(employee.emp_no):
                 uid_emp = emp_t.filter(
                     emp_t.emp_no == pv['emp_no']).first().uid
+                if pv['department'] not in departments:
+                    departments.append(pv['department'])
                 valid = DateRange(
                     lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
@@ -709,6 +736,7 @@ class Manager(object):
                             department=pv['department'],
                             validity=valid,
                             uid_employee=uid_emp
-                        )
-
+                        )      
+        self.depts = departments
+        self.depts.sort()
         self.db.commit()

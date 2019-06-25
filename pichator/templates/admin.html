@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrace vedení{% endblock %}
+{%- set active_page = 'admin' %}
+
+{% block content %}
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $(".select-picker").selectpicker();
+    })
+</script>
+{% endblock %}
+
+<div class='container-fluid'>
+    <div class="row buffer-top-md">
+        <div class="col-xs-12 col-sm-8 col-sm-push-2 col-md-4 col-md-push-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Úprava přistupových práv
+                </div>
+                <div class="panel-body">
+                    <form class='form-inline' id='acls' name='acls' method='POST' action='/admin'>
+                        {% for employee in employees %}
+                        <div class="row">
+                            <div class='form-group col-md-7'>
+                                <div class="col-md-7">
+                                    <label for="{{ employee['uid'] }}">{{ employee['first_name'] }}
+                                        {{ employee['last_name'] }}</label>
+                                </div>
+                                <div class="col-md-1">
+                                    <select class="select-picker" id="{{ employee['uid'] }}"
+                                        name="{{ employee['uid'] }}">
+                                        {% for dept in depts %}
+                                        <option value="{{ dept }}" {% if employee['acl'] == dept %} selected
+                                            {% endif %}>
+                                            {{ dept }}
+                                        </option>
+                                        {% endfor %}
+                                        <option value="None" {% if not employee['acl'].isdigit() %} selected
+                                            {% endif %}>
+                                            Není vedoucím</option>
+                                        <option value="admin" {% if employee['acl'] == 'admin'%} selected {% endif %}>
+                                            Administrátor</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                </div>
+
+                <div class="panel-footer">
+                    <input class="btn-primary btn" type="submit" value="Uložit">
+                </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
