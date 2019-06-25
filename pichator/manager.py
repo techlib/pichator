@@ -572,7 +572,7 @@ class Manager(object):
                     symbol = 'S'
                     
                 # This timetable is not valid on this day or it is non working day for the employee
-                elif timetable_list[curr_date.weekday()] == None:
+                elif timetable_list[curr_date.weekday()] == None or curr_date > date.today():
                     symbol = '-'
                 
                 # Employee has valid timetable for the day and should have been in workplace but was not present    
