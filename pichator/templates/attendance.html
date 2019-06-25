@@ -10,14 +10,20 @@
     var pvs = [];
 
     function submit_data() {
-        $.get('/attendance_submit?' + $.param({
-            'period': "{{ month }}-{{ year }}",
-            'start': $('#editForm-start').val(),
-            'end': $('#editForm-end').val(),
-            'mode': $('#editForm-mode').val(),
-            'day': $('#editForm-day').val(),
-            'pvid': "{{ pvid }}"
-        })).done(function () {
+        $.ajax({
+            type: 'POST',
+            url: '/attendance_submit?',
+            contentType: "application/json",
+            dataType: 'json',
+            data: JSON.stringify({
+                'start': $('#editForm-start').val(),
+                'end': $('#editForm-end').val(),
+                'mode': $('#editForm-mode').val(),
+                'date': $('#editForm-date').val(),
+                'user_uid': $('#editForm-user').val(),
+            }),
+        })
+        .done(function () {
             $('#modalEditForm').modal('hide');
         });
     }
@@ -30,6 +36,8 @@
             $('#editForm-start').val(data.arrival);
             $('#editForm-end').val(data.departure);
             $('#editForm-mode').val(data.mode);
+            $('#editForm-user').val(data.user);
+            $('#editForm-date').val(data.date);
             $('#dialog-title-weekday').html(data.weekday);
             $('#dialog-title-month').html(data.month);
             $('#modalEditForm').modal('show');
@@ -73,7 +81,7 @@
                         {% for pv in pvs %}
                         <li>
                             {% if pv.pvid == pvid %}
-                                {{ pv.department|unit_type }}
+                            {{ pv.department|unit_type }}
                             {% else %}
                             <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">
                                 {{ pv.department|unit_type }}
@@ -91,20 +99,24 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title w-100 font-weight-bold"><span id="dialog-title-weekday"></span> <span id="dialog-title-day"></span>. <span id="dialog-title-month"></span>.</h4>
+                    <h4 class="modal-title w-100 font-weight-bold"><span id="dialog-title-weekday"></span> <span
+                            id="dialog-title-day"></span>. <span id="dialog-title-month"></span>.</h4>
                 </div>
                 <div class="modal-body">
                     <form id='updateForm'>
+                        <input type="hidden" id="editForm-date" />
+                        <input type="hidden" id="editForm-user" />
+
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label for="editForm-start">Příchod</label>
                                 <input type="time" id="editForm-start" class="form-control clock-picker"
-                                data-placement='right' data-align='top' data-autoclose='true'>
+                                    data-placement='right' data-align='top' data-autoclose='true'>
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="editForm-end">Odchod</label>
                                 <input type="time" id="editForm-end" class="form-control clock-picker"
-                                data-placement='right' data-align='top' data-autoclose='true'>
+                                    data-placement='right' data-align='top' data-autoclose='true'>
                             </div>
                         </div>
                         <div class="form-group">
@@ -154,9 +166,11 @@
                 <tbody>
                 <tbody>
                     {% for index, day in attendance.items() %}
-                    <tr class="{{ attendance_class(day) }}" data-date="" data-arrival="{{ day.arrival|short_time }}"
+                    <tr class="{{ attendance_class(day) }}" data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
                         data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
+                        data-date={{ day.date }}
+                        data-user="334721"
                         data-month={{ day.date.month }}>
                         <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
 
