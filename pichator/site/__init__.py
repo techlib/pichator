@@ -316,7 +316,7 @@ def make_site(manager, access_model, debug=False):
         acl = manager.get_acl(username)
         data = flask.request.get_json()
 
-        user_uid = data.get('user_uid')
+        user_uid = int(data.get('user_uid'))
 
         # check access
         if acl.isdigit() and uid != user_uid:
@@ -343,7 +343,7 @@ def make_site(manager, access_model, debug=False):
             log.err('Query without required parameter date.')
             raise NotAcceptable
 
-        return flask.jsonify(manager.set_attendance(date, int(user_uid), start, end, mode))
+        return flask.jsonify(manager.set_attendance(date, user_uid, start, end, mode))
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
