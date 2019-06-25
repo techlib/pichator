@@ -10,20 +10,17 @@
 
 {% block scripts %}
 <script>
+    var timetable = []
+    var selected = 0
+
     function submit_timetable() {
-        if ($('#pvs')[0].length == 1) {
-            i = 0;
-        } else {
-            i = $('#pvs')[0].selectedIndex;
-        }
-        console.log($('#pvs')[i].value)
-        $('#f_pvs').val($('#pvs')[i].value);
+        $('#f_pvs').val(timetable[selected].PV);
         $('#timetable-form').submit();
     }
 
     function fillTimetable(timetable) {
-        $('#occupancy').val(timetable.occupancy)
-        $('#dept').val(timetable.department)
+        $('#occupancy').html(timetable.occupancy)
+        $('#dept').html(timetable.department)
         $('#monF').val(timetable.days[0])
         $('#monT').val(timetable.days[1])
         $('#tueF').val(timetable.days[2])
@@ -71,66 +68,67 @@
         $('#timetable-total strong').text(formatDuration(total))
     }
 
+    function refreshSelect() {
+        $('#pvs').empty()
+        for (i = 0; i < timetable.length; i++) {
+            var pv = timetable[i]
+            var item = $('<li></li>')
+
+            if (i == selected) {
+                item.append(pv.PV)
+            } else {
+                var link = $('<a></a>')
+                    .text(pv.PV)
+                    .attr('href', '#')
+                    .attr('onClick', 'select(' + i + ')')
+                    .data('pvid', pv.PV)
+
+                item.append(link)
+            }
+            $('#pvs').append(item)
+        }
+    }
+
+    function select(index) {
+        selected = index
+        refreshSelect()
+        fillTimetable(timetable[index])
+    }
+
     $(document).ready(function () {
         $('.clockpicker').clockpicker()
-        $('#pvs').selectpicker();
         $('#date').datepicker({
             'startDate': new Date,
-            'format':'dd-mm-yyyy',
+            'format': 'dd-mm-yyyy',
         });
         $('#date').datepicker('setDate', 'today');
-        timetable = []
         emp_no = '{{ emp_no }}'
-        $('#pvs').on('changed.bs.select', function (e) {
-            if ($('#pvs')[0].length == 1) {
-                i = 0;
-            } else {
-                i = $('#pvs')[0].selectedIndex;
-            }
-
-            fillTimetable(timetable[i])
-        })
 
         $.ajax({
             url: '/timetable_data',
         }).done(function (data) {
             timetable = data.data
-            for (i = 0; i < timetable.length; i++) {
-                $('#pvs').append('<option value="' + timetable[i].PV + '" id="' + timetable[i].PV +
-                    '">' + timetable[i].PV + '</option>')
-            }
-            $('#pvs').selectpicker('refresh');
-            if ($('#pvs')[0].length == 1) {
-                i = 0;
-            } else {
-                i = $('#pvs')[0].selectedIndex;
-            }
-
-            fillTimetable(timetable[i])
+            select(0)
         })
     })
 </script>
 {% endblock %}
 
 <div class='container-fluid'>
-    <div class='row buffer-top-md well'>
-        <form id='pv-select' class="form-inline" method='POST'>
-            <div class='form-group'>
-                <label for='pvs'>Číslo PV:</label>
-                <select class='form-control' name='pvs' id='pvs'></select>
+    <div class="row pichator-toolbar toolbar-pf">
+        <div class="col-sm-12">
+            <div class="row toolbar-pf-results">
+                <div class="col-sm-12">
+                    <h5>PV</h5>
+                    <ul id="pvs" class="list-inline"></ul>
+                    <h5>Úvazek</h5>
+                    <span id="occupancy"></span>
+                    <h5>Oddělení</h5>
+                    <span id="dept"></span>
+                </div>
             </div>
-            <div class='form-group'>
-                <label for='occupancy'> Úvazek: </label>
-                <input type='text' class='form-control' id='occupancy' name='occupancy' readonly>
-            </div>
-            <div class='form-group'>
-                <label for='dept'> Oddělení: </label>
-                <input type='text' class='form-control' id='dept' name='dept' readonly>
-            </div>
-
-        </form>
+        </div>
     </div>
-
     <div class='row buffer-top-md'>
         <div class="col-xs-12 col-sm-8 col-sm-push-2 col-md-6 col-md-push-3">
             <div class="panel panel-default">
