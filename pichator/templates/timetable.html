@@ -13,8 +13,7 @@
     function submit_timetable() {
         if ($('#pvs')[0].length == 1) {
             i = 0;
-        }
-        else {
+        } else {
             i = $('#pvs')[0].selectedIndex;
         }
         console.log($('#pvs')[i].value)
@@ -75,6 +74,11 @@
     $(document).ready(function () {
         $('.clockpicker').clockpicker()
         $('#pvs').selectpicker();
+        $('#date').datepicker({
+            'startDate': new Date,
+            'format':'dd-mm-yyyy',
+        });
+        $('#date').datepicker('setDate', 'today');
         timetable = []
         emp_no = '{{ emp_no }}'
         $('#pvs').on('changed.bs.select', function (e) {
@@ -137,6 +141,14 @@
                     <form class='form-inline' id='timetable-form' name='timetable-form' method='post'
                         action='/timetable'>
                         <div class="row">
+                            <div class="form-group col-md-2">
+                                <div class="input-group">
+                                    <label for="date">Počátek platnosti:</label>
+                                    <input type="text" id="date" name="date" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row top-buffer">
                             <div class="col-xs-12 col-md-2"></div>
                             <div class="col-xs-12 col-md-2"><strong>Čas od</strong></div>
                             <div class="col-xs-12 col-md-2"><strong>Čas do</strong></div>
@@ -146,7 +158,6 @@
 
                         {% for day in ['mon', 'tue', 'wed', 'thu', 'fri'] %}
                         {% set day_index = loop.index - 1 -%}
-
                         <div class="row">
                             <div class="col-xs-12 col-md-2 form-control-static">
                                 <strong>{{ day_names[day_index] }}</strong>

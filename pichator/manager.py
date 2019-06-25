@@ -239,8 +239,12 @@ class Manager(object):
         # returns True if commit succeeds, False otherwise
         pv_t = self.db.pv
         timetable_t = self.db.timetable
-        today = date.today()
         maxdate = date.max
+        start_date = date.today()
+        
+        if data['date']:
+            start_date = datetime.strptime(data['date'],'%d-%m-%Y').date()
+            
         valid_mon = data['monF'] and data['monT']
         valid_tue = data['tueF'] and data['tueT']
         valid_wed = data['wedF'] and data['wedT']
@@ -265,10 +269,10 @@ class Manager(object):
 
         hours_in_week = (monday_v.len() + tuesday_v.len() +
                          wednesday_v.len() + thursday_v.len() + friday_v.len()) / 60
-        validity_v = DateRange(today, maxdate)
+        validity_v = DateRange(start_date, maxdate)
         pvid_v = data['f_pvs']
         pv = pv_t.filter(pv_t.pvid == pvid_v).filter(
-            pv_t.validity.contains(today)).first()
+            pv_t.validity.contains(start_date)).first()
         if not pv:
             log.err('Attempt to upsert timetable for user who doesn\'t have valid PV')
             raise NotAcceptable
@@ -282,7 +286,7 @@ class Manager(object):
 
         query = self.db.session().query(pv_t, timetable_t).join(pv_t)
         pv_with_timetable = query.filter(and_(pv_t.pvid == pvid_v), pv_t.validity.contains(
-            today), timetable_t.validity.contains(today)).first()
+            start_date), timetable_t.validity.contains(start_date)).first()
 
         if pv_with_timetable:
             pv, timetable = pv_with_timetable
@@ -290,7 +294,7 @@ class Manager(object):
             tt_timeid = timetable.timeid
             cur_tt = timetable_t.filter(timetable_t.timeid == tt_timeid)
             validity_from = cur_tt.one().validity.lower
-            new_validity = DateRange(validity_from, today)
+            new_validity = DateRange(validity_from, start_date)
             cur_tt.update({'validity': new_validity})
 
         try:
