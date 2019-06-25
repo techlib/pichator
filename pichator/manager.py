@@ -323,6 +323,7 @@ class Manager(object):
         pv_t   = self.db.pv
 
         month_range = self.month_range(year, month)
+        today = date.today()
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -360,7 +361,7 @@ class Manager(object):
                 weekday = day['date'].weekday()
                 if day['date'] in timetable.validity and weekday < 5:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
-                    day['mode'] = day['mode'] or ('absence' if day['timetable'] else None)
+                    day['mode'] = day['mode'] or ('absence' if day['timetable'] and day['date'] <= today else None)
                     break
 
         return result
