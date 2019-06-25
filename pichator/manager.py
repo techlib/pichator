@@ -19,19 +19,10 @@ from calendar import monthrange, monthlen
 class TimeRange(Range):
     def len(self):
         # Returns number of minutes in timerange
-        overflow = False
-        split_from = self.lower.split(':')
-        split_to = self.upper.split(':')
-        h_from = int(split_from[0])
-        m_from = int(split_from[1])
-        h_to = int(split_to[0])
-        m_to = int(split_to[1])
-        m_len = m_to - m_from
-        if m_len < 0:
-            m_len = 60 - m_len
-            overflow = True
-        h_len = h_to - h_from if not overflow else h_to - h_from - 1
-        total = h_len * 60 + m_len
+        dt_from = datetime.combine(date.today(),self.lower)
+        dt_to = datetime.combine(date.today(),self.upper)
+        length = dt_to - dt_from
+        total = length.total_seconds() / 60
         return total if total < 6 * 60 else total - 30
 
 
@@ -533,6 +524,7 @@ class Manager(object):
     def get_department(self, dept, month, year):
         retval = {'data': []}
         gen_mode = self.get_dept_mode(dept)
+        found = False
         
         emp_t = self.db.employee
         pv_t = self.db.pv
@@ -549,52 +541,72 @@ class Manager(object):
 
         pv_with_emp = query \
             .filter(and_(pv_t.validity.overlaps(month_period), timetable_t.validity.overlaps(month_period))) \
-            .all()
+            .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).all()
             
         if not pv_with_emp:
             log.msg(f'No valid employees with timetable for period {month_period.lower} - {month_period.upper}')
             return retval
         
-        for pv, employee, timetable in pv_with_emp:
+        for _, employee, timetable in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
-            if str(pv.department).startswith(str(dept)):
-                retval_dict = {
-                    'Jméno': f'{employee.first_name} {employee.last_name}'}
-                for day in range(per_range[1]):
-                    curr_date = date(year, month, day + 1)
+            retval_dict = {
+                'Jméno': f'{employee.first_name} {employee.last_name}'}
+            for day in range(per_range[1]):
+                curr_date = date(year, month, day + 1)
+                
+                if timetable and curr_date in timetable.validity:
+                    timetable_list = [
+                        timetable.monday,
+                        timetable.tuesday,
+                        timetable.wednesday,
+                        timetable.thursday,
+                        timetable.friday,
+                        None,
+                        None
+                    ]
+                else:
+                    timetable_list = [None] * 7
+                
+                presence = pres_t.filter(
+                    and_(pres_t.uid_employee ==
+                         employee.uid, pres_t.date == curr_date)
+                ).first()
+                # Weekend
+                if curr_date.isoweekday() in [6, 7]:
+                    symbol = 'S'
                     
-                    if timetable and curr_date in timetable.validity:
-                        timetable_list = [
-                            timetable.monday,
-                            timetable.tuesday,
-                            timetable.wednesday,
-                            timetable.thursday,
-                            timetable.friday,
-                            TimeRange('00:00', '00:00'),
-                            TimeRange('00:00', '00:00')
-                        ]
-                    else:
-                        timetable_list = [TimeRange('00:00', '00:00')]*7
-                    
-                    presence = pres_t.filter(
-                        and_(pres_t.uid_employee ==
-                             employee.uid, pres_t.date == curr_date)
-                    ).first()
-                    if curr_date.isoweekday() in [6, 7]:
-                        symbol = 'S'
-                    elif timetable_list[curr_date.weekday()] == None:
-                        symbol = '-'
-                    elif not presence:
-                        if gen_mode == 'auto':
+                # This timetable is not valid on this day or it is non working day for the employee
+                elif timetable_list[curr_date.weekday()] == None:
+                    symbol = '-'
+                
+                # Employee has valid timetable for the day and should have been in workplace but was not present    
+                elif not presence:
+                    # Automatically generated presence
+                    if gen_mode == 'auto':
+                        if timetable_list[curr_date.weekday()].len() >= 6*60:
                             symbol = '/'
                         else:
-                            symbol = 'A'
+                            symbol = '/-'
                     else:
-                        symbol = eng_to_symbol(
-                            presence.presence_mode, presence.food_stamp
-                        )
-                    retval_dict[str(day+1)] = symbol
-
+                        symbol = 'A'
+                        
+                # Employee was present or was on vacation, business trip etc.
+                else:
+                    symbol = eng_to_symbol(
+                        presence.presence_mode, presence.food_stamp
+                    )
+                    # If employee was present for shorter time and presence is automatically generated fill in presence acording timetable
+                    if symbol == '/-' and gen_mode == 'auto' and timetable_list[curr_date.weekday()].len() >= 6*60:
+                        symbol = '/'
+                retval_dict[str(day+1)] = symbol
+            # If there exist record for this employee in this month with different timetable - merge them
+            for record in retval['data']:
+                if record['Jméno'] == f'{employee.first_name} {employee.last_name}':
+                    found = True
+                    for key in record.keys():
+                        if record[key] == '-' and retval_dict[key]:
+                            record[key] = retval_dict[key]
+            if not found:
                 retval['data'].append(retval_dict)
 
         return retval
