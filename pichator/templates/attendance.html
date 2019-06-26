@@ -165,7 +165,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                <tbody>
                     {% for index, day in attendance.items() %}
                     <tr class="{{ attendance_class(day) }}" data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
@@ -186,7 +185,6 @@
                         {% endif %}
                     </tr>
                     {% endfor %}
-                </tbody>
                 </tbody>
             </table>
         </div>
