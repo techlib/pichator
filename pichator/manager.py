@@ -555,7 +555,7 @@ class Manager(object):
         for _, employee, timetable in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
             retval_dict = {
-                'Jméno': f'{employee.first_name} {employee.last_name}'}
+                'name': f'{employee.first_name} {employee.last_name}'}
             for day in range(per_range[1]):
                 curr_date = date(year, month, day + 1)
                 
@@ -607,14 +607,14 @@ class Manager(object):
                 retval_dict[str(day+1)] = symbol
             # If there exist record for this employee in this month with different timetable - merge them
             for record in retval['data']:
-                if record['Jméno'] == f'{employee.first_name} {employee.last_name}':
+                if record['name'] == f'{employee.first_name} {employee.last_name}':
                     found = True
                     for key in record.keys():
                         if record[key] == '-' and retval_dict[key]:
                             record[key] = retval_dict[key]
             if not found:
                 retval['data'].append(retval_dict)
-
+        log.msg(retval)
         return retval
 
     def init_presence(self, period, source):

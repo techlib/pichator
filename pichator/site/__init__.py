@@ -178,12 +178,18 @@ def make_site(manager, access_model, debug=False):
         period = flask.request.values.get('period').split('-')
         return flask.jsonify(manager.get_employees(dept, int(period[0]), int(period[1])))
 
-    @app.route('/dept', methods=['GET', 'POST'], defaults={'dept':None})
-    @app.route('/dept/<dept>', methods=['GET', 'POST'])
+    @app.route('/dept', methods=['GET', 'POST'], defaults={'dept': None, 'month': None, 'year': None})
+    @app.route('/dept/<dept>', methods=['GET', 'POST'], defaults={'month': None, 'year': None})
+    @app.route('/dept/<dept>/<int:year>/<int:month>', methods=['GET', 'POST'])
     @authorized_only('admin')
     @pass_user_info
-    def display_dept(uid, username, dept):
+    def display_dept(uid, username, dept, month, year):
         acl = manager.get_acl(username)
+        today = date.today()
+        month = month or today.month
+        year = year or today.year
+        dept = dept or acl
+        data = manager.get_department(dept, month, year)['data']
         if acl == 'admin' and dept:
             if flask.request.method == 'POST':
                 new_mode = flask.request.form['modes']

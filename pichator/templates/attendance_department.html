@@ -7,70 +7,24 @@
 
 {% block scripts %}
 <script>
-    var column_def = []
-
-    function getData(cb_func) {
-        $.ajax({
-            url: '/dept_data',
-            data: {
-                dept: '{{ acl }}',
-                period: $('#period').val(),
-            },
-            success: cb_func
-        })
-    }
-
-    function reload_table() {
-        if ($.fn.DataTable.isDataTable('#attendance')) {
-            $('#attendance').DataTable().destroy();
-        }
-        $('#attendance').empty();
-        getData(function (data) {
-            var column_defs = [{
-                data: 'Jméno',
-                title: 'Jméno'
-            }]
-            columnNames = Object.keys(data.data[0]);
-            for (var i in columnNames) {
-                if (columnNames[i] != 'Jméno') {
-                    column_defs.push({
-                        data: columnNames[i],
-                        title: columnNames[i]
-                    })
-                }
-            }
-            $('#attendance').DataTable({
-                data: data.data,
-                columns: column_defs,
-                paging: false,
-                searching: false,
-                bLengthChange: false,
-                bInfo: false,
-                ordering: false,
-                order: [
-                    [0, "asc"]
-                ],
-                buttons: [{
-                    extend: 'pdfHtml5',
-                    orientation: 'landscape',
-                    pageSize: 'A4',
-                }],
-                dom: 'Bt',
-            });
-        });
-    };
-
     $(document).ready(function () {
         $('#period').datepicker({
             viewMode: 'months',
             format: 'mm-yyyy',
             minViewMode: 'months',
-        });
+            todayHighlight: false,
+            todayBtn: 'linked',
+            language: 'cs',
+        })
+
+        $('#period').datepicker('setDate', '{{ month }}-{{ year }}');
 
         $("#period").datepicker().on('changeDate', function (e) {
-            reload_table();
+            const date = e.format().split('-')
+            const url = '/dept/{{ dept }}/' + parseInt(date[1]) + '/' + parseInt(date[0]);
+            window.location.href = url
         })
-        $('#period').datepicker('setDate', new Date());
+
 
     });
 </script>
@@ -78,10 +32,12 @@
 <div class='container-fluid'>
     <div class='row buffer-top-md well'>
         <form class='form-inline' id='attendance-form' method='post'>
-            <div class='col-md-3'>
+            <div class='col-sm-12'>
                 <div class='form-group col-md-3'>
-                    <label for='period'>Období:</label>
-                    <input class='form-control' name='period' id="period" type='text'>
+                    <h5>Období</h5>
+                    <p>
+                        <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
+                    </p>
                 </div>
                 <div class='form-group col-md-3'>
                     <label for='dept'>Oddělení:</label>
@@ -117,13 +73,29 @@
     </div>
     <div class="row">
         <div class="col-md-6">
-
-            <table class='display table table-bordered table-responsive' id='attendance' name='attendance'>
+            {% if data[0]|length != 0 %}
+            <table class='table table-bordered table-responsive table-striped' id='attendance'
+                name='attendance'>
                 <thead>
+                    <th>Jméno</th>
+                    {% for day in range(1, data[0]|length) %}
+                    <th>{{ day }}</th>
+                    {% endfor %}
                 </thead>
                 <tbody>
+                    {% for emp in data %}
+                    <tr>
+                        <td>{{ emp['name'] }}</td>
+                        {% for day in range(1, data[0]|length) %}
+                        <td>{{ emp[day|string] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <h5>Žádný zaměstnanec s vyplněnou pracovní dobou pro tento měsíc. PLACEHOLDER</h5>
+            {% endif %}
         </div>
     </div>
 </div>
