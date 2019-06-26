@@ -169,7 +169,7 @@
                     <tr class="{{ attendance_class(day) }}" data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
                         data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
-                        data-date={{ day.date }} data-user="334721" data-month={{ day.date.month }}>
+                        data-date={{ day.date }} data-user="{{ uid }}" data-month={{ day.date.month }}>
                         <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
 
                         {% if day.timetable and day.mode %}
