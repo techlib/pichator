@@ -41,6 +41,7 @@
             $('#dialog-title-weekday').html(data.weekday);
             $('#dialog-title-month').html(data.month);
             $('#modalEditForm').modal('show');
+            $('#editForm-mode').selectpicker('refresh');
         })
         {% endif %}
 
