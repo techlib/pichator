@@ -9,6 +9,9 @@
 .today{
     background-color:#73BCF7 !important
 }
+.weekend td:first-child{
+    font-weight: bold !important
+}
 
 .pichator-toolbar.toolbar-pf {
     padding-top: 0px !important;

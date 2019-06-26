@@ -32,6 +32,9 @@
         {% if not readonly %}
         $('#attendance tbody tr').on('click', function () {
             const data = $(this).data()
+            if( [5,6].includes( data.weekdayno ) ){
+                return
+            }
             $('#dialog-title-day').html(data.day);
             $('#editForm-start').val(data.arrival);
             $('#editForm-end').val(data.departure);
@@ -169,7 +172,8 @@
                     <tr class="{{ attendance_class(day) }}" data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
                         data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
-                        data-date={{ day.date }} data-user="{{ uid }}" data-month={{ day.date.month }}>
+                        data-date={{ day.date }} data-user="{{ uid }}" data-month={{ day.date.month }}
+                        data-weekdayno="{{ day.date.weekday() }}">
                         <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
 
                         {% if day.timetable and day.mode %}
