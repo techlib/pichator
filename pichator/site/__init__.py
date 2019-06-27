@@ -60,6 +60,29 @@ def make_site(manager, access_model, debug=False):
     def day_name(t):
         return ('Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle')[t]
     
+    @app.template_filter('mode_name')
+    def mode_name(t):
+        obj_mapping = {
+        'Employer difficulties': 'Překážka na straně zaměstnavatele',
+        'Vacation': 'Dovolená',
+        'Vacation 0.5': 'Dovolená 0.5 dne',
+        'Presence': 'Presence',
+        'Absence': 'Absence',
+        'On call time': 'Pracovní pohotovost',
+        'Sickness': 'Nemoc',
+        'Compensatory time off': 'Náhradní volno',
+        'Family member care': 'Ošetřování člena rodiny',
+        'Personal difficulties': 'Osobní překážky',
+        'Bussiness trip': 'Služební cesta',
+        'Study': 'Studium při zaměstnání',
+        'Training': 'Školení',
+        'Injury and disease from profession': 'Úraz/nemoc z povolání',
+        'Unpaid leave': 'Neplacené volno',
+        'Public interest': 'Obecný zájem',
+        'Sickday': 'Zdravotní volno'
+        }
+        return obj_mapping[t]
+    
 
 
     @app.template_filter('unit_type')
@@ -82,8 +105,8 @@ def make_site(manager, access_model, debug=False):
         if date == today:
             return 'info'
 
-        if day['mode'] == 'absence':
-            return 'absence'
+        if day['mode'] == 'Absence':
+            return 'Absence'
 
         return ''
 

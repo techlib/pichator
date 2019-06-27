@@ -358,7 +358,7 @@ class Manager(object):
 
         for p in presence.all():
             result[p.date.day] = {**result[p.date.day], **{
-                'mode':  eng_to_czech(p.presence_mode),
+                'mode':  p.presence_mode,
                 'arrival': p.arrival,
                 'departure': p.departure
             }}
@@ -375,7 +375,7 @@ class Manager(object):
                 weekday = day['date'].weekday()
                 if day['date'] in timetable.validity and weekday < 5:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
-                    day['mode'] = day['mode'] or ('absence' if day['timetable'] and day['date'] <= today else None)
+                    day['mode'] = day['mode'] or ('Absence' if day['timetable'] and day['date'] <= today else None)
                     break
 
         return result

@@ -6,6 +6,10 @@
  max-width: 6em;
 }
 
+.inline {
+    display: inline;
+}
+
 .today{
     background-color:#73BCF7 !important
 }
