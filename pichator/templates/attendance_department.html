@@ -45,17 +45,17 @@
                     <form method="POST" class="inline">
                         <label class="radio-inline">
                             <input name='modes' id='auto' type='radio' value='auto' {% if mode == 'auto' %} checked
-                                {% endif %}>Automaticky
+                                {% endif %}><b>Automaticky</b>
                         </label>
                         <label class="radio-inline">
                             <input name='modes' id='edit' type='radio' value='edit' {% if not mode or mode == 'edit' %}
-                                checked {% endif %}>S editací
+                                checked {% endif %}><b>S editací</b>
                         </label>
                         <label class="radio-inline">
                             <input name='modes' id='readonly' type='radio' value='readonly' {% if mode == 'readonly' %}
-                                checked {% endif %}>Prohlížení
+                                checked {% endif %}><b>Prohlížení</b>
                         </label>
-                        <input class='btn btn-success' type='submit' value='Uložit'>
+                        <input class='btn btn-success buffer-left-md' type='submit' value='Uložit'>
                     </form>
 
                 </div>
@@ -63,7 +63,7 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row buffer-top-md">
         <div class="col-md-6">
             {% if data[0]|length != 0 %}
             <table class='table table-bordered table-responsive table-striped' id='attendance' name='attendance'>
