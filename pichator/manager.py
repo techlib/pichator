@@ -614,7 +614,6 @@ class Manager(object):
                             record[key] = retval_dict[key]
             if not found:
                 retval['data'].append(retval_dict)
-        log.msg(retval)
         return retval
 
     def init_presence(self, period, source):
