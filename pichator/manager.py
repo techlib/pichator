@@ -54,30 +54,6 @@ def eng_to_symbol(mode, stamp):
 
     return obj_mapping[mode]
 
-
-def eng_to_czech(mode):
-    obj_mapping = {
-        'Employer difficulties': 'Překážka na straně zaměstnavatele',
-        'Vacation': 'Dovolená',
-        'Vacation 0.5': 'Dovolená 0.5 dne',
-        'Presence': 'Presence',
-        'Absence': 'Absence',
-        'On call time': 'Pracovní pohotovost',
-        'Sickness': 'Nemoc',
-        'Compensatory time off': 'Náhradní volno',
-        'Family member care': 'Ošetřování člena rodiny',
-        'Personal difficulties': 'Osobní překážky',
-        'Bussiness trip': 'Služební cesta',
-        'Study': 'Studium při zaměstnání',
-        'Training': 'Školení',
-        'Injury and disease from profession': 'Úraz/nemoc z povolání',
-        'Unpaid leave': 'Neplacené volno',
-        'Public interest': 'Obecný zájem',
-        'Sickday': 'Zdravotní volno'
-    }
-    return obj_mapping[mode]
-
-
 def get_dayname(number):
     return ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')[number]
 
@@ -386,83 +362,6 @@ class Manager(object):
             emp_t.filter(emp_t.uid == emp_uid).update({'acl': datadict[emp_uid]})
         self.db.commit()
     
-    def get_attendance(self, uid, pvid, period, username):
-        WEEKDAYS = ['Pondělí', 'Úterý', 'Středa',
-                    'Čtvrtek', 'Pátek', 'Sobota', 'Neděle']
-        retval = {'data': []}
-        per_year = int(period.split('-')[1])
-        per_month = int(period.split('-')[0])
-        per_range = monthrange(per_year, per_month)
-        per_range_list = [i for i in range(1, per_range[1] + 1)]
-        pv_t = self.db.pv
-        emp_t = self.db.employee
-        pres_t = self.db.presence
-        time_t = self.db.timetable
-        emp_no = self.get_emp_no(username)
-        uid = emp_t.filter(emp_t.emp_no == emp_no).one().uid
-        pvs = pv_t.filter(pv_t.pvid == pvid).all()
-        uid_pv = ''
-
-        for day in per_range_list:
-            curr_time = ''
-            day_date = date(per_year, per_month, day)
-            weekday = day_date.weekday()
-            for pv in pvs:
-                # Get pv valid for the date
-                if day_date in pv.validity:
-                    uid_pv = pv.uid
-                    break
-            # If there's no valid pv for date, continue to next day
-            if not uid_pv:
-                continue
-            # Get timetable corresponding to the date
-            curr_time = time_t.filter(
-                time_t.uid_pv == uid_pv, time_t.validity.contains(day_date)).first()
-            if curr_time:
-                timetable_list = [
-                    curr_time.monday,
-                    curr_time.tuesday,
-                    curr_time.wednesday,
-                    curr_time.thursday,
-                    curr_time.friday,
-                    TimeRange('00:00', '00:00'),
-                    TimeRange('00:00', '00:00')
-                ]
-            else:
-                timetable_list = [TimeRange('00:00', '00:00')] * 7
-            attend = pres_t.filter(
-                and_(pres_t.date == day_date, pres_t.uid_employee == uid)
-            ).first()
-
-
-            if timetable_list[weekday].lower == timetable_list[weekday].upper:
-                mode = 'Presence'
-            elif attend:
-                mode = eng_to_czech(attend.presence_mode)
-            else:
-                mode = 'Absence'
-            if attend:
-                retval['data'].append({
-                    'day': f'{day}. ',
-                    'start': f'{attend.arrival}',
-                    'end': f'{attend.departure}',
-                    'mode': mode,
-                    'stamp': 'Ano' if attend.food_stamp else 'Ne',
-                    'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
-                    'weekday': WEEKDAYS[weekday]
-                })
-            else:
-                retval['data'].append({
-                    'day': f'{day}. ',
-                    'start': '00:00',
-                    'end': '00:00',
-                    'mode': mode,
-                    'stamp': 'Ne',
-                    'timetable': f'{timetable_list[weekday].lower} - {timetable_list[weekday].upper}',
-                    'weekday': WEEKDAYS[weekday]
-                })
-        return retval
-
     def pvid_to_username(self, pvid):
         emp_no = pvid.split('.')[0]
         emp_t = self.db.employee
