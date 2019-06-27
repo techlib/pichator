@@ -59,6 +59,7 @@ def make_site(manager, access_model, debug=False):
     @app.template_filter('day_name')
     def day_name(t):
         return ('Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle')[t]
+    
 
 
     @app.template_filter('unit_type')

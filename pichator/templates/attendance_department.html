@@ -38,40 +38,30 @@
                     <p>
                         <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
                     </p>
+
                     <h5>Útvar {{ acl }}</h5>
+
+                    <h5>Mód docházky</h5>
+                    <form method="POST">
+                        <label class="radio-inline">
+                            <input name='modes' id='auto' type='radio' value='auto' {% if mode == 'auto' %} checked
+                                {% endif %}>Automaticky
+                        </label>
+                        <label class="radio-inline">
+                            <input name='modes' id='edit' type='radio' value='edit' {% if not mode or mode == 'edit' %}
+                                checked {% endif %}>S editací
+                        </label>
+                        <label class="radio-inline">
+                            <input name='modes' id='readonly' type='radio' value='readonly' {% if mode == 'readonly' %}
+                                checked {% endif %}>Prohlížení
+                        </label>
+                        <input class='btn btn-success' type='submit' value='Uložit'>
+                    </form>
+
                 </div>
             </div>
         </div>
     </div>
-    <form class="form-inline" method="POST">
-        <h5>Mód docházky</h5>
-        <div class="row">
-            <div class='col-md-3'>
-                <div class='form-group' id="modes">
-                    <div class='pf-c-radio'>
-                        <div class='col-md-5'>
-                            <input class='form-control pf-c-radio__input' name='modes' id='auto' type='radio'
-                                value='auto' {% if mode == 'auto' %} checked {% endif %}>
-                            <label class='pf-c-radio__label' for="auto">Automaticky</label>
-                        </div>
-                        <div class='col-md-5'>
-                            <input class='form-control pf-c-radio__input' name='modes' id='edit' type='radio'
-                                value='edit' {% if not mode or mode == 'edit' %} checked {% endif %}>
-                            <label class='pf-c-radio__label' for="edit">S editací</label>
-                        </div>
-                        <div class='col-md-5'>
-                            <input class='form-control pf-c-radio__input' name='modes' id='readonly' type='radio'
-                                value='readonly' {% if mode == 'readonly' %} checked {% endif %}>
-                            <label class='pf-c-radio__label' for="readonly">Prohlížení</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class='col-md-1'>
-                <input class='btn btn-success' type='submit' value='Uložit'>
-            </div>
-        </div>
-    </form>
 
     <div class="row">
         <div class="col-md-6">

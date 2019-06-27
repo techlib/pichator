@@ -358,7 +358,7 @@ class Manager(object):
 
         for p in presence.all():
             result[p.date.day] = {**result[p.date.day], **{
-                'mode':  p.presence_mode,
+                'mode':  eng_to_czech(p.presence_mode),
                 'arrival': p.arrival,
                 'departure': p.departure
             }}
