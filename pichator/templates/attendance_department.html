@@ -34,24 +34,24 @@
         <div class="col-sm-12">
             <div class="row toolbar-pf-results">
                 <div class="col-sm-12">
-                    <h5>Období</h5>
+                    <h5>Období:</h5>
                     <p>
                         <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
                     </p>
 
-                    <h5>Útvar {{ acl }}</h5>
+                    <h5>Útvar: {{ acl }}</h5>
 
-                    <h5>Mód docházky</h5>
+                    <h5>Mód docházky:</h5>
                     <form method="POST" class="inline">
-                        <label class="radio-inline">
+                        <label class="radio-inline buffer-left-md">
                             <input name='modes' id='auto' type='radio' value='auto' {% if mode == 'auto' %} checked
                                 {% endif %}><b>Automaticky</b>
                         </label>
-                        <label class="radio-inline">
+                        <label class="radio-inline buffer-left-md">
                             <input name='modes' id='edit' type='radio' value='edit' {% if not mode or mode == 'edit' %}
                                 checked {% endif %}><b>S editací</b>
                         </label>
-                        <label class="radio-inline">
+                        <label class="radio-inline buffer-left-md">
                             <input name='modes' id='readonly' type='radio' value='readonly' {% if mode == 'readonly' %}
                                 checked {% endif %}><b>Prohlížení</b>
                         </label>

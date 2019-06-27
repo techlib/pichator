@@ -7,6 +7,10 @@
     margin-left: 20px;
    }
 
+.buffer-left-sm {
+    margin-left: 10px;
+}
+
 .input-sm {
  max-width: 6em;
 }
