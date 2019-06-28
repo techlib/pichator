@@ -220,6 +220,7 @@ def make_site(manager, access_model, debug=False):
                 manager.set_dept_mode(dept, new_mode)
             mode = manager.get_dept_mode(dept)
             acl = dept
+            data = manager.get_department(dept, month, year)['data']
             return flask.render_template('attendance_department.html', **locals())
         
         if not acl.isdigit():
