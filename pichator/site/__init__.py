@@ -19,6 +19,7 @@ from xml.sax.saxutils import escape
 
 from twisted.python import log
 
+from weasyprint import HTML, CSS
 
 import flask
 import os
@@ -214,7 +215,7 @@ def make_site(manager, access_model, debug=False):
         year = year or today.year
         dept = dept or acl
         data = manager.get_department(dept, month, year)['data']
-        if acl == 'admin' and dept:
+        if acl == 'admin':
             if flask.request.method == 'POST':
                 new_mode = flask.request.form['modes']
                 manager.set_dept_mode(dept, new_mode)
@@ -231,6 +232,23 @@ def make_site(manager, access_model, debug=False):
             manager.set_dept_mode(acl, new_mode)
         mode = manager.get_dept_mode(acl)
         return flask.render_template('attendance_department.html', **locals())
+    
+    @app.route('/dept_pdf', defaults={'dept': None, 'month': None, 'year': None})
+    @app.route('/dept_pdf/<dept>', defaults={'month': None, 'year': None})
+    @app.route('/dept_pdf/<dept>/<int:year>/<int:month>')
+    @authorized_only('admin')
+    @pass_user_info
+    def get_pdf(uid, username, dept, month, year):
+        acl = manager.get_acl(username)
+        today = date.today()
+        month = month or today.month
+        year = year or today.year
+        dept = dept or acl
+        data = manager.get_department(dept, month, year)['data']
+        if acl == 'admin' or acl.isdigit():
+            pdf_template = HTML('templates/dept_pdf.html')
+            pdf_css = CSS('static/css/dept_pdf.css')
+            return pdf_template.write_pdf()
     
     @app.route('/dept_data')
     @authorized_only('admin')

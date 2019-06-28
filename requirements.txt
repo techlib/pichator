@@ -6,3 +6,4 @@ flask
 sqlalchemy
 sqlsoup
 twisted
+weasyprint
