@@ -13,6 +13,18 @@
 {% endblock %}
 
 <div class='container-fluid'>
+    <div class="row pichator-toolbar toolbar-pf">
+        <div class="col-sm-12">
+            <div class="row toolbar-pf-results">
+                <div class="col-sm-12">
+                    <h5>Administrace útvaru: </h5>
+                    {% for dept in depts %}
+                        <a class="buffer-left-sm" href="/dept/{{ dept }}">{{ dept }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row buffer-top-md">
         <div class="col-xs-12 col-sm-8 col-sm-push-2 col-md-4 col-md-push-4">
             <div class="panel panel-default">
