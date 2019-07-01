@@ -23,15 +23,16 @@ from shutil import rmtree
 from twisted.python import log
 
 from weasyprint import HTML, CSS
+from os.path import join, abspath, dirname
+from os import urandom
 
 import flask
-import os
 import re
 
 
 def make_site(manager, access_model, debug=False):
     app = flask.Flask('.'.join(__name__.split('.')[:-1]))
-    app.secret_key = os.urandom(16)
+    app.secret_key = urandom(16)
     app.debug = debug
 
     @app.template_filter('to_alert')
@@ -218,6 +219,7 @@ def make_site(manager, access_model, debug=False):
         year = year or today.year
         dept = dept or acl
         data = manager.get_department(dept, month, year)['data']
+        pdf_view = flask.request.values.get('pdf') == 'true'
         if acl == 'admin':
             if flask.request.method == 'POST':
                 new_mode = flask.request.form['modes']
@@ -225,6 +227,15 @@ def make_site(manager, access_model, debug=False):
             mode = manager.get_dept_mode(dept)
             acl = dept
             data = manager.get_department(dept, month, year)['data']
+            if pdf_view:
+                pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
+                pdf_css_path = join(dirname(abspath(__file__)), '../static/css/dept_pdf.css')
+                patternfly_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
+                patternfly_add_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
+
+                result = pdf_template.write_pdf(stylesheets=[CSS(pdf_css_path), CSS(patternfly_path), CSS(patternfly_add_path)])
+
+                return flask.Response(response=result, mimetype='application/pdf')
             return flask.render_template('attendance_department.html', **locals())
         
         if not acl.isdigit():
@@ -234,30 +245,17 @@ def make_site(manager, access_model, debug=False):
             new_mode = flask.request.form['modes']
             manager.set_dept_mode(acl, new_mode)
         mode = manager.get_dept_mode(acl)
+        if pdf_view:
+                pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
+                pdf_css_path = join(dirname(abspath(__file__)), '../static/css/dept_pdf.css')
+                patternfly_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
+                patternfly_add_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
+                
+                result = pdf_template.write_pdf(stylesheets=[CSS(pdf_css_path), CSS(patternfly_path), CSS(patternfly_add_path)])
+                
+                return flask.Response(response=result, mimetype='application/pdf')
         return flask.render_template('attendance_department.html', **locals())
-    
-    @app.route('/dept_pdf', defaults={'dept': None, 'month': None, 'year': None})
-    @app.route('/dept_pdf/<dept>', defaults={'month': None, 'year': None})
-    @app.route('/dept_pdf/<dept>/<int:year>/<int:month>')
-    @authorized_only('admin')
-    @pass_user_info
-    def get_pdf(uid, username, dept, month, year):
-        acl = manager.get_acl(username)
-        today = date.today()
-        month = month or today.month
-        year = year or today.year
-        dept = dept or acl
-        data = manager.get_department(dept, month, year)['data']
-        if acl == 'admin' or acl.isdigit():
-            pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
-            pdf_css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../static/css/dept_pdf.css')
-            patternfly_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
-            patternfly_add_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
-            pdf_css = CSS(pdf_css_path)
-            patternfly = CSS(patternfly_path)
-            patternfly_additions = CSS(patternfly_add_path)
-            result = pdf_template.write_pdf(stylesheets=[pdf_css, patternfly, patternfly_additions])
-            return flask.Response(response=result, mimetype='application/pdf')
+
     
     @app.route('/dept_data')
     @authorized_only('admin')

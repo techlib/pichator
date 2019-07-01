@@ -85,7 +85,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <a class="btn btn-warning" href="/dept_pdf/{{ dept }}/{{ year }}/{{ month }}">PDF</a>
+            <a class="btn btn-warning" href="/dept/{{ dept }}/{{ year }}/{{ month }}?pdf=true">PDF</a>
             {% else %}
             <h5>Žádný zaměstnanec s vyplněnou pracovní dobou pro tento měsíc. PLACEHOLDER</h5>
             {% endif %}
