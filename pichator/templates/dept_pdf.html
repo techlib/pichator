@@ -1,46 +1,53 @@
 <title>Docházka za útvar {{ dept }}</title>
 
 {% block content %}
-<div class="row">
-    <div class="col-md-4">
-        <h1>Docházka za útvar {{ dept }}</h1>
-    </div>
-    <div class="col-md-3">
-        Období: {{month}}-{{year}}
-    </div>
-</div>
-{% if data[0]|length != 0 %}
-<table class='table table-bordered table-striped'>
-    <thead>
-        <th>Jméno</th>
-        {% for day in range(1, data[0]|length) %}
-        <th>{{ day }}</th>
-        {% endfor %}
-    </thead>
-    <tbody>
-        {% for emp in data %}
-        <tr>
-            <td>{{ emp['name'] }}</td>
-            {% for day in range(1, data[0]|length) %}
-            <td>{{ emp[day|string] }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<div class="row">
-        <div class="col-md-8 col-md-push-2 buffer-top-md">
-            <div class="blank-slate-pf">
-                <h2>Prázdná odpověď</h2>
-
-                <p>Dotaz vrátil prázdný záznam.</p>
-                <p>
-                    Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
-                    Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
-                </p>
-            </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <h1>Docházka za útvar {{ dept }}</h1>
+        </div>
+        <div class="col-md-3">
+            Období: {{month}}-{{year}}
         </div>
     </div>
+    {% if data[0]|length != 0 %}
+    <div class="row">
+        <div class="col-md-8 buffer-top-md">
+            <table class='table table-bordered table-striped'>
+                <thead>
+                    <th>Jméno</th>
+                    {% for day in range(1, data[0]|length) %}
+                    <th>{{ day }}</th>
+                    {% endfor %}
+                </thead>
+                <tbody>
+                    {% for emp in data %}
+                    <tr>
+                        <td>{{ emp['name'] }}</td>
+                        {% for day in range(1, data[0]|length) %}
+                        <td>{{ emp[day|string] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-md-8 col-md-push-2 buffer-top-md">
+        <div class="blank-slate-pf">
+            <h2>Prázdná odpověď</h2>
+
+            <p>Dotaz vrátil prázdný záznam.</p>
+            <p>
+                Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
+                Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a
+                    href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
+            </p>
+        </div>
+    </div>
+</div>
 {% endif %}
 {% endblock %}
