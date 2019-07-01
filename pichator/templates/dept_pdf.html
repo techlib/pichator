@@ -29,6 +29,18 @@
     </tbody>
 </table>
 {% else %}
-<h5>Žádný zaměstnanec s vyplněnou pracovní dobou pro tento měsíc.</h5>
+<div class="row">
+        <div class="col-md-8 col-md-push-2 buffer-top-md">
+            <div class="blank-slate-pf">
+                <h2>Prázdná odpověď</h2>
+
+                <p>Dotaz vrátil prázdný záznam.</p>
+                <p>
+                    Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
+                    Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
+                </p>
+            </div>
+        </div>
+    </div>
 {% endif %}
 {% endblock %}
