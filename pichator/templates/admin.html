@@ -40,8 +40,6 @@
                                         <option value="None" {% if not employee['acl'].isdigit() %} selected
                                             {% endif %}>
                                             Není vedoucím</option>
-                                        <option value="admin" {% if employee['acl'] == 'admin'%} selected {% endif %}>
-                                            Administrátor</option>
                                     </select>
                                 </div>
                             </div>
