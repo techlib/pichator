@@ -165,7 +165,7 @@ def make_site(manager, access_model, debug=False):
 
     @app.route('/', defaults={'year': None, 'month': None, 'pvid': None})
     @app.route('/<int:year>/<int:month>/<pvid>')
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def index(uid, username, year, month, pvid):
         nonlocal has_privilege
@@ -199,7 +199,7 @@ def make_site(manager, access_model, debug=False):
         """
 
     @app.route('/get_emp')
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def employees(uid, username):
         acl = manager.get_acl(username)
@@ -210,7 +210,7 @@ def make_site(manager, access_model, debug=False):
     @app.route('/dept', methods=['GET', 'POST'], defaults={'dept': None, 'month': None, 'year': None})
     @app.route('/dept/<dept>', methods=['GET', 'POST'], defaults={'month': None, 'year': None})
     @app.route('/dept/<dept>/<int:year>/<int:month>', methods=['GET', 'POST'])
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def display_dept(uid, username, dept, month, year):
         acl = manager.get_acl(username)
@@ -220,7 +220,7 @@ def make_site(manager, access_model, debug=False):
         dept = dept or acl
         data = manager.get_department(dept, month, year)['data']
         pdf_view = flask.request.values.get('pdf') == 'true'
-        if acl == 'admin':
+        if has_privilege('admin'):
             if flask.request.method == 'POST':
                 new_mode = flask.request.form['modes']
                 manager.set_dept_mode(dept, new_mode)
@@ -258,7 +258,7 @@ def make_site(manager, access_model, debug=False):
 
     
     @app.route('/dept_data')
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def get_dept(uid, username):
         dept = flask.request.values.get('dept')
@@ -267,7 +267,7 @@ def make_site(manager, access_model, debug=False):
                 'Geting data for department without mandatory parameter department number.')
             raise NotAcceptable
         acl = manager.get_acl(username)
-        if acl != str(dept)[0] and acl != 'admin':
+        if acl != str(dept)[0] and not has_privilege(admin):
             log.err(
                 f'Trying to acces data of department {dept}, but has no authorization to do so.')
             raise Forbidden
@@ -298,22 +298,17 @@ def make_site(manager, access_model, debug=False):
     @pass_user_info
     def admin(uid, username):
         acl = manager.get_acl(username)
-        if acl != 'admin':
-            raise Forbidden
         if flask.request.method == 'POST':
             manager.set_acls(flask.request.form.to_dict())
         
-        # Check if user is still admin after change of acls
         acl = manager.get_acl(username)
-        if acl != 'admin':
-            raise Forbidden
         employees = manager.get_all_employees()
         depts = manager.get_all_depts()
         
         return flask.render_template('admin.html', **locals())
 
     @app.route('/timetable_data')
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def get_timetables_data(uid, username):
         acl = manager.get_acl(username)
@@ -325,7 +320,7 @@ def make_site(manager, access_model, debug=False):
         return flask.jsonify(manager.get_timetables(uid))
 
     @app.route('/pvs')
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def get_pvs(uid, username):
         nonlocal has_privilege
@@ -338,7 +333,7 @@ def make_site(manager, access_model, debug=False):
         return flask.jsonify(manager.get_pvs(uid, int(period[0]), int(period[1])))
 
     @app.route('/attendance_data')
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def get_attendance_data(uid, username):
         nonlocal has_privilege
@@ -364,7 +359,7 @@ def make_site(manager, access_model, debug=False):
         return flask.jsonify(manager.get_attendance2(uid, pvid, int(period[0]), int(period[1]), username))
 
     @app.route('/attendance_submit', methods=['POST'])
-    @authorized_only('admin')
+    @authorized_only('user')
     @pass_user_info
     def set_attendance_data(uid, username):
         nonlocal has_privilege
