@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Docházka za útvar {{ acl }}{% endblock %}
+{% block title %}Docházka za útvar {{ dept }}{% endblock %}
 {%- set active_page = 'department' %}
 
 {% block content %}
@@ -40,7 +40,7 @@
                     </p>
 
                     <h5>Útvar</h5>
-                    <span>{{ acl }}</span>
+                    <span>{{ dept }}</span>
 
                     <h5>Mód docházky</h5>
                     <form method="POST" class="inline">
@@ -85,6 +85,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            <a class="btn btn-warning" href="/dept_pdf/{{ dept }}/{{ year }}/{{ month }}">PDF</a>
             {% else %}
             <h5>Žádný zaměstnanec s vyplněnou pracovní dobou pro tento měsíc. PLACEHOLDER</h5>
             {% endif %}

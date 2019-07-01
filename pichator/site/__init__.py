@@ -16,6 +16,9 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import *
 from xml.sax.saxutils import escape
 
+from time import time
+from shutil import rmtree
+
 
 from twisted.python import log
 
@@ -246,9 +249,12 @@ def make_site(manager, access_model, debug=False):
         dept = dept or acl
         data = manager.get_department(dept, month, year)['data']
         if acl == 'admin' or acl.isdigit():
-            pdf_template = HTML('templates/dept_pdf.html')
-            pdf_css = CSS('static/css/dept_pdf.css')
-            return pdf_template.write_pdf()
+            pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
+            pdf_css = CSS('/home/daniels/Documents/NTK/pichator/pichator/static/css/dept_pdf.css')
+            patternfly = CSS('/home/daniels/Documents/NTK/pichator/pichator/static/vendor/patternfly/css/patternfly.css')
+            patternfly_additions = CSS('/home/daniels/Documents/NTK/pichator/pichator/static/vendor/patternfly/css/patternfly-additions.css')
+            result = pdf_template.write_pdf(stylesheets=[pdf_css, patternfly, patternfly_additions])
+            return flask.Response(response=result, mimetype='application/pdf')
     
     @app.route('/dept_data')
     @authorized_only('admin')

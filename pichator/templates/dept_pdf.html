@@ -1,0 +1,34 @@
+<title>Docházka za útvar {{ dept }}</title>
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <h1>Docházka za útvar {{ dept }}</h1>
+    </div>
+    <div class="col-md-3">
+        Období: {{month}}-{{year}}
+    </div>
+</div>
+{% if data[0]|length != 0 %}
+<table class='table table-bordered table-striped'>
+    <thead>
+        <th>Jméno</th>
+        {% for day in range(1, data[0]|length) %}
+        <th>{{ day }}</th>
+        {% endfor %}
+    </thead>
+    <tbody>
+        {% for emp in data %}
+        <tr>
+            <td>{{ emp['name'] }}</td>
+            {% for day in range(1, data[0]|length) %}
+            <td>{{ emp[day|string] }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<h5>Žádný zaměstnanec s vyplněnou pracovní dobou pro tento měsíc.</h5>
+{% endif %}
+{% endblock %}
