@@ -54,7 +54,7 @@
                     <a href="/dept">Docházka útvaru {{ acl }}</a>
                 </li>
                 {% endif %}
-                {% if acl and acl == 'admin' %}
+                {% if admin %}
                 <li class="{% if active_page=='admin' %}active{%endif %}">
                     <a href="/admin">Administrační rozhraní</a>
                 </li>
