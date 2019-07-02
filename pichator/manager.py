@@ -6,7 +6,7 @@ __all__ = ['Manager']
 from twisted.python import log
 from twisted.internet.task import LoopingCall
 from threading import Thread
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy import types as sqltypes
 from sqlalchemy.sql.expression import cast
@@ -583,40 +583,36 @@ class Manager(object):
     def update_presence(self, date, source):
         pres_t = self.db.presence
         emp_t = self.db.employee
+
         for employee in emp_t.all():
             arriv = source.get_arrival(date, employee.uid)
             depart = source.get_departure(date, employee.uid)
+
             if not arriv:
                 continue
+
             length = (depart - arriv).seconds / 3600
             presence_mode = 'Presence'
             food_stamp = length >= 6
-            if not pres_t.filter(
-                    and_(pres_t.uid_employee == employee.uid, pres_t.date == date)
-            ).first():
-                pres_t.insert(
-                    date=date,
-                    arrival=arriv.time(),
-                    departure=depart.time(),
-                    presence_mode=presence_mode,
-                    uid_employee=employee.uid,
-                    food_stamp=food_stamp
-                )
+
+            current = pres_t.filter(pres_t.uid_employee == employee.uid) \
+                            .filter(pres_t.date == date) \
+                            .first()
+
+            if not current:
+                pres_t.insert(**{
+                    'date': date,
+                    'arrival': arriv.time(),
+                    'departure': depart.time(),
+                    'presence_mode': presence_mode,
+                    'uid_employee': employee.uid,
+                    'food_stamp': food_stamp
+                })
             else:
-                presence_s = pres_t.filter(
-                    and_(pres_t.uid_employee == employee.uid, pres_t.date == date)
-                )
-                presence = presence_s.one()
-                if presence.arrival > arriv.time():
-                    presence_s.update({
-                        'arrival': arriv.time(),
-                        'food_stamp': food_stamp
-                    })
-                if presence.departure < depart.time():
-                    presence_s.update({
-                        'departure': depart.time(),
-                        'food_stamp': food_stamp
-                    })
+                current.arrival = func.least(arriv.time(), pres_t.arrival)
+                current.departure = func.greatest(
+                    depart.time(), pres_t.departure)
+                current.food_stamp = food_stamp
 
         self.db.commit()
 
