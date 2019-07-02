@@ -98,8 +98,7 @@ if __name__ == '__main__':
         '''
         year = datetime.now().date().year
         for i in range(1, 13):
-            period = f'{i}-{year}'
-            manager.init_presence(period=period, source=ekv)
+            manager.init_presence(year=year, month=i, source=ekv)
         '''
         # Bind the website to it's address.
         reactor.listenTCP(http_port, site, interface=http_host)

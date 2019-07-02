@@ -144,8 +144,8 @@ class Manager(object):
 
         return retval
 
-    def threaded_init(self, period, source):
-        th_init = Thread(target=self.init_presence, args=(period, source))
+    def threaded_init(self, year, month, source):
+        th_init = Thread(target=self.init_presence, args=(year, month, source))
         th_init.start()
 
     def threaded_update_presence(self, date, source):
@@ -530,55 +530,12 @@ class Manager(object):
                 retval['data'].append(retval_dict)
         return retval
 
-    def init_presence(self, period, source):
-        pres_t = self.db.presence
-        emp_t = self.db.employee
-        per_year = int(period.split('-')[1])
-        per_month = int(period.split('-')[0])
-        per_range = monthrange(per_year, per_month)
-        per_range_list = [i for i in range(1, per_range[1] + 1)]
+    def init_presence(self, year, month, source):
+        days = monthlen(year, month)
 
-        for employee in emp_t.all():
-            for day in per_range_list:
-                datetm = datetime.strptime(
-                    f'{day}-{per_month}-{per_year}', '%d-%m-%Y')
-                date = datetm.date()
-                arriv = source.get_arrival(date, employee.uid)
-                depart = source.get_departure(date, employee.uid)
-                if not arriv:
-                    continue
-                length = (depart - arriv).seconds / 3600
-                presence_mode = 'Presence'
-                food_stamp = length >= 6
-
-                if not pres_t.filter(
-                    and_(pres_t.uid_employee == employee.uid,
-                         pres_t.date == date)
-                ).first():
-                    pres_t.insert(
-                        date=date,
-                        arrival=arriv.time(),
-                        departure=depart.time(),
-                        presence_mode=presence_mode,
-                        uid_employee=employee.uid,
-                        food_stamp=food_stamp
-                    )
-
-                else:
-                    presence_s = pres_t.filter(
-                        and_(pres_t.uid_employee ==
-                             employee.uid, pres_t.date == date)
-                    )
-                    presence = presence_s.one()
-                    if presence.arrival > arriv.time():
-                        presence_s.update(
-                            {'arrival': arriv.time(), 'food_stamp': food_stamp})
-
-                    if presence.departure < depart.time():
-                        presence_s.update(
-                            {'departure': depart.time(), 'food_stamp': food_stamp})
-
-        self.db.commit()
+        for day in days:
+            date = date(year, month, day + 1)
+            self.update_presence(date, source)
 
     def update_presence(self, date, source):
         pres_t = self.db.presence
