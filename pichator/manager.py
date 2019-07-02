@@ -585,44 +585,36 @@ class Manager(object):
     def update_pvs(self, elanor):
         pv_t = self.db.pv
         emp_t = self.db.employee
-        departments = []
+
+        departments = set()
+
         for employee in emp_t.all():
             for pv in elanor.get_pvs(employee.emp_no):
-                uid_emp = emp_t.filter(
-                    emp_t.emp_no == pv['emp_no']).first().uid
-                if pv['department'] not in departments:
-                    departments.append(pv['department'])
+                departments.add(pv['department'])
+
                 valid = DateRange(
                     lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
-                if not pv_t.filter(
-                    and_(pv_t.pvid == pv['pvid'],
-                         pv_t.occupancy == pv['occupancy'],
-                         pv_t.department == pv['department'],
-                         pv_t.validity == valid,
-                         pv_t.uid_employee == uid_emp)
-                ).first():
-                    if pv_t.filter(
-                        and_(pv_t.pvid == pv['pvid'],
+                query = and_(pv_t.pvid == pv['pvid'],
                              pv_t.occupancy == pv['occupancy'],
                              pv_t.department == pv['department'],
-                             pv_t.uid_employee == uid_emp)
-                    ).first():
-                        pv_t.filter(
-                            and_(pv_t.pvid == pv['pvid'],
-                                 pv_t.occupancy == pv['occupancy'],
-                                 pv_t.department == pv['department'],
-                                 pv_t.uid_employee == uid_emp
-                                 )
-                        ).update({'validity': valid})
-                    else:
-                        pv_t.insert(
-                            pvid=pv['pvid'],
-                            occupancy=pv['occupancy'],
-                            department=pv['department'],
-                            validity=valid,
-                            uid_employee=uid_emp
-                        )
-        self.depts = departments
-        self.depts.sort()
+                             pv_t.uid_employee == employee.uid)
+
+                if pv_t.filter(query) \
+                       .filter(pv_t.validity == valid) \
+                       .first():
+                    continue
+
+                if pv_t.filter(query).first():
+                    pv_t.filter(query).update({'validity': valid})
+                else:
+                    pv_t.insert(**{
+                        'pvid': pv['pvid'],
+                        'occupancy': pv['occupancy'],
+                        'department': pv['department'],
+                        'validity': valid,
+                        'uid_employee': employee.uid
+                    })
+
+        self.depts = sorted(list(departments))
         self.db.commit()
