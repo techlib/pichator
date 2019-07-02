@@ -16,11 +16,12 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, monthlen
 
+
 class TimeRange(Range):
     def len(self):
         # Returns number of minutes in timerange
-        dt_from = datetime.combine(date.today(),self.lower)
-        dt_to = datetime.combine(date.today(),self.upper)
+        dt_from = datetime.combine(date.today(), self.lower)
+        dt_to = datetime.combine(date.today(), self.upper)
         length = dt_to - dt_from
         total = length.total_seconds() / 60
         return total if total < 6 * 60 else total - 30
@@ -54,8 +55,10 @@ def eng_to_symbol(mode, stamp):
 
     return obj_mapping[mode]
 
+
 def get_dayname(number):
     return ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')[number]
+
 
 class Manager(object):
     def __init__(self, db):
@@ -95,10 +98,10 @@ class Manager(object):
         except Exception as e:
             log.err(e)
             return []
-        
+
     def get_all_depts(self):
         return self.depts
-    
+
     def get_all_employees(self):
         retval = []
         for emp in self.db.employee.all():
@@ -107,7 +110,7 @@ class Manager(object):
                 'last_name': emp.last_name,
                 'uid': emp.uid,
                 'acl': emp.acl,
-                    })
+            })
         return retval
 
     def month_range(self, year, month):
@@ -188,7 +191,7 @@ class Manager(object):
             payload['data'].append(pv_data)
 
         return payload
-    
+
     def get_dept_mode(self, dept):
         acls_t = self.db.acls
         mode_row = acls_t.filter(acls_t.dept == str(dept)).first()
@@ -196,7 +199,7 @@ class Manager(object):
             return
         else:
             return mode_row.acl
-        
+
     def set_dept_mode(self, dept, mode):
         acls_t = self.db.acls
         prev_mode_row = acls_t.filter(acls_t.dept == dept)
@@ -207,20 +210,20 @@ class Manager(object):
             else:
                 prev_mode_row.update({'acl': mode})
         else:
-            acls_t.insert(dept = dept, acl = mode)
-            
+            acls_t.insert(dept=dept, acl=mode)
+
         self.db.commit()
-            
+
     def set_timetables(self, data):
         # returns True if commit succeeds, False otherwise
         pv_t = self.db.pv
         timetable_t = self.db.timetable
         maxdate = date.max
         start_date = date.today()
-        
+
         if data['date']:
-            start_date = datetime.strptime(data['date'],'%d-%m-%Y').date()
-            
+            start_date = datetime.strptime(data['date'], '%d-%m-%Y').date()
+
         valid_mon = data['monF'] and data['monT']
         valid_tue = data['tueF'] and data['tueT']
         valid_wed = data['wedF'] and data['wedT']
@@ -231,12 +234,17 @@ class Manager(object):
             log.err('Attempt to upsert timetable without all days periods filled-in.\n\
                     To signify free day, please set start and end of workday to 00:00')
             raise NotAcceptable
-        mon_time_f, mon_time_t = datetime.strptime(data['monF'], '%H:%M').time(), datetime.strptime(data['monT'], '%H:%M').time()
-        tue_time_f, tue_time_t = datetime.strptime(data['tueF'], '%H:%M').time(), datetime.strptime(data['tueT'], '%H:%M').time()
-        wed_time_f, wed_time_t = datetime.strptime(data['wedF'], '%H:%M').time(), datetime.strptime(data['wedT'], '%H:%M').time()
-        thu_time_f, thu_time_t = datetime.strptime(data['thuF'], '%H:%M').time(), datetime.strptime(data['thuT'], '%H:%M').time()
-        fri_time_f, fri_time_t = datetime.strptime(data['friF'], '%H:%M').time(), datetime.strptime(data['friT'], '%H:%M').time()
-        
+        mon_time_f, mon_time_t = datetime.strptime(
+            data['monF'], '%H:%M').time(), datetime.strptime(data['monT'], '%H:%M').time()
+        tue_time_f, tue_time_t = datetime.strptime(
+            data['tueF'], '%H:%M').time(), datetime.strptime(data['tueT'], '%H:%M').time()
+        wed_time_f, wed_time_t = datetime.strptime(
+            data['wedF'], '%H:%M').time(), datetime.strptime(data['wedT'], '%H:%M').time()
+        thu_time_f, thu_time_t = datetime.strptime(
+            data['thuF'], '%H:%M').time(), datetime.strptime(data['thuT'], '%H:%M').time()
+        fri_time_f, fri_time_t = datetime.strptime(
+            data['friF'], '%H:%M').time(), datetime.strptime(data['friT'], '%H:%M').time()
+
         monday_v = TimeRange(mon_time_f, mon_time_t)
         tuesday_v = TimeRange(tue_time_f, tue_time_t)
         wednesday_v = TimeRange(wed_time_f, wed_time_t)
@@ -310,7 +318,7 @@ class Manager(object):
 
         time_t = self.db.timetable
         pres_t = self.db.presence
-        pv_t   = self.db.pv
+        pv_t = self.db.pv
 
         month_range = self.month_range(year, month)
         today = date.today()
@@ -351,7 +359,8 @@ class Manager(object):
                 weekday = day['date'].weekday()
                 if day['date'] in timetable.validity and weekday < 5:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
-                    day['mode'] = day['mode'] or ('Absence' if day['timetable'] and day['date'] <= today else None)
+                    day['mode'] = day['mode'] or (
+                        'Absence' if day['timetable'] and day['date'] <= today else None)
                     break
 
         return result
@@ -359,9 +368,10 @@ class Manager(object):
     def set_acls(self, datadict):
         emp_t = self.db.employee
         for emp_uid in datadict.keys():
-            emp_t.filter(emp_t.uid == emp_uid).update({'acl': datadict[emp_uid]})
+            emp_t.filter(emp_t.uid == emp_uid).update(
+                {'acl': datadict[emp_uid]})
         self.db.commit()
-    
+
     def pvid_to_username(self, pvid):
         emp_no = pvid.split('.')[0]
         emp_t = self.db.employee
@@ -388,11 +398,13 @@ class Manager(object):
     def set_attendance(self, date, employee_uid, start, end, mode):
         pres_t = self.db.presence
 
-        length = datetime.strptime(start, "%H:%M") - datetime.strptime(end, "%H:%M")
+        length = datetime.strptime(start, "%H:%M") - \
+            datetime.strptime(end, "%H:%M")
         duration = length.seconds / 3600
 
         # If attendance is longer than 6 hours (or 4 on business trip) employee can haz food stamp
-        food_stamp = duration >= 6 or (mode == 'Business trip' and duration >= 4)
+        food_stamp = duration >= 6 or (
+            mode == 'Business trip' and duration >= 4)
 
         presence = pres_t \
             .filter(pres_t.uid_employee == employee_uid) \
@@ -419,17 +431,19 @@ class Manager(object):
 
     def get_dept(self, pvid, date):
         pv_t = self.db.pv
-        pv = pv_t.filter(and_(pv_t.pvid == pvid, pv_t.validity.contains(date))).first()
+        pv = pv_t.filter(
+            and_(pv_t.pvid == pvid, pv_t.validity.contains(date))).first()
         if not pv:
-            log.msg(f'PV {pvid} is not valid at {date}. Cannot return department.')
+            log.msg(
+                f'PV {pvid} is not valid at {date}. Cannot return department.')
             return
         return pv.department
-    
+
     def get_department(self, dept, month, year):
         retval = {'data': []}
         gen_mode = self.get_dept_mode(dept)
         found = False
-        
+
         emp_t = self.db.employee
         pv_t = self.db.pv
         pres_t = self.db.presence
@@ -437,27 +451,28 @@ class Manager(object):
 
         per_range = monthrange(year, month)
         query = self.db.session.query(pv_t, emp_t, timetable_t)\
-        .join(emp_t)\
-        .outerjoin(timetable_t)
-        
+            .join(emp_t)\
+            .outerjoin(timetable_t)
+
         month_period = DateRange(date(year, month, 1), date(
             year, month, per_range[1]), '[]')
 
         pv_with_emp = query \
             .filter(and_(pv_t.validity.overlaps(month_period), timetable_t.validity.overlaps(month_period))) \
             .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).all()
-            
+
         if not pv_with_emp:
-            log.msg(f'No valid employees with timetable for period {month_period.lower} - {month_period.upper}')
+            log.msg(
+                f'No valid employees with timetable for period {month_period.lower} - {month_period.upper}')
             return retval
-        
+
         for _, employee, timetable in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
             retval_dict = {
                 'name': f'{employee.first_name} {employee.last_name}'}
             for day in range(per_range[1]):
                 curr_date = date(year, month, day + 1)
-                
+
                 if timetable and curr_date in timetable.validity:
                     timetable_list = [
                         timetable.monday,
@@ -470,7 +485,7 @@ class Manager(object):
                     ]
                 else:
                     timetable_list = [None] * 7
-                
+
                 presence = pres_t.filter(
                     and_(pres_t.uid_employee ==
                          employee.uid, pres_t.date == curr_date)
@@ -478,13 +493,13 @@ class Manager(object):
                 # Weekend
                 if curr_date.isoweekday() in [6, 7]:
                     symbol = 'S'
-                    
+
                 # This timetable is not valid on this day,
                 # it is non working day for the employee or the day is in future
                 elif timetable_list[curr_date.weekday()] == None or curr_date > date.today():
                     symbol = '-'
-                
-                # Employee has valid timetable for the day and should have been in workplace but was not present    
+
+                # Employee has valid timetable for the day and should have been in workplace but was not present
                 elif not presence:
                     # Automatically generated presence
                     if gen_mode == 'auto':
@@ -494,7 +509,7 @@ class Manager(object):
                             symbol = '/-'
                     else:
                         symbol = 'A'
-                        
+
                 # Employee was present or was on vacation, business trip etc.
                 else:
                     symbol = eng_to_symbol(
@@ -564,8 +579,6 @@ class Manager(object):
                             {'departure': depart.time(), 'food_stamp': food_stamp})
 
         self.db.commit()
-        
-        
 
     def update_presence(self, date, source):
         pres_t = self.db.presence
@@ -656,7 +669,7 @@ class Manager(object):
                             department=pv['department'],
                             validity=valid,
                             uid_employee=uid_emp
-                        )      
+                        )
         self.depts = departments
         self.depts.sort()
         self.db.commit()
