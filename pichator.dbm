@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="15,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="14,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -31,7 +31,7 @@ CAUTION: Do not modify this file unless you know what you are doing.
 		<type name="character varying" length="0"/>
 	</column>
 	<column name="emp_no">
-		<type name="smallint" length="0"/>
+		<type name="character varying" length="0"/>
 	</column>
 	<column name="username" not-null="true">
 		<type name="character varying" length="0"/>

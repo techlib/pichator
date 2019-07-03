@@ -31,7 +31,7 @@ CREATE ROLE pichator WITH
 CREATE TABLE public.employee(
 	first_name character varying NOT NULL,
 	last_name character varying NOT NULL,
-	emp_no smallint,
+	emp_no character varying,
 	username character varying NOT NULL,
 	uid bigint NOT NULL,
 	acl character varying NOT NULL DEFAULT 'edit',
