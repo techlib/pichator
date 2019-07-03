@@ -23,6 +23,8 @@ from shutil import rmtree
 from twisted.python import log
 
 from weasyprint import HTML, CSS
+from weasyprint.fonts import FontConfiguration
+
 from os.path import join, abspath, dirname
 from os import urandom
 
@@ -212,6 +214,10 @@ def make_site(manager, access_model, debug=False):
         dept = dept or acl
         data = manager.get_department(dept, month, year)['data']
         pdf_view = flask.request.values.get('pdf') == 'true'
+
+        font_config = FontConfiguration()
+        font_path = join(dirname(abspath(__file__)), '../templates/fonts')
+        
         if has_privilege('admin'):
             if flask.request.method == 'POST':
                 new_mode = flask.request.form['modes']
@@ -225,7 +231,7 @@ def make_site(manager, access_model, debug=False):
                 patternfly_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
                 patternfly_add_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
 
-                result = pdf_template.write_pdf(stylesheets=[CSS(pdf_css_path), CSS(patternfly_path), CSS(patternfly_add_path)])
+                result = pdf_template.write_pdf( font_config=font_config)
 
                 return flask.Response(response=result, mimetype='application/pdf')
             return flask.render_template('attendance_department.html', **locals())
@@ -243,7 +249,7 @@ def make_site(manager, access_model, debug=False):
                 patternfly_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
                 patternfly_add_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
                 
-                result = pdf_template.write_pdf(stylesheets=[CSS(pdf_css_path), CSS(patternfly_path), CSS(patternfly_add_path)])
+                result = pdf_template.write_pdf( font_config=font_config)
                 
                 return flask.Response(response=result, mimetype='application/pdf')
         return flask.render_template('attendance_department.html', **locals())

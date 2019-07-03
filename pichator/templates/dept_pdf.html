@@ -1,53 +1,107 @@
-<title>Docházka za útvar {{ dept }}</title>
+<html>
 
-{% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-4">
-            <h1>Docházka za útvar {{ dept }}</h1>
-        </div>
-        <div class="col-md-3">
-            Období: {{month}}-{{year}}
-        </div>
-    </div>
+<head>
+    <title>Docházka za útvar {{ dept }}</title>
+
+    <style type="text/css">
+        @page {
+            size: landscape;
+            margin: 0.5cm;
+        }
+
+        @font-face {
+            font-family: UniversBig;
+            src: url("file://{{ font_path }}/UniversCom-55Roman.ttf");
+        }
+
+        @font-face {
+            font-family: UniversLight;
+            src: url("file://{{ font_path }}/UniversCom-45Light.ttf");
+        }
+
+        * {
+            font-family: UniversLight;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            font-weight: bolder;
+        }
+
+        h1 {
+            font-family: Univers;
+            font-weight: normal;
+        }
+
+        td,
+        th {
+            border-bottom: 1px solid #999;
+            text-align: center;
+            line-height: 25px;
+
+        }
+
+        tbody tr:nth-child(odd) {
+            background:rgba(210, 210, 210, 0.2);
+        }
+
+        td:first-child,
+        th:first-child {
+            text-align: left;
+            padding-left: 5px;
+            max-width: 7cm;
+        }
+    </style>
+
+</head>
+
+<body>
+
+
+    <h1>Docházka za útvar {{ dept }}</h1>
+    Období: {{month}}-{{year}}
+
     {% if data[0]|length %}
+    <table>
+        <thead>
+            <th></th>
+            {% for day in range(1, data[0]|length) %}
+            <th>{{ day }}</th>
+            {% endfor %}
+        </thead>
+        <tbody>
+            {% for x in [1,2,3,4,5] %}
+            {% for emp in data %}
+            <tr>
+                <td>{{ emp['name'] }}</td>
+                {% for day in range(1, data[0]|length) %}
+                <td>{{ emp[day|string] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
     <div class="row">
-        <div class="col-md-8 buffer-top-md">
-            <table class='table table-bordered table-striped'>
-                <thead>
-                    <th>Jméno</th>
-                    {% for day in range(1, data[0]|length) %}
-                    <th>{{ day }}</th>
-                    {% endfor %}
-                </thead>
-                <tbody>
-                    {% for emp in data %}
-                    <tr>
-                        <td>{{ emp['name'] }}</td>
-                        {% for day in range(1, data[0]|length) %}
-                        <td>{{ emp[day|string] }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-{% else %}
-<div class="row">
-    <div class="col-md-8 col-md-push-2 buffer-top-md">
-        <div class="blank-slate-pf">
-            <h2>Prázdná odpověď</h2>
+        <div class="col-md-8 col-md-push-2 buffer-top-md">
+            <div class="blank-slate-pf">
+                <h2>Prázdná odpověď</h2>
 
-            <p>Dotaz vrátil prázdný záznam.</p>
-            <p>
-                Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
-                Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a
-                    href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
-            </p>
+                <p>Dotaz vrátil prázdný záznam.</p>
+                <p>
+                    Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
+                    Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a
+                        href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
+                </p>
+            </div>
         </div>
     </div>
-</div>
-{% endif %}
-{% endblock %}
+    {% endif %}
+</body>
+
+</html>
