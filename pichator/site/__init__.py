@@ -231,7 +231,7 @@ def make_site(manager, access_model, debug=False):
             return flask.render_template('attendance_department.html', **locals())
         
         if not acl.isdigit():
-            log.msg(f'User {username} tried to access department view with acl {acl}.')
+            log.msg('User {} tried to access department view with acl {}.'.format(username, acl))
             raise Forbidden
         if flask.request.method == 'POST':
             new_mode = flask.request.form['modes']
@@ -261,7 +261,7 @@ def make_site(manager, access_model, debug=False):
         acl = manager.get_acl(username)
         if acl != str(dept)[0] and not has_privilege(admin):
             log.err(
-                f'Trying to acces data of department {dept}, but has no authorization to do so.')
+                'Trying to acces data of department {}, but has no authorization to do so.'.format(dept))
             raise Forbidden
         period = flask.request.values.get('period', '').split('-')
         if len(period) != 2:

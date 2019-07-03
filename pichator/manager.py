@@ -73,7 +73,7 @@ class Manager(object):
         try:
             return emp_t.filter(emp_t.username == username).one().emp_no
         except NoResultFound:
-            log.err(f'User not found. Supplied username: {username}')
+            log.err('User not found. Supplied username: {}'.format(username))
             raise NotAcceptable
 
     def get_acl(self, username):
@@ -81,7 +81,7 @@ class Manager(object):
         try:
             return emp_t.filter(emp_t.username == username).one().acl
         except NoResultFound:
-            log.err(f'User not found. Supplied username: {username}')
+            log.err('User not found. Supplied username: {}'.fromat(username))
             raise NotAcceptable
 
     def get_depts(self, username):
@@ -379,7 +379,7 @@ class Manager(object):
             return emp_t.filter(emp_t.emp_no == emp_no).one().username
         except Exception as e:
             log.err(e)
-            log.err(f'User belonging to pvid {pvid} not found.')
+            log.err('User belonging to pvid {} not found.'.format(pvid))
             raise NotAcceptable
         return ''
 
@@ -435,7 +435,7 @@ class Manager(object):
             and_(pv_t.pvid == pvid, pv_t.validity.contains(date))).first()
         if not pv:
             log.msg(
-                f'PV {pvid} is not valid at {date}. Cannot return department.')
+                'PV {} is not valid at {}. Cannot return department.'.format(pvid, date))
             return
         return pv.department
 
@@ -463,13 +463,13 @@ class Manager(object):
 
         if not pv_with_emp:
             log.msg(
-                f'No valid employees with timetable for period {month_period.lower} - {month_period.upper}')
+                'No valid employees with timetable for period {} - {}'.format(month_period.lower, month_period.upper))
             return retval
 
         for _, employee, timetable in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
             retval_dict = {
-                'name': f'{employee.first_name} {employee.last_name}'}
+                'name': '{} {}'.format(employee.first_name, employee.last_name)}
             for day in range(per_range[1]):
                 curr_date = date(year, month, day + 1)
 
@@ -521,7 +521,7 @@ class Manager(object):
                 retval_dict[str(day+1)] = symbol
             # If there exist record for this employee in this month with different timetable - merge them
             for record in retval['data']:
-                if record['name'] == f'{employee.first_name} {employee.last_name}':
+                if record['name'] == '{} {}'.format(employee.first_name, employee.last_name):
                     found = True
                     for key in record.keys():
                         if record[key] == '-' and retval_dict[key]:
@@ -540,8 +540,7 @@ class Manager(object):
 
         for employee in emp_t.all():
             for day in per_range_list:
-                datetm = datetime.strptime(
-                    f'{day}-{per_month}-{per_year}', '%d-%m-%Y')
+                datetm = datetime(per_year, per_month, day)
                 date = datetm.date()
                 arriv = source.get_arrival(date, employee.uid)
                 depart = source.get_departure(date, employee.uid)
@@ -620,9 +619,9 @@ class Manager(object):
         self.check_loop = LoopingCall(
             self.update_presence, date=date, source=source)
         self.check_loop_2 = LoopingCall(self.update_pvs, elanor=elanor)
-        log.msg(f'Syncing presence from {src_name}')
+        log.msg('Syncing presence from {}'.format(src_name))
         self.check_loop.start(3600)
-        log.msg(f'Syncing pvs from elanor')
+        log.msg('Syncing pvs from elanor')
         self.check_loop_2.start(3600)
 
     def update_pvs(self, elanor):

@@ -4,5 +4,14 @@
 }
 
 .table{
-    width: 100% !important;
+    max-width: 2300px;
+    width: 100%;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.table td{
+    width: auto;
+    overflow: hidden;
+    word-wrap: break-word;
 }

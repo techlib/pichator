@@ -12,22 +12,22 @@ class Ekv:
 
     def get_arrival(self, date, ID):
         ms_date = date.strftime("%Y-%m-%d")
-        query = f'''
+        query = '''
                 SELECT MIN([Time])
                 FROM [ASSET].[dbo].[EFI_EKV_ValidPass]
-                WHERE [AssetUID]='I1.{ID}'
-                AND [Time] between '{ms_date} 00:00:00' and '{ms_date} 23:59:59'
-                '''
+                WHERE [AssetUID]='I1.{}'
+                AND [Time] between '{} 00:00:00' and '{} 23:59:59'
+                '''.format(ID, ms_date, ms_date)
         return self.db.execute(query).fetchall()[0][0]
 
     def get_departure(self, date, ID):
         ms_date = date.strftime("%Y-%m-%d")
-        query = f'''
+        query = '''
                 SELECT MAX([Time])
                 FROM [ASSET].[dbo].[EFI_EKV_ValidPass]
-                WHERE [AssetUID]='I1.{ID}'
-                AND [Time] between '{ms_date} 00:00:00' and '{ms_date} 23:59:59'
-                '''
+                WHERE [AssetUID]='I1.{}'
+                AND [Time] between '{} 00:00:00' and '{} 23:59:59'
+                '''.format(ID, ms_date, ms_date)
         return self.db.execute(query).fetchall()[0][0]
 
 
