@@ -6,3 +6,4 @@ __pycache__
 /src/
 .vscode
 *prod.ini
+pichator/templates/fonts/*ttf
