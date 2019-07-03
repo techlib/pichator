@@ -261,7 +261,7 @@ def make_site(manager, access_model, debug=False):
         acl = manager.get_acl(username)
         if acl != str(dept)[0] and not has_privilege(admin):
             log.err(
-                'Trying to acces data of department {}, but has no authorization to do so.'.format(dept))
+                'Trying to acces data of department { }, but has no authorization to do so.'.format(dept))
             raise Forbidden
         period = flask.request.values.get('period', '').split('-')
         if len(period) != 2:

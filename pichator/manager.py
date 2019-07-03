@@ -14,8 +14,11 @@ from datetime import timedelta, datetime, date, time
 from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
-from calendar import monthrange, monthlen
+from calendar import monthrange, mdays, February, isleap
 
+
+def monthlen(year, month):
+    return mdays[month] + (month == February and isleap(year))
 
 class TimeRange(Range):
     def len(self):
