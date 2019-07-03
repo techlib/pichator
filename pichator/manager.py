@@ -155,7 +155,7 @@ class Manager(object):
         th_up_pres = Thread(target=self.update_presence, args=(date, source))
         th_up_pres.start()
 
-    def threaded_update_pv(self, elanor):
+    def threaded_update_pvs(self, elanor):
         th_up_pv = Thread(target=self.update_pvs, args=(elanor, ))
         th_up_pv.start()
 
@@ -405,9 +405,8 @@ class Manager(object):
             datetime.strptime(end, "%H:%M")
         duration = length.seconds / 3600
 
-        # If attendance is longer than 6 hours (or 4 on business trip) employee can haz food stamp
-        food_stamp = duration >= 6 or (
-            mode == 'Business trip' and duration >= 4)
+        # If attendance is longer than 4 hours employee can have food stamp
+        food_stamp = duration >= 4
 
         presence = pres_t \
             .filter(pres_t.uid_employee == employee_uid) \
@@ -506,7 +505,7 @@ class Manager(object):
                 elif not presence:
                     # Automatically generated presence
                     if gen_mode == 'auto':
-                        if timetable_list[curr_date.weekday()].len() >= 6*60:
+                        if timetable_list[curr_date.weekday()].len() >= 4*60:
                             symbol = '/'
                         else:
                             symbol = '/-'
@@ -553,7 +552,7 @@ class Manager(object):
 
             length = (depart - arriv).seconds / 3600
             presence_mode = 'Presence'
-            food_stamp = length >= 6
+            food_stamp = length >= 4
 
             current = pres_t.filter(pres_t.uid_employee == employee.uid) \
                             .filter(pres_t.date == date) \
@@ -578,8 +577,8 @@ class Manager(object):
 
     def sync(self, date, source, src_name, elanor):
         self.check_loop = LoopingCall(
-            self.update_presence, date=date, source=source)
-        self.check_loop_2 = LoopingCall(self.update_pvs, elanor=elanor)
+            self.threaded_update_presence, date=date, source=source)
+        self.check_loop_2 = LoopingCall(self.threaded_update_pvs, elanor=elanor)
         log.msg('Syncing presence from {}'.format(src_name))
         self.check_loop.start(3600)
         log.msg('Syncing pvs from elanor')
