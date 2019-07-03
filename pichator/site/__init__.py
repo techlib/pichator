@@ -129,7 +129,7 @@ def make_site(manager, access_model, debug=False):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             uid = flask.request.headers.get('X-User-Id', '0')
-            username = flask.request.headers.get('X-Full-Name', 'brabemi')
+            username = flask.request.headers.get('X-User-Name', 'brabemi')
 
             kwargs.update({
                 'uid': int(uid),
