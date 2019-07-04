@@ -85,7 +85,7 @@ class Manager(object):
         try:
             return emp_t.filter(emp_t.username == username).one().acl
         except NoResultFound:
-            log.err('User not found. Supplied username: {}'.fromat(username))
+            log.err('User not found. Supplied username: {}'.format(username))
             raise NotAcceptable
 
     def get_depts(self, username):
@@ -114,6 +114,7 @@ class Manager(object):
                 'last_name': emp.last_name,
                 'uid': emp.uid,
                 'acl': emp.acl,
+                'depts': self.get_depts(emp.username)
             })
         return retval
 
