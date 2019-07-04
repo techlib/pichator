@@ -228,9 +228,6 @@ def make_site(manager, access_model, debug=False):
             data = manager.get_department(dept, month, year)['data']
             if pdf_view:
                 pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
-                pdf_css_path = join(dirname(abspath(__file__)), '../static/css/dept_pdf.css')
-                patternfly_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
-                patternfly_add_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
 
                 result = pdf_template.write_pdf( font_config=font_config)
 
@@ -246,9 +243,6 @@ def make_site(manager, access_model, debug=False):
         mode = manager.get_dept_mode(acl)
         if pdf_view:
                 pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
-                pdf_css_path = join(dirname(abspath(__file__)), '../static/css/dept_pdf.css')
-                patternfly_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly.css')
-                patternfly_add_path = join(dirname(abspath(__file__)), '../static/vendor/patternfly/css/patternfly-additions.css')
                 
                 result = pdf_template.write_pdf( font_config=font_config)
                 

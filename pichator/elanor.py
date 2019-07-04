@@ -11,7 +11,6 @@ __all__ = ['Elanor']
 def parse_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').date()
 
-
 class Elanor:
     def __init__(self, db):
         self.elanor_db = db

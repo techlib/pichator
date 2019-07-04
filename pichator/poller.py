@@ -10,13 +10,11 @@ import requests
 __all__ = ['Poller']
 
 
-def oracle_date_to_date(O_date):
-    if O_date and O_date != 'None':
-        split_string = O_date.split('-')
-        return date(int(split_string[0]), int(split_string[1]), int(split_string[2]))
-    else:
-        return ""
-
+def oracle_date_to_date(o_date):
+    try:
+        return date(*[int(i) for i in o_date.split('-')])
+    except ValueError:
+        return ''
 
 class Poller:
     def __init__(self, pich_db, elanor_db, ekv_user, ekv_pass):
