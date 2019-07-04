@@ -15,6 +15,7 @@ from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, mdays, February, isleap
+import holidays
 
 
 def monthlen(year, month):
@@ -315,7 +316,7 @@ class Manager(object):
 
         return retval
 
-    def get_attendance2(self, uid, pvid, month, year, username):
+    def get_attendance(self, uid, pvid, month, year, username):
         result = {}
         days = monthlen(year, month)
 
@@ -325,6 +326,8 @@ class Manager(object):
 
         month_range = self.month_range(year, month)
         today = date.today()
+        
+        cz_holidays = holidays.CountryHoliday('CZ')
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -358,9 +361,9 @@ class Manager(object):
 
         all_timetables = timetables.all()
         for _, day in result.items():
-            for timetable in all_timetables:
+            for timetable in all_timetables:   
                 weekday = day['date'].weekday()
-                if day['date'] in timetable.validity and weekday < 5:
+                if day['date'] in timetable.validity and weekday < 5 and day['date'] not in cz_holidays:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
                     day['mode'] = day['mode'] or (
                         'Absence' if day['timetable'] and day['date'] <= today else None)

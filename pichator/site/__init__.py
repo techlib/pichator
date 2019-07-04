@@ -30,7 +30,7 @@ from os import urandom
 
 import flask
 import re
-
+import holidays
 
 def make_site(manager, access_model, debug=False):
     app = flask.Flask('.'.join(__name__.split('.')[:-1]))
@@ -104,9 +104,10 @@ def make_site(manager, access_model, debug=False):
     @app.template_global('attendance_class')
     def attendance_row_class(day):
         date = day['date']
+        cz_holidays = holidays.CountryHoliday('CZ')
         today = date.today()
 
-        if date.weekday() in (5, 6):
+        if date.weekday() in (5, 6) or date in cz_holidays:
             return 'weekend'
 
         if date == today:
@@ -182,7 +183,7 @@ def make_site(manager, access_model, debug=False):
         pvid = pvid or pvs[0]['pvid']
         department = manager.get_dept(pvid, date(year, month, 1)) or manager.get_dept(pvid, date(year, month, 28))
 
-        attendance = manager.get_attendance2(uid, pvid, month, year, username)
+        attendance = manager.get_attendance(uid, pvid, month, year, username)
         
         # Restrictive mode - if one of your superiors blocked edit mode on any level of hierarchy you cant edit.
         readonly = False
@@ -328,31 +329,6 @@ def make_site(manager, access_model, debug=False):
             raise NotAcceptable
 
         return flask.jsonify(manager.get_pvs(uid, int(period[0]), int(period[1])))
-
-    @app.route('/attendance_data')
-    @authorized_only('user')
-    @pass_user_info
-    def get_attendance_data(uid, username):
-
-        pvid = flask.request.values.get('pvid')
-        if flask.request.values.get('username'):
-            username = flask.request.values.get('username')
-        emp_no = manager.get_emp_no(username)
-        if not pvid or not emp_no:
-            log.err(
-                'Query for attendance data without required parameter pvid or emp_no.')
-            raise NotAcceptable
-        if str(emp_no) != pvid.split('.')[0] and not manager.get_acl(username).isdigit():
-            log.err('Requesting attendance data for user other than is logged-in.')
-            raise Forbidden
-        period = flask.request.values.get('period').split('-')
-
-        if not pvid or not period:
-            log.err(
-                'Query for attendance data without required parameter pvid or period.')
-            raise NotAcceptable
-
-        return flask.jsonify(manager.get_attendance2(uid, pvid, int(period[0]), int(period[1]), username))
 
     @app.route('/attendance_submit', methods=['POST'])
     @authorized_only('user')

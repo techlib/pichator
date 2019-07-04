@@ -33,7 +33,7 @@
         {% if not readonly %}
         $('#attendance tbody tr').on('click', function () {
             const data = $(this).data()
-            if( [5,6].includes( data.weekdayno ) ){
+            if( [5,6].includes( data.weekdayno ) || $(this).hasClass('weekend') ){
                 return
             }
             if(data.mode === 'None'){
