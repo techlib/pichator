@@ -19,7 +19,7 @@
                 <div class="col-sm-12">
                     <h5>Administrace útvaru: </h5>
                     {% for dept in depts %}
-                        <a class="buffer-left-sm" href="/dept/{{ dept }}">{{ dept }}</a>
+                    <a class="buffer-left-sm" href="/dept/{{ dept }}">{{ dept }}</a>
                     {% endfor %}
                 </div>
             </div>
@@ -44,10 +44,12 @@
                                     <select class="select-picker" id="{{ employee['uid'] }}"
                                         name="{{ employee['uid'] }}">
                                         {% for dept in depts %}
+                                        {% if dept|int in employee['depts'] %}
                                         <option value="{{ dept }}" {% if employee['acl'] == dept %} selected
                                             {% endif %}>
                                             {{ dept }}
                                         </option>
+                                        {% endif %}
                                         {% endfor %}
                                         <option value="None" {% if not employee['acl'].isdigit() %} selected
                                             {% endif %}>
