@@ -15,6 +15,7 @@ from psycopg2.extras import DateRange, Range, register_range
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, mdays, February, isleap
+from random import randint
 import holidays
 
 CZ_HOLIDAYS = holidays.CountryHoliday('CZ')
@@ -326,9 +327,15 @@ class Manager(object):
         time_t = self.db.timetable
         pres_t = self.db.presence
         pv_t = self.db.pv
+        acl_t = self.pich_db.acls
 
         month_range = self.month_range(year, month)
         today = date.today()
+
+        current_pv = pv_t.filter(pv_t.pvid == pvid) \
+            .filter(pv_t.validity.overlaps(month_range))
+        dept = current_pv.one().department
+        dept_acl = acl_t.filter(acl_t.dept == str(dept)).one().acl
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -341,12 +348,19 @@ class Manager(object):
                 'departure': None,
             }
 
-        # fill in actual presence
         presence = pres_t \
             .filter(pres_t.date >= month_range.lower) \
             .filter(pres_t.date <= month_range.upper) \
             .filter(pres_t.uid_employee == uid)
 
+        timetables = time_t \
+            .join(pv_t) \
+            .filter(pv_t.pvid == pvid) \
+            .filter(time_t.validity.overlaps(month_range))
+
+        all_timetables = timetables.all()
+
+        # fill in actual presence
         for p in presence.all():
             result[p.date.day] = {**result[p.date.day], **{
                 'mode':  p.presence_mode,
@@ -354,20 +368,30 @@ class Manager(object):
                 'departure': p.departure
             }}
 
-        # add timetable information
-        timetables = time_t \
-            .join(pv_t) \
-            .filter(pv_t.pvid == pvid) \
-            .filter(time_t.validity.overlaps(month_range))
-
-        all_timetables = timetables.all()
+        # add timetable info
         for _, day in result.items():
             for timetable in all_timetables:   
                 weekday = day['date'].weekday()
                 if day['date'] in timetable.validity and weekday < 5 and day['date'] not in CZ_HOLIDAYS:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
-                    day['mode'] = day['mode'] or (
-                        'Absence' if day['timetable'] and day['date'] <= today else None)
+                    if dept_acl == 'auto':
+                        # pretend employee was present according to timetable
+                        if day['mode'] in ['Absence', 'Presence']:
+                            day['mode'] = 'Presence'
+                            # random offset to make arrivals more believable
+                            offset = randint(0,22)
+                            arrival = getattr(timetable, get_dayname(weekday)).lower()
+                            offset_arrival = datetime.combine(date(1,1,1), arrival) - timedelta(minutes = offset)
+                            day['arrival'] = offset_arrival.time()
+
+                            # people are less likely to stay much longer than needed
+                            offset = randint(0,7)
+                            departure = getattr(timetable, get_dayname(weekday)).upper()
+                            offset_departure = datetime.combine(date(1,1,1), departure) - timedelta(minutes = offset)
+                            day['departure'] = offset_departure.time()
+                    else:    
+                        day['mode'] = day['mode'] or (
+                            'Absence' if day['timetable'] and day['date'] <= today else None)
                     break
 
         return result
