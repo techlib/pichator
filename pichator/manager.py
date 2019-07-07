@@ -17,6 +17,8 @@ from werkzeug.exceptions import Forbidden, NotAcceptable, InternalServerError
 from calendar import monthrange, mdays, February, isleap
 import holidays
 
+CZ_HOLIDAYS = holidays.CountryHoliday('CZ')
+
 
 def monthlen(year, month):
     return mdays[month] + (month == February and isleap(year))
@@ -327,8 +329,6 @@ class Manager(object):
 
         month_range = self.month_range(year, month)
         today = date.today()
-        
-        cz_holidays = holidays.CountryHoliday('CZ')
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -364,7 +364,7 @@ class Manager(object):
         for _, day in result.items():
             for timetable in all_timetables:   
                 weekday = day['date'].weekday()
-                if day['date'] in timetable.validity and weekday < 5 and day['date'] not in cz_holidays:
+                if day['date'] in timetable.validity and weekday < 5 and day['date'] not in CZ_HOLIDAYS:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
                     day['mode'] = day['mode'] or (
                         'Absence' if day['timetable'] and day['date'] <= today else None)
@@ -502,7 +502,7 @@ class Manager(object):
 
                 # This timetable is not valid on this day,
                 # it is non working day for the employee or the day is in future
-                elif timetable_list[curr_date.weekday()] == None or curr_date > date.today():
+                elif timetable_list[curr_date.weekday()] == None or curr_date > date.today() or curr_date in CZ_HOLIDAYS:
                     symbol = '-'
 
                 # Employee has valid timetable for the day and should have been in workplace but was not present
