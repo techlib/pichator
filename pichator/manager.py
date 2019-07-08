@@ -327,7 +327,7 @@ class Manager(object):
         time_t = self.db.timetable
         pres_t = self.db.presence
         pv_t = self.db.pv
-        acl_t = self.pich_db.acls
+        acl_t = self.db.acls
 
         month_range = self.month_range(year, month)
         today = date.today()
@@ -335,7 +335,8 @@ class Manager(object):
         current_pv = pv_t.filter(pv_t.pvid == pvid) \
             .filter(pv_t.validity.overlaps(month_range))
         dept = current_pv.one().department
-        dept_acl = acl_t.filter(acl_t.dept == str(dept)).one().acl
+        dept_acl = acl_t.filter(acl_t.dept == str(dept)).first()
+        dept_acl = dept_acl.acl if dept_acl else 'edit'
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -380,13 +381,13 @@ class Manager(object):
                             day['mode'] = 'Presence'
                             # random offset to make arrivals more believable
                             offset = randint(0,22)
-                            arrival = getattr(timetable, get_dayname(weekday)).lower()
+                            arrival = getattr(timetable, get_dayname(weekday)).lower
                             offset_arrival = datetime.combine(date(1,1,1), arrival) - timedelta(minutes = offset)
                             day['arrival'] = offset_arrival.time()
 
                             # people are less likely to stay much longer than needed
                             offset = randint(0,7)
-                            departure = getattr(timetable, get_dayname(weekday)).upper()
+                            departure = getattr(timetable, get_dayname(weekday)).upper
                             offset_departure = datetime.combine(date(1,1,1), departure) + timedelta(minutes = offset)
                             day['departure'] = offset_departure.time()
                     else:    
