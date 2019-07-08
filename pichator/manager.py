@@ -642,14 +642,15 @@ class Manager(object):
 
         for employee in emp_t.all():
             for pv in elanor.get_pvs(employee.emp_no):
-                departments.add(pv['department'])
+                dept = str(pv['department'])
+                departments.add(dept)
 
                 valid = DateRange(
                     lower=min(pv['validity']), upper=max(pv['validity']), bounds='[]')
 
                 query = and_(pv_t.pvid == pv['pvid'],
                              pv_t.occupancy == pv['occupancy'],
-                             pv_t.department == pv['department'],
+                             pv_t.department == dept,
                              pv_t.uid_employee == employee.uid)
 
                 if pv_t.filter(query) \
@@ -663,7 +664,7 @@ class Manager(object):
                     pv_t.insert(**{
                         'pvid': pv['pvid'],
                         'occupancy': pv['occupancy'],
-                        'department': pv['department'],
+                        'department': dept,
                         'validity': valid,
                         'uid_employee': employee.uid
                     })

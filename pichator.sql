@@ -151,7 +151,7 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 CREATE TABLE public.pv(
 	pvid character varying,
 	occupancy decimal NOT NULL,
-	department smallint NOT NULL,
+	department varchar NOT NULL,
 	uid bigint NOT NULL DEFAULT nextval('public.pv_pvid_seq'::regclass),
 	validity daterange NOT NULL,
 	uid_employee bigint NOT NULL,
