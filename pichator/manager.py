@@ -89,7 +89,7 @@ class Manager(object):
         try:
             return emp_t.filter(emp_t.username == username).one().acl
         except NoResultFound:
-            log.err('User not found. Supplied username: {}'.format(username))
+            log.err('User not found when looking up acls. Supplied username: {}'.format(username))
             raise NotAcceptable
 
     def get_depts(self, username):
