@@ -89,7 +89,6 @@ def make_site(manager, access_model, debug=False):
         'Sickday': 'Zdravotní volno'
         }
         return obj_mapping[t]
-    
 
 
     @app.template_filter('unit_type')
@@ -217,7 +216,7 @@ def make_site(manager, access_model, debug=False):
 
         font_config = FontConfiguration()
         font_path = join(dirname(abspath(__file__)), '../templates/fonts')
-        
+
         if has_privilege('admin'):
             if flask.request.method == 'POST':
                 new_mode = flask.request.form['modes']
@@ -232,7 +231,7 @@ def make_site(manager, access_model, debug=False):
 
                 return flask.Response(response=result, mimetype='application/pdf')
             return flask.render_template('attendance_department.html', **locals())
-        
+
         if not acl.isdigit():
             log.msg('User {} tried to access department view with acl {}.'.format(username, acl))
             raise Forbidden
@@ -248,7 +247,7 @@ def make_site(manager, access_model, debug=False):
                 return flask.Response(response=result, mimetype='application/pdf')
         return flask.render_template('attendance_department.html', **locals())
 
-    
+
     @app.route('/dept_data')
     @authorized_only('user')
     @pass_user_info
