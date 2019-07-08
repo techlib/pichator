@@ -387,7 +387,7 @@ class Manager(object):
                             # people are less likely to stay much longer than needed
                             offset = randint(0,7)
                             departure = getattr(timetable, get_dayname(weekday)).upper()
-                            offset_departure = datetime.combine(date(1,1,1), departure) - timedelta(minutes = offset)
+                            offset_departure = datetime.combine(date(1,1,1), departure) + timedelta(minutes = offset)
                             day['departure'] = offset_departure.time()
                     else:    
                         day['mode'] = day['mode'] or (
