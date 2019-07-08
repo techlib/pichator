@@ -328,7 +328,6 @@ class Manager(object):
         time_t = self.db.timetable
         pres_t = self.db.presence
         pv_t = self.db.pv
-        acl_t = self.db.acls
 
         month_range = self.month_range(year, month)
         today = date.today()
@@ -336,6 +335,9 @@ class Manager(object):
         current_pv = pv_t.filter(pv_t.pvid == pvid) \
             .filter(pv_t.validity.overlaps(month_range))
         dept = str(current_pv.one().department)
+        
+        if current_pv.one().uid_employee != uid and not self.is_supervisor(uid, current_pv.one().uid_employee):
+            raise Forbidden
 
         # create list of acls in organization structure
         acls = [self.get_dept_mode(dept[:i]) for i in range(len(dept) + 1) if self.get_dept_mode(dept[:i])]
@@ -364,7 +366,7 @@ class Manager(object):
         presence = pres_t \
             .filter(pres_t.date >= month_range.lower) \
             .filter(pres_t.date <= month_range.upper) \
-            .filter(pres_t.uid_employee == uid)
+            .filter(pres_t.uid_employee == current_pv.one().uid_employee)
 
         timetables = time_t \
             .join(pv_t) \
@@ -563,7 +565,7 @@ class Manager(object):
                         presence.presence_mode, presence.food_stamp
                     )
                     # If employee was present for shorter time and presence is automatically generated fill in presence acording timetable
-                    if symbol == '/-' and gen_mode == 'auto' and timetable_list[curr_date.weekday()].len() >= 6*60:
+                    if symbol in ['/-', 'A'] and gen_mode == 'auto' and timetable_list[curr_date.weekday()].len() >= 6*60:
                         symbol = '/'
                 retval_dict[str(day+1)] = symbol
             # If there exist record for this employee in this month with different timetable - merge them

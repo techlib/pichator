@@ -172,7 +172,6 @@ def make_site(manager, access_model, debug=False):
     @pass_user_info
     def index(uid, username, year, month, pvid):
         admin = has_privilege('admin')
-        emp_no = manager.get_emp_no(username)
         acl = manager.get_acl(username)
         today = date.today()
 
