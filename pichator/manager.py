@@ -24,6 +24,7 @@ CZ_HOLIDAYS = holidays.CountryHoliday('CZ')
 def monthlen(year, month):
     return mdays[month] + (month == February and isleap(year))
 
+
 class TimeRange(Range):
     def len(self):
         # Returns number of minutes in timerange
@@ -334,9 +335,22 @@ class Manager(object):
 
         current_pv = pv_t.filter(pv_t.pvid == pvid) \
             .filter(pv_t.validity.overlaps(month_range))
-        dept = current_pv.one().department
-        dept_acl = acl_t.filter(acl_t.dept == str(dept)).first()
-        dept_acl = dept_acl.acl if dept_acl else 'edit'
+        dept = str(current_pv.one().department)
+
+        # create list of acls in organization structure
+        acls = []
+        for i in range(len(dept) + 1):
+            acl = self.get_dept_mode(dept[:i])
+            if acl:
+                acls.append(acl)
+
+        # set acl to most restrictive setting from organization structure with default value edit
+        if 'readonly' in acls:
+            dept_acl = 'readonly'
+        elif 'auto' in acls:
+            dept_acl = 'auto'
+        else:
+            dept_acl = 'edit'
 
         # generate empty month with no presence
         for day in range(1, days + 1):
@@ -371,7 +385,7 @@ class Manager(object):
 
         # add timetable info
         for _, day in result.items():
-            for timetable in all_timetables:   
+            for timetable in all_timetables:
                 weekday = day['date'].weekday()
                 if day['date'] in timetable.validity and weekday < 5 and day['date'] not in CZ_HOLIDAYS:
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
@@ -380,17 +394,21 @@ class Manager(object):
                         if day['mode'] in ['Absence', 'Presence']:
                             day['mode'] = 'Presence'
                             # random offset to make arrivals more believable
-                            offset = randint(0,22)
-                            arrival = getattr(timetable, get_dayname(weekday)).lower
-                            offset_arrival = datetime.combine(date(1,1,1), arrival) - timedelta(minutes = offset)
+                            offset = randint(0, 22)
+                            arrival = getattr(
+                                timetable, get_dayname(weekday)).lower
+                            offset_arrival = datetime.combine(
+                                date(1, 1, 1), arrival) - timedelta(minutes=offset)
                             day['arrival'] = offset_arrival.time()
 
                             # people are less likely to stay much longer than needed
-                            offset = randint(0,7)
-                            departure = getattr(timetable, get_dayname(weekday)).upper
-                            offset_departure = datetime.combine(date(1,1,1), departure) + timedelta(minutes = offset)
+                            offset = randint(0, 7)
+                            departure = getattr(
+                                timetable, get_dayname(weekday)).upper
+                            offset_departure = datetime.combine(
+                                date(1, 1, 1), departure) + timedelta(minutes=offset)
                             day['departure'] = offset_departure.time()
-                    else:    
+                    else:
                         day['mode'] = day['mode'] or (
                             'Absence' if day['timetable'] and day['date'] <= today else None)
                     break
@@ -607,7 +625,8 @@ class Manager(object):
     def sync(self, date, source, src_name, elanor):
         self.check_loop = LoopingCall(
             self.threaded_update_presence, date=date, source=source)
-        self.check_loop_2 = LoopingCall(self.threaded_update_pvs, elanor=elanor)
+        self.check_loop_2 = LoopingCall(
+            self.threaded_update_pvs, elanor=elanor)
         log.msg('Syncing presence from {}'.format(src_name))
         self.check_loop.start(3600)
         log.msg('Syncing pvs from elanor')
