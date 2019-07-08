@@ -345,12 +345,14 @@ class Manager(object):
                 acls.append(acl)
 
         # set acl to most restrictive setting from organization structure with default value edit
+        dept_acl = 'edit'
+        
         if 'readonly' in acls:
             dept_acl = 'readonly'
+        elif 'edit' in acls:
+            dept_acl = 'edit'
         elif 'auto' in acls:
             dept_acl = 'auto'
-        else:
-            dept_acl = 'edit'
 
         # generate empty month with no presence
         for day in range(1, days + 1):
