@@ -515,10 +515,12 @@ class Manager(object):
                 'No valid employees with timetable for period {} - {}'.format(month_period.lower, month_period.upper))
             return retval
 
-        for _, employee, timetable in pv_with_emp:
+        for pv, employee, timetable in pv_with_emp:
             # Select pvs in the department itself or subordinate departments
             retval_dict = {
-                'name': '{} {}'.format(employee.first_name, employee.last_name)}
+                'name': '{} {}'.format(employee.first_name, employee.last_name),
+                'pvid': pv.pvid
+            }
             for day in range(per_range[1]):
                 curr_date = date(year, month, day + 1)
 
