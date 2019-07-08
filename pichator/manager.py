@@ -338,12 +338,8 @@ class Manager(object):
         dept = str(current_pv.one().department)
 
         # create list of acls in organization structure
-        acls = []
-        for i in range(len(dept) + 1):
-            acl = self.get_dept_mode(dept[:i])
-            if acl:
-                acls.append(acl)
-
+        acls = [self.get_dept_mode(dept[:i]) for i in range(len(dept) + 1) if self.get_dept_mode(dept[:i])]
+        
         # set acl to most restrictive setting from organization structure with default value edit
         dept_acl = 'edit'
         
