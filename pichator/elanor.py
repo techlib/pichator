@@ -28,12 +28,19 @@ class Elanor:
                 date_to = parse_date(pv_item.attrib['datum_do'])
                 occupancy = round(float(pv_item.attrib['hodnota']) / 40, 2)
 
+                dat_nast = parse_date(pv.dat_nast)
+                dat_ukon = parse_date(pv.dat_ukon)
+
+                if date_to < dat_nast:
+                    log.msg('Ignoring {} (date_to:{} < dat_nast{})'.format(pv.oscpv, date_to, dat_nast))
+                    continue
+
                 retval.append({
                     'pvid': pv.oscpv,
                     'occupancy': occupancy,
                     'department': pv.kod,
-                    'validity': (max(parse_date(pv.dat_nast), date_from),
-                                 min(parse_date(pv.dat_ukon), date_to)),
+                    'validity': (max(dat_nast, date_from),
+                                 min(dat_ukon, date_to)),
                     'emp_no': emp_no
                 })
 

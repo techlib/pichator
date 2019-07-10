@@ -646,7 +646,7 @@ class Manager(object):
                 departments.add(dept)
 
                 valid = DateRange(
-                    lower=min(pv['validity']), upper=max(pv['validity']), bounds='[]')
+                    lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
                 query = and_(pv_t.pvid == pv['pvid'],
                              pv_t.occupancy == pv['occupancy'],
