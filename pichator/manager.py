@@ -651,6 +651,7 @@ class Manager(object):
                 query = and_(pv_t.pvid == pv['pvid'],
                              pv_t.occupancy == pv['occupancy'],
                              pv_t.department == dept,
+                             pv_t.validty.overlaps(valid),
                              pv_t.uid_employee == employee.uid)
 
                 if pv_t.filter(query) \
