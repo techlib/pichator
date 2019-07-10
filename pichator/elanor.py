@@ -11,6 +11,7 @@ __all__ = ['Elanor']
 def parse_date(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d').date()
 
+
 class Elanor:
     def __init__(self, db):
         self.elanor_db = db
@@ -33,17 +34,20 @@ class Elanor:
                 odd_od = parse_date(pv.odd_od)
                 odd_do = parse_date(pv.odd_do)
 
-                if date_to < dat_nast:
-                    log.msg('Ignoring {} (date_to:{} < dat_nast{})'.format(pv.oscpv, date_to, dat_nast))
-                    continue
-
-                retval.append({
+                item = {
                     'pvid': pv.oscpv,
                     'occupancy': occupancy,
                     'department': pv.kod,
                     'validity': (max(dat_nast, date_from, odd_od),
                                  min(dat_ukon, date_to, odd_do)),
                     'emp_no': emp_no
-                })
+                }
+
+                if item['validity'][0] > item['validity'][1]:
+                    log.msg('Ignoring {} (valid_from:{} < valid_to:{})'.format(
+                        pv.oscpv, item['validity'][0], item['validity'][1]))
+                    continue
+
+                retval.append(item)
 
         return retval
