@@ -104,7 +104,7 @@ if __name__ == '__main__':
         reactor.listenTCP(http_port, site, interface=http_host)
         
         # Schedule to call manager sync from ekv
-        reactor.callLater(0,manager.sync, date=datetime.now().date(), source=ekv, src_name='ekv', elanor=elanor)
+        reactor.callLater(0,manager.sync, source=ekv, source_name='ekv', elanor=elanor)
         
         # Run the Twisted reactor until the user terminates us.
         reactor.run()

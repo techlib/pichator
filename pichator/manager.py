@@ -89,7 +89,8 @@ class Manager(object):
         try:
             return emp_t.filter(emp_t.username == username).one().acl
         except NoResultFound:
-            log.err('User not found when looking up acls. Supplied username: {}'.format(username))
+            log.err(
+                'User not found when looking up acls. Supplied username: {}'.format(username))
             raise NotAcceptable
 
     def get_depts(self, username):
@@ -157,11 +158,13 @@ class Manager(object):
         th_init = Thread(target=self.init_presence, args=(year, month, source))
         th_init.start()
 
-    def threaded_update_presence(self, date, source):
-        th_up_pres = Thread(target=self.update_presence, args=(date, source))
+    def threaded_update_presence(self, source, source_name):
+        log.msg('Syncing presence from {}'.format(source_name))
+        th_up_pres = Thread(target=self.update_presence, args=(source,))
         th_up_pres.start()
 
     def threaded_update_pvs(self, elanor):
+        log.msg('Syncing pvs from elanor')
         th_up_pv = Thread(target=self.update_pvs, args=(elanor, ))
         th_up_pv.start()
 
@@ -335,16 +338,17 @@ class Manager(object):
         current_pv = pv_t.filter(pv_t.pvid == pvid) \
             .filter(pv_t.validity.overlaps(month_range))
         dept = str(current_pv.one().department)
-        
+
         if current_pv.one().uid_employee != uid and not self.is_supervisor(uid, current_pv.one().uid_employee):
             raise Forbidden
 
         # create list of acls in organization structure
-        acls = [self.get_dept_mode(dept[:i]) for i in range(len(dept) + 1) if self.get_dept_mode(dept[:i])]
-        
+        acls = [self.get_dept_mode(dept[:i]) for i in range(
+            len(dept) + 1) if self.get_dept_mode(dept[:i])]
+
         # set acl to most restrictive setting from organization structure with default value edit
         dept_acl = 'edit'
-        
+
         if 'readonly' in acls:
             dept_acl = 'readonly'
         elif 'edit' in acls:
@@ -586,11 +590,14 @@ class Manager(object):
 
         for day in days:
             date = date(year, month, day + 1)
-            self.update_presence(date, source)
+            self.update_presence(source, date)
 
-    def update_presence(self, date, source):
+    def update_presence(self, source, date=None):
         pres_t = self.db.presence
         emp_t = self.db.employee
+
+        if not date:
+            date = datetime.now().date()
 
         for employee in emp_t.all():
             arriv = source.get_arrival(date, employee.uid)
@@ -624,15 +631,15 @@ class Manager(object):
 
         self.db.commit()
 
-    def sync(self, date, source, src_name, elanor):
-        self.check_loop = LoopingCall(
-            self.threaded_update_presence, date=date, source=source)
-        self.check_loop_2 = LoopingCall(
+    def sync(self, source, source_name, elanor):
+        self.source_loop = LoopingCall(
+            self.threaded_update_presence, source=source, source_name=source_name)
+
+        self.elanor_loop = LoopingCall(
             self.threaded_update_pvs, elanor=elanor)
-        log.msg('Syncing presence from {}'.format(src_name))
-        self.check_loop.start(3600)
-        log.msg('Syncing pvs from elanor')
-        self.check_loop_2.start(3600)
+
+        self.source_loop.start(3600)
+        self.elanor_loop.start(3600)
 
     def update_pvs(self, elanor):
         pv_t = self.db.pv
