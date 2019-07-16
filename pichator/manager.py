@@ -667,7 +667,8 @@ class Manager(object):
                     continue
 
                 if pv_t.filter(query).first():
-                    pv_t.filter(query).update({'validity': valid})
+                    pv_t.filter(query).update(
+                        {'validity': valid}, synchronize_session=False)
                 else:
                     pv_t.insert(**{
                         'pvid': pv['pvid'],
