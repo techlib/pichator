@@ -340,16 +340,20 @@ def make_site(manager, access_model, debug=False):
             log.err('Submiting attendance data for user other than is logged-in.')
             raise Forbidden
 
-        start = data.get('start')
-        end = data.get('end')
-        if not start or not end:
-            log.err(
-                'Query for attendance data without required parameter start or end.')
-            raise NotAcceptable
-
         mode = data.get('mode')
         if not mode:
             mode = 'Absence'
+
+        start = data.get('start')
+        end = data.get('end')
+        if not start or not end:
+            if mode != 'Presence':
+                start = '00:00'
+                end = '00:00'
+            else:
+                log.err(
+                    'Query for attendance data without required parameter start or end.')
+                raise NotAcceptable
 
         date = data.get('date')
         if not date:
