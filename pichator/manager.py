@@ -600,6 +600,7 @@ class Manager(object):
             date = datetime.now().date()
 
         for employee in emp_t.all():
+            log.msg('Checking presence for user {} for {}'.format(employee.username, date.strftime('%Y-%m-%d')))
             arriv = source.get_arrival(date, employee.uid)
             depart = source.get_departure(date, employee.uid)
 
@@ -648,6 +649,7 @@ class Manager(object):
         departments = set()
 
         for employee in emp_t.all():
+            log.msg('Checking pvs for {}'.format(employee.username))
             for pv in elanor.get_pvs(employee.emp_no):
                 dept = str(pv['department'])
                 departments.add(dept)
