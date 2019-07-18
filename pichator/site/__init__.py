@@ -155,15 +155,15 @@ def make_site(manager, access_model, debug=False):
 
     @app.errorhandler(Forbidden.code)
     def unauthorized(e):
-        return flask.render_template('forbidden.html')
+        return flask.render_template('forbidden.html'), 403
 
     @app.errorhandler(NotAcceptable.code)
     def notacceptable(e):
-        return flask.render_template('not_acceptable.html')
+        return flask.render_template('not_acceptable.html'), 400
 
     @app.errorhandler(InternalServerError.code)
     def internalservererror(e):
-        return flask.render_template('internal_server_error.html')
+        return flask.render_template('internal_server_error.html'), 500
 
     @app.route('/', defaults={'year': None, 'month': None, 'pvid': None})
     @app.route('/<int:year>/<int:month>/<pvid>')
