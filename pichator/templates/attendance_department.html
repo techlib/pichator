@@ -70,7 +70,7 @@
             <table class='table table-bordered table-responsive table-striped' id='attendance' name='attendance'>
                 <thead>
                     <th>Jméno</th>
-                    {% for day in range(1, data[0]|length) %}
+                    {% for day in range(1, data[0]|length - 1) %}
                     <th>{{ day }}</th>
                     {% endfor %}
                 </thead>
@@ -78,7 +78,7 @@
                     {% for emp in data %}
                     <tr>
                         <td><a href="/{{ year }}/{{ month }}/{{ emp['pvid'] }}">{{ emp['name'] }}</a></td>
-                        {% for day in range(1, data[0]|length) %}
+                        {% for day in range(1, data[0]|length - 1) %}
                         <td>{{ emp[day|string] }}</td>
                         {% endfor %}
                     </tr>
