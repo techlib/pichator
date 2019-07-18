@@ -511,8 +511,11 @@ class Manager(object):
             year, month, per_range[1]), '[]')
 
         pv_with_emp = query \
-            .filter(and_(pv_t.validity.overlaps(month_period), timetable_t.validity.overlaps(month_period))) \
+            .filter(pv_t.validity.overlaps(month_period))\
+            .filter(timetable_t.validity.overlaps(month_period))\
             .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).all()
+        
+        log.msg(pv_with_emp)
 
         if not pv_with_emp:
             log.msg(
