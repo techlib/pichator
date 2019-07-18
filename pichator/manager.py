@@ -577,6 +577,7 @@ class Manager(object):
                     if symbol in ['/-', 'A'] and gen_mode == 'auto' and timetable_list[curr_date.weekday()].len() >= 6*60:
                         symbol = '/'
                 retval_dict[str(day+1)] = symbol
+            found = False
             # If there exist record for this employee in this month with different timetable - merge them
             for record in retval['data']:
                 if record['name'] == '{} {}'.format(employee.first_name, employee.last_name):
@@ -586,6 +587,7 @@ class Manager(object):
                             record[key] = retval_dict[key]
             if not found:
                 retval['data'].append(retval_dict)
+
         return retval
 
     def init_presence(self, year, month, source):
