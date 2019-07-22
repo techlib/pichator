@@ -515,7 +515,6 @@ class Manager(object):
             .filter(timetable_t.validity.overlaps(month_period))\
             .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).all()
         
-        log.msg(pv_with_emp)
 
         if not pv_with_emp:
             log.msg(
