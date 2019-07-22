@@ -53,6 +53,10 @@
         for (var i = 0; i <= 4; i++) {
             var from = $('input[data-type=F][data-day=' + i + ']').val()
             var to = $('input[data-type=T][data-day=' + i + ']').val()
+            if(from === ''){
+                $('#day' + i + '-total').text('')
+                continue
+            }
 
             var dayDuration = getMinutes(to) - getMinutes(from)
 

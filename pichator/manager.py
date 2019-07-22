@@ -193,9 +193,9 @@ class Manager(object):
             if tt:
                 for day in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'):
                     pv_data['days'].append(
-                        tt.__getattribute__(day).lower.strftime('%H:%M'))
+                        tt.__getattribute__(day).lower.strftime('%H:%M') if tt.__getattribute__(day) else '')
                     pv_data['days'].append(
-                        tt.__getattribute__(day).upper.strftime('%H:%M'))
+                        tt.__getattribute__(day).upper.strftime('%H:%M') if tt.__getattribute__(day) else '')
 
             else:
                 pv_data['days'] = ['08:00', '16:30'] * 5
@@ -241,22 +241,33 @@ class Manager(object):
         valid_wed = data['wedF'] and data['wedT']
         valid_thu = data['thuF'] and data['thuT']
         valid_fri = data['friF'] and data['friT']
-        valid = valid_mon and valid_tue and valid_wed and valid_thu and valid_fri
-        if not valid:
-            log.err('Attempt to upsert timetable without all days periods filled-in.\n\
-                    To signify free day, please set start and end of workday to 00:00')
-            raise NotAcceptable
-        mon_time_f, mon_time_t = datetime.strptime(
-            data['monF'], '%H:%M').time(), datetime.strptime(data['monT'], '%H:%M').time()
-        tue_time_f, tue_time_t = datetime.strptime(
-            data['tueF'], '%H:%M').time(), datetime.strptime(data['tueT'], '%H:%M').time()
-        wed_time_f, wed_time_t = datetime.strptime(
-            data['wedF'], '%H:%M').time(), datetime.strptime(data['wedT'], '%H:%M').time()
-        thu_time_f, thu_time_t = datetime.strptime(
-            data['thuF'], '%H:%M').time(), datetime.strptime(data['thuT'], '%H:%M').time()
-        fri_time_f, fri_time_t = datetime.strptime(
-            data['friF'], '%H:%M').time(), datetime.strptime(data['friT'], '%H:%M').time()
-
+        
+        if valid_mon:
+            mon_time_f, mon_time_t = datetime.strptime(
+                data['monF'], '%H:%M').time(), datetime.strptime(data['monT'], '%H:%M').time()
+        else:
+            mon_time_f = mon_time_t = datetime(1,1,1,0,0).time()
+        if valid_tue:    
+            tue_time_f, tue_time_t = datetime.strptime(
+                data['tueF'], '%H:%M').time(), datetime.strptime(data['tueT'], '%H:%M').time()
+        else:
+            tue_time_f = tue_time_t = datetime(1,1,1,0,0).time()
+        if valid_wed:
+            wed_time_f, wed_time_t = datetime.strptime(
+                data['wedF'], '%H:%M').time(), datetime.strptime(data['wedT'], '%H:%M').time()
+        else:
+            wed_time_f = wed_time_t = datetime(1,1,1,0,0).time()
+        if valid_thu:
+            thu_time_f, thu_time_t = datetime.strptime(
+                data['thuF'], '%H:%M').time(), datetime.strptime(data['thuT'], '%H:%M').time()
+        else:
+            thu_time_f = thu_time_t = datetime(1,1,1,0,0).time()
+        if valid_fri:
+            fri_time_f, fri_time_t = datetime.strptime(
+                data['friF'], '%H:%M').time(), datetime.strptime(data['friT'], '%H:%M').time()
+        else:
+            fri_time_f = fri_time_t = datetime(1,1,1,0,0).time()
+            
         monday_v = TimeRange(mon_time_f, mon_time_t)
         tuesday_v = TimeRange(tue_time_f, tue_time_t)
         wednesday_v = TimeRange(wed_time_f, wed_time_t)
@@ -395,7 +406,7 @@ class Manager(object):
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
                     if dept_acl == 'auto':
                         # pretend employee was present according to timetable
-                        if day['mode'] in ['Absence', 'Presence']:
+                        if day['mode'] in ['Absence', 'Presence', None]:
                             day['mode'] = 'Presence'
                             # random offset to make arrivals more believable
                             offset = randint(0, 22)
@@ -514,7 +525,6 @@ class Manager(object):
             .filter(pv_t.validity.overlaps(month_period))\
             .filter(timetable_t.validity.overlaps(month_period))\
             .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).all()
-        
 
         if not pv_with_emp:
             log.msg(
@@ -604,7 +614,8 @@ class Manager(object):
             date = datetime.now().date()
 
         for employee in emp_t.all():
-            log.msg('Checking presence for user {} for {}'.format(employee.username, date.strftime('%Y-%m-%d')))
+            log.msg('Checking presence for user {} for {}'.format(
+                employee.username, date.strftime('%Y-%m-%d')))
             arriv = source.get_arrival(date, employee.uid)
             depart = source.get_departure(date, employee.uid)
 
