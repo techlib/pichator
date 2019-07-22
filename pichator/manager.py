@@ -402,7 +402,11 @@ class Manager(object):
         for _, day in result.items():
             for timetable in all_timetables:
                 weekday = day['date'].weekday()
-                if day['date'] in timetable.validity and weekday < 5 and day['date'] not in CZ_HOLIDAYS:
+                
+                if day['date'] in timetable.validity and\
+                weekday < 5 and\
+                day['date'] not in CZ_HOLIDAYS and\
+                getattr(timetable, get_dayname(weekday)):
                     day['timetable'] = getattr(timetable, get_dayname(weekday))
                     if dept_acl == 'auto':
                         # pretend employee was present according to timetable
