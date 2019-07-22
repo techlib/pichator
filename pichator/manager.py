@@ -324,7 +324,7 @@ class Manager(object):
 
         return retval
 
-    def get_attendance(self, uid, pvid, month, year, username):
+    def get_attendance(self, uid, pvid, month, year, username, admin):
         result = {}
         days = monthlen(year, month)
 
@@ -339,7 +339,7 @@ class Manager(object):
             .filter(pv_t.validity.overlaps(month_range))
         dept = str(current_pv.one().department)
 
-        if current_pv.one().uid_employee != uid and not self.is_supervisor(uid, current_pv.one().uid_employee):
+        if current_pv.one().uid_employee != uid and not self.is_supervisor(uid, current_pv.one().uid_employee) and not admin:
             raise Forbidden
 
         # create list of acls in organization structure

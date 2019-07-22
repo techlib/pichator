@@ -181,7 +181,7 @@ def make_site(manager, access_model, debug=False):
         pvid = pvid or pvs[0]['pvid']
         department = manager.get_dept(pvid, date(year, month, 1)) or manager.get_dept(pvid, date(year, month, 28))
 
-        attendance = manager.get_attendance(uid, pvid, month, year, username)
+        attendance = manager.get_attendance(uid, pvid, month, year, username, admin)
         
         # Restrictive mode - if one of your superiors blocked edit mode on any level of hierarchy you cant edit.
         readonly = False
