@@ -103,7 +103,8 @@
         $('.clockpicker').clockpicker()
         $('#date').datepicker({
             'startDate': new Date,
-            'format': 'dd-mm-yyyy',
+            'format': 'dd/mm/yyyy',
+            'language': 'cs',
         });
         $('#date').datepicker('setDate', 'today');
         emp_no = '{{ emp_no }}'

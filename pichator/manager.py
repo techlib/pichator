@@ -234,7 +234,7 @@ class Manager(object):
         start_date = date.today()
 
         if data['date']:
-            start_date = datetime.strptime(data['date'], '%d-%m-%Y').date()
+            start_date = datetime.strptime(data['date'], '%d/%m/%Y').date()
 
         valid_mon = data['monF'] and data['monT']
         valid_tue = data['tueF'] and data['tueT']
