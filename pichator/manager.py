@@ -556,7 +556,7 @@ class Manager(object):
                     ]
                 else:
                     timetable_list = [None] * 7
-
+                current_timetable = timetable_list[curr_date.weekday()]
                 presence = pres_t.filter(
                     and_(pres_t.uid_employee ==
                          employee.uid, pres_t.date == curr_date)
@@ -564,17 +564,16 @@ class Manager(object):
                 # Weekend
                 if curr_date.isoweekday() in [6, 7]:
                     symbol = 'S'
-
                 # This timetable is not valid on this day,
                 # it is non working day for the employee or the day is in future
-                elif timetable_list[curr_date.weekday()] == None or curr_date > date.today() or curr_date in CZ_HOLIDAYS:
+                elif current_timetable == None or current_timetable.isempty or curr_date > date.today() or curr_date in CZ_HOLIDAYS:
                     symbol = '-'
 
                 # Employee has valid timetable for the day and should have been in workplace but was not present
                 elif not presence:
                     # Automatically generated presence
                     if gen_mode == 'auto':
-                        if timetable_list[curr_date.weekday()].len() >= 4*60:
+                        if current_timetable.len() >= 4*60:
                             symbol = '/'
                         else:
                             symbol = '/-'
@@ -587,7 +586,7 @@ class Manager(object):
                         presence.presence_mode, presence.food_stamp
                     )
                     # If employee was present for shorter time and presence is automatically generated fill in presence acording timetable
-                    if symbol in ['/-', 'A'] and gen_mode == 'auto' and timetable_list[curr_date.weekday()].len() >= 6*60:
+                    if symbol in ['/-', 'A'] and gen_mode == 'auto' and current_timetable.len() >= 4*60:
                         symbol = '/'
                 retval_dict[str(day+1)] = symbol
             found = False
