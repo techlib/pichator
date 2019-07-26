@@ -655,13 +655,14 @@ class Manager(object):
         retval = []
         pres_t = self.db.presence
         for dept in self.get_all_depts():
-            item = {'dept_no': dept, 'emp':[]}
+            item = {'dept_no': dept, 'emp': []}
+            emp_set = set()
             for employee in self.get_employees(dept, date.month, date.year):
                 presence = pres_t.filter(pres_t.uid_employee == employee['uid']).filter(pres_t.date == date).first()
                 if presence and presence.presence_mode == 'Presence' and str(employee['dept']) == dept:
-                    item['emp'].append(employee['first_name'] + ' ' + employee['last_name'])
+                    emp_set.add(employee['first_name'] + ' ' + employee['last_name'])
+            item['emp'] = list(emp_set)
             retval.append(item)
-        log.msg(retval)
         return retval
                 
                 
