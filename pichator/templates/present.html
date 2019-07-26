@@ -46,16 +46,18 @@
                 </thead>
                 <tbody>
                     {% for dept in data %}
+                    {% if dept.emp|length != 0%}
                     <tr>
                         <td> <b>{{ dept.dept_no }}</b></td>
-                        <tr> </tr>
+                        <td> </td>
                     </tr>
-                    {% for epmloyee in dept.emp %}
+                    {% for employee in dept.emp %}
                     <tr>
-                        <tr></tr>
-                        <tr> {{ employee }} </tr>
+                        <td></td>
+                        <td> {{ employee }} </td>
                     </tr>
                     {% endfor %}
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
