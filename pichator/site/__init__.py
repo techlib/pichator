@@ -198,6 +198,23 @@ def make_site(manager, access_model, debug=False):
         dept = flask.request.values.get('dept')
         period = flask.request.values.get('period').split('-')
         return flask.jsonify(manager.get_employees(dept, int(period[0]), int(period[1])))
+    
+    @app.route('/present', defaults={'day': None, 'month': None, 'year': None})
+    @app.route('/present/<int:day>/<int:month>/<int:year>')
+    @authorized_only('user')
+    @pass_user_info
+    def present(uid, username, day, month, year):
+        acl = manager.get_acl(username)
+        admin = has_privilege('admin')
+        if not day or not month or not year:
+            date_val = date.today()
+            day = date_val.day
+            month = date_val.month
+            year = date_val.year
+        else:
+            date_val = date(year, month, day)
+        data = manager.get_present(date_val)
+        return flask.render_template('present.html', **locals())
 
     @app.route('/dept', methods=['GET', 'POST'], defaults={'dept': None, 'month': None, 'year': None})
     @app.route('/dept/<dept>', methods=['GET', 'POST'], defaults={'month': None, 'year': None})

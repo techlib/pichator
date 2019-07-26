@@ -149,7 +149,8 @@ class Manager(object):
                 'last_name': employee.last_name,
                 'PV': pv.pvid,
                 'dept': pv.department,
-                'username': employee.username
+                'username': employee.username,
+                'uid': employee.uid
             })
 
         return retval
@@ -649,6 +650,21 @@ class Manager(object):
                 current.food_stamp = food_stamp
 
         self.db.commit()
+        
+    def get_present(self, date):
+        retval = []
+        pres_t = self.db.presence
+        for dept in self.get_all_depts():
+            item = {'dept_no': dept, 'emp':[]}
+            for employee in self.get_employees(dept, date.month, date.year):
+                presence = pres_t.filter(pres_t.uid_employee == employee['uid']).filter(pres_t.date == date).first()
+                if presence and presence.presence_mode == 'Presence' and employee['dept'] == dept:
+                    item['emp'].append(employee.first_name + ' ' + employee.last_name)
+            retval.append(item)
+        return retval
+                
+                
+            
 
     def sync(self, source, source_name, elanor):
         self.source_loop = LoopingCall(

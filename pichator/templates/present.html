@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Přítomné osoby{% endblock %}
+{%- set active_page = 'present' %}
+
+{% block content %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function () {
+        $('#date').datepicker({
+            'format': 'dd/mm/yyyy',
+            'language': 'cs',
+        });
+        $('#date').datepicker('setDate', 'today');
+        $("#date").datepicker().on('changeDate', function (e) {
+            const url = '/present/' + e.format();
+            window.location.href = url
+        });
+    });
+</script>
+{% endblock %}
+<div class='container-fluid'>
+    <div class="row pichator-toolbar toolbar-pf">
+        <div class="col-sm-12">
+            <div class="row toolbar-pf-results">
+                <div class="col-sm-12">
+                    <h5>Datum</h5>
+                    <p>
+                        <a id="date" data-value="{{day}}/{{month}}/{{year}}"> {{day}}/{{month}}/{{year}} </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row buffer-top-md">
+        <div class="col-md-6">
+            {% if data|length != 0 %}
+            <table class='table table-bordered table-responsive table-striped' id='present' name='present'>
+                <thead>
+                    <tr>
+                        <th>Oddělení</th>
+                        <th>Jméno</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in data %}
+                    <tr>
+                        <td> <b>{{ dept.dept_no }}</b></td>
+                        <tr> </tr>
+                    </tr>
+                    {% for epmloyee in dept.emp %}
+                    <tr>
+                        <tr></tr>
+                        <tr> {{ employee }} </tr>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="row">
+                <div class="col-md-8 col-md-push-2 buffer-top-md">
+                    <div class="blank-slate-pf">
+                        <h2>Prázdná odpověď</h2>
+
+                        <p>Dotaz vrátil prázdný záznam.</p>
+                        <p>
+                            Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
+                            Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
