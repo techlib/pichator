@@ -659,7 +659,7 @@ class Manager(object):
             for employee in self.get_employees(dept, date.month, date.year):
                 presence = pres_t.filter(pres_t.uid_employee == employee['uid']).filter(pres_t.date == date).first()
                 if presence and presence.presence_mode == 'Presence' and employee['dept'] == dept:
-                    item['emp'].append(employee.first_name + ' ' + employee.last_name)
+                    item['emp'].append(employee['first_name'] + ' ' + employee['last_name'])
             retval.append(item)
         return retval
                 
