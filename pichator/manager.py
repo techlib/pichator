@@ -64,8 +64,9 @@ def eng_to_symbol(mode, stamp):
     return obj_mapping[mode]
 
 
-def get_dayname(number):
-    return ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')[number]
+def get_dayname(number, even):
+    return ('monday_e', 'tuesday_e', 'wednesday_e', 'thursday_e', 'friday_e', 'saturday_e', 'sunday_e')[number] if even\
+    else ('monday_o', 'tuesday_o', 'wednesday_o', 'thursday_o', 'friday_o', 'saturday_o', 'sunday_o')[number]
 
 
 class Manager(object):
@@ -192,7 +193,13 @@ class Manager(object):
             }
 
             if tt:
-                for day in ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'):
+                for day in ('monday_e', 'tuesday_e', 'wednesday_e', 'thursday_e', 'friday_e'):
+                    pv_data['days'].append(
+                        tt.__getattribute__(day).lower.strftime('%H:%M') if tt.__getattribute__(day) else '')
+                    pv_data['days'].append(
+                        tt.__getattribute__(day).upper.strftime('%H:%M') if tt.__getattribute__(day) else '')
+
+                for day in ('monday_o', 'tuesday_o', 'wednesday_o', 'thursday_o', 'friday_o'):
                     pv_data['days'].append(
                         tt.__getattribute__(day).lower.strftime('%H:%M') if tt.__getattribute__(day) else '')
                     pv_data['days'].append(
@@ -229,6 +236,7 @@ class Manager(object):
 
     def set_timetables(self, data):
         # returns True if commit succeeds, False otherwise
+        # F - from; T - to; _e - even week; _o - odd week
         pv_t = self.db.pv
         timetable_t = self.db.timetable
         maxdate = date.max
@@ -237,46 +245,89 @@ class Manager(object):
         if data['date']:
             start_date = datetime.strptime(data['date'], '%d/%m/%Y').date()
 
-        valid_mon = data['monF'] and data['monT']
-        valid_tue = data['tueF'] and data['tueT']
-        valid_wed = data['wedF'] and data['wedT']
-        valid_thu = data['thuF'] and data['thuT']
-        valid_fri = data['friF'] and data['friT']
+        valid_mon_e = data['monFE'] and data['monTE']
+        valid_tue_e = data['tueFE'] and data['tueTE']
+        valid_wed_e = data['wedFE'] and data['wedTE']
+        valid_thu_e = data['thuFE'] and data['thuTE']
+        valid_fri_e = data['friFE'] and data['friTE']
         
-        if valid_mon:
-            mon_time_f, mon_time_t = datetime.strptime(
-                data['monF'], '%H:%M').time(), datetime.strptime(data['monT'], '%H:%M').time()
+        valid_mon_o = data['monFO'] and data['monTO']
+        valid_tue_o = data['tueFO'] and data['tueTO']
+        valid_wed_o = data['wedFO'] and data['wedTO']
+        valid_thu_o = data['thuFO'] and data['thuTO']
+        valid_fri_o = data['friFO'] and data['friTO']
+        
+        has_odd = valid_mon_o or valid_tue_o or valid_wed_o or valid_thu_o or valid_fri_o
+        
+        if valid_mon_e:
+            mon_time_f_e, mon_time_t_e = datetime.strptime(
+                data['monFE'], '%H:%M').time(), datetime.strptime(data['monTE'], '%H:%M').time()
         else:
-            mon_time_f = mon_time_t = datetime(1,1,1,0,0).time()
-        if valid_tue:    
-            tue_time_f, tue_time_t = datetime.strptime(
-                data['tueF'], '%H:%M').time(), datetime.strptime(data['tueT'], '%H:%M').time()
+            mon_time_f_e = mon_time_t_e = datetime(1,1,1,0,0).time()
+        if valid_tue_e:    
+            tue_time_f_e, tue_time_t_e = datetime.strptime(
+                data['tueFE'], '%H:%M').time(), datetime.strptime(data['tueTE'], '%H:%M').time()
         else:
-            tue_time_f = tue_time_t = datetime(1,1,1,0,0).time()
-        if valid_wed:
-            wed_time_f, wed_time_t = datetime.strptime(
-                data['wedF'], '%H:%M').time(), datetime.strptime(data['wedT'], '%H:%M').time()
+            tue_time_f_e = tue_time_t_e = datetime(1,1,1,0,0).time()
+        if valid_wed_e:
+            wed_time_f_e, wed_time_t_e = datetime.strptime(
+                data['wedFE'], '%H:%M').time(), datetime.strptime(data['wedTE'], '%H:%M').time()
         else:
-            wed_time_f = wed_time_t = datetime(1,1,1,0,0).time()
-        if valid_thu:
-            thu_time_f, thu_time_t = datetime.strptime(
-                data['thuF'], '%H:%M').time(), datetime.strptime(data['thuT'], '%H:%M').time()
+            wed_time_f_e = wed_time_t_e = datetime(1,1,1,0,0).time()
+        if valid_thu_e:
+            thu_time_f_e, thu_time_t_e = datetime.strptime(
+                data['thuFE'], '%H:%M').time(), datetime.strptime(data['thuTE'], '%H:%M').time()
         else:
-            thu_time_f = thu_time_t = datetime(1,1,1,0,0).time()
-        if valid_fri:
-            fri_time_f, fri_time_t = datetime.strptime(
-                data['friF'], '%H:%M').time(), datetime.strptime(data['friT'], '%H:%M').time()
+            thu_time_f_e = thu_time_t_e = datetime(1,1,1,0,0).time()
+        if valid_fri_e:
+            fri_time_f_e, fri_time_t_e = datetime.strptime(
+                data['friFE'], '%H:%M').time(), datetime.strptime(data['friTE'], '%H:%M').time()
         else:
-            fri_time_f = fri_time_t = datetime(1,1,1,0,0).time()
+            fri_time_f_e = fri_time_t_e = datetime(1,1,1,0,0).time()
             
-        monday_v = TimeRange(mon_time_f, mon_time_t)
-        tuesday_v = TimeRange(tue_time_f, tue_time_t)
-        wednesday_v = TimeRange(wed_time_f, wed_time_t)
-        thursday_v = TimeRange(thu_time_f, thu_time_t)
-        friday_v = TimeRange(fri_time_f, fri_time_t)
+        if valid_mon_o:
+            mon_time_f_o, mon_time_t_o = datetime.strptime(
+                data['monFO'], '%H:%M').time(), datetime.strptime(data['monTO'], '%H:%M').time()
+        else:
+            mon_time_f_o = mon_time_t_o = datetime(1,1,1,0,0).time()
+        if valid_tue_o:    
+            tue_time_f_o, tue_time_t_o = datetime.strptime(
+                data['tueFO'], '%H:%M').time(), datetime.strptime(data['tueTO'], '%H:%M').time()
+        else:
+            tue_time_f_o = tue_time_t_o = datetime(1,1,1,0,0).time()
+        if valid_wed_o:
+            wed_time_f_o, wed_time_t_o = datetime.strptime(
+                data['wedFO'], '%H:%M').time(), datetime.strptime(data['wedTO'], '%H:%M').time()
+        else:
+            wed_time_f_o = wed_time_t_o = datetime(1,1,1,0,0).time()
+        if valid_thu_o:
+            thu_time_f_o, thu_time_t_o = datetime.strptime(
+                data['thuFO'], '%H:%M').time(), datetime.strptime(data['thuTO'], '%H:%M').time()
+        else:
+            thu_time_f_o = thu_time_t_o = datetime(1,1,1,0,0).time()
+        if valid_fri_o:
+            fri_time_f_o, fri_time_t_o = datetime.strptime(
+                data['friFO'], '%H:%M').time(), datetime.strptime(data['friTO'], '%H:%M').time()
+        else:
+            fri_time_f_o = fri_time_t_o = datetime(1,1,1,0,0).time()
+            
+        monday_v_e = TimeRange(mon_time_f_e, mon_time_t_e)
+        tuesday_v_e = TimeRange(tue_time_f_e, tue_time_t_e)
+        wednesday_v_e = TimeRange(wed_time_f_e, wed_time_t_e)
+        thursday_v_e = TimeRange(thu_time_f_e, thu_time_t_e)
+        friday_v_e = TimeRange(fri_time_f_e, fri_time_t_e)
 
-        hours_in_week = (monday_v.len() + tuesday_v.len() +
-                         wednesday_v.len() + thursday_v.len() + friday_v.len()) / 60
+        monday_v_o = TimeRange(mon_time_f_o, mon_time_t_o)
+        tuesday_v_o = TimeRange(tue_time_f_o, tue_time_t_o)
+        wednesday_v_o = TimeRange(wed_time_f_o, wed_time_t_o)
+        thursday_v_o = TimeRange(thu_time_f_o, thu_time_t_o)
+        friday_v_o = TimeRange(fri_time_f_o, fri_time_t_o)
+
+        hours_in_week_e = (monday_v_e.len() + tuesday_v_e.len() +
+                         wednesday_v_e.len() + thursday_v_e.len() + friday_v_e.len()) / 60
+        hours_in_week_o = (monday_v_o.len() + tuesday_v_o.len() +
+                         wednesday_v_o.len() + thursday_v_o.len() + friday_v_o.len()) / 60
+        
         validity_v = DateRange(start_date, maxdate)
         pvid_v = data['f_pvs']
         pv = pv_t.filter(pv_t.pvid == pvid_v).filter(
@@ -288,7 +339,8 @@ class Manager(object):
         valid_pv_uid = pv.uid
         occupancy = pv.occupancy
 
-        if not hours_in_week == 40 * occupancy:
+        if hours_in_week_e == hours_in_week_o and hours_in_week_e != 40 * occupancy\
+        or (hours_in_week_e + hours_in_week_o) / 2 not in  [40 * occupancy, 20 * occupancy]:
             # Filled in hours are not matching occupancy
             return False
 
@@ -307,10 +359,20 @@ class Manager(object):
 
         try:
             # Insert new timetable
-            timetable_t.insert(monday=monday_v, tuesday=tuesday_v,
-                               wednesday=wednesday_v, thursday=thursday_v,
-                               friday=friday_v, validity=validity_v,
-                               uid_pv=valid_pv_uid)
+            if not has_odd:
+                timetable_t.insert(monday_e=monday_v_e, tuesday_e=tuesday_v_e,
+                                   wednesday_e=wednesday_v_e, thursday_e=thursday_v_e,
+                                   friday_e=friday_v_e, monday_o=monday_v_e, 
+                                   tuesday_o=tuesday_v_e, wednesday_o=wednesday_v_e,
+                                   thursday_o=thursday_v_e, friday_o=friday_v_e,
+                                   validity=validity_v, uid_pv=valid_pv_uid)
+            else:
+                timetable_t.insert(monday_e=monday_v_e, tuesday_e=tuesday_v_e,
+                                   wednesday_e=wednesday_v_e, thursday_e=thursday_v_e,
+                                   friday_e=friday_v_e, monday_o=monday_v_o, 
+                                   tuesday_o=tuesday_v_o, wednesday_o=wednesday_v_o,
+                                   thursday_o=thursday_v_o, friday_o=friday_v_o,
+                                   validity=validity_v, uid_pv=valid_pv_uid)
             self.db.commit()
             return True
         except Exception as e:
@@ -403,12 +465,13 @@ class Manager(object):
         for _, day in result.items():
             for timetable in all_timetables:
                 weekday = day['date'].weekday()
+                even_week = day['date'].isocalendar()[1] % 2 == 0
                 
                 if day['date'] in timetable.validity and\
                 weekday < 5 and\
                 day['date'] not in CZ_HOLIDAYS and\
-                getattr(timetable, get_dayname(weekday)):
-                    day['timetable'] = getattr(timetable, get_dayname(weekday))
+                getattr(timetable, get_dayname(weekday, even_week)):
+                    day['timetable'] = getattr(timetable, get_dayname(weekday, even_week))
                     if dept_acl == 'auto':
                         # pretend employee was present according to timetable
                         if day['mode'] in ['Absence', 'Presence', None]:
@@ -416,7 +479,7 @@ class Manager(object):
                             # random offset to make arrivals more believable
                             offset = randint(0, 22)
                             arrival = getattr(
-                                timetable, get_dayname(weekday)).lower
+                                timetable, get_dayname(weekday, even_week)).lower
                             offset_arrival = datetime.combine(
                                 date(1, 1, 1), arrival) - timedelta(minutes=offset)
                             day['arrival'] = offset_arrival.time()
@@ -424,7 +487,7 @@ class Manager(object):
                             # people are less likely to stay much longer than needed
                             offset = randint(0, 7)
                             departure = getattr(
-                                timetable, get_dayname(weekday)).upper
+                                timetable, get_dayname(weekday, even_week)).upper
                             offset_departure = datetime.combine(
                                 date(1, 1, 1), departure) + timedelta(minutes=offset)
                             day['departure'] = offset_departure.time()
@@ -547,17 +610,25 @@ class Manager(object):
 
                 if timetable and curr_date in timetable.validity:
                     timetable_list = [
-                        timetable.monday,
-                        timetable.tuesday,
-                        timetable.wednesday,
-                        timetable.thursday,
-                        timetable.friday,
+                        timetable.monday_e,
+                        timetable.tuesday_e,
+                        timetable.wednesday_e,
+                        timetable.thursday_e,
+                        timetable.friday_e,
                         None,
-                        None
+                        None,
+                        timetable.monday_o,
+                        timetable.tuesday_o,
+                        timetable.wednesday_o,
+                        timetable.thursday_o,
+                        timetable.friday_o,
+                        None,
+                        None,
                     ]
                 else:
-                    timetable_list = [None] * 7
-                current_timetable = timetable_list[curr_date.weekday()]
+                    timetable_list = [None] * 14
+                even_week = curr_date.isocalendar()[1]%2 == 0
+                current_timetable = timetable_list[curr_date.weekday()] if even_week else timetable_list[curr_date.weekday() + 7]
                 presence = pres_t.filter(
                     and_(pres_t.uid_employee ==
                          employee.uid, pres_t.date == curr_date)

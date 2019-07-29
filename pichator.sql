@@ -151,7 +151,7 @@ ON DELETE RESTRICT ON UPDATE CASCADE;
 CREATE TABLE public.pv(
 	pvid character varying,
 	occupancy decimal NOT NULL,
-	department varchar NOT NULL,
+	department smallint NOT NULL,
 	uid bigint NOT NULL DEFAULT nextval('public.pv_pvid_seq'::regclass),
 	validity daterange NOT NULL,
 	uid_employee bigint NOT NULL,
@@ -165,14 +165,19 @@ ALTER TABLE public.pv OWNER TO pichator;
 -- object: public.timetable | type: TABLE --
 -- DROP TABLE IF EXISTS public.timetable CASCADE;
 CREATE TABLE public.timetable(
-	monday public.timerange,
-	tuesday public.timerange,
-	wednesday public.timerange,
-	thursday public.timerange,
-	friday public.timerange,
+	monday_e public.timerange,
+	tuesday_e public.timerange,
+	wednesday_e public.timerange,
+	thursday_e public.timerange,
+	friday_e public.timerange,
 	timeid bigint NOT NULL DEFAULT nextval('public.timetable_timeid_seq'::regclass),
 	uid_pv bigint NOT NULL,
 	validity daterange NOT NULL,
+	monday_o public.timerange,
+	tuesday_o public.timerange,
+	wednesday_o public.timerange,
+	thursday_o public.timerange,
+	friday_o public.timerange,
 	CONSTRAINT timetable_pk PRIMARY KEY (timeid)
 
 );

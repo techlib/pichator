@@ -13,6 +13,15 @@
     var timetable = []
     var selected = 0
 
+    function display_odd(){
+        if($('#odd_even').prop("checked") == true){
+            $('.to-be-hidden').removeAttr("hidden");
+        }
+        else{
+            $('.to-be-hidden').prop('hidden', true);
+        }
+        calculateTotal();
+    }
     function submit_timetable() {
         $('#f_pvs').val(timetable[selected].PV);
         $('#timetable-form').submit();
@@ -21,18 +30,31 @@
     function fillTimetable(timetable) {
         $('#occupancy').html(timetable.occupancy)
         $('#dept').html(timetable.department)
-        $('#monF').val(timetable.days[0])
-        $('#monT').val(timetable.days[1])
-        $('#tueF').val(timetable.days[2])
-        $('#tueT').val(timetable.days[3])
-        $('#wedF').val(timetable.days[4])
-        $('#wedT').val(timetable.days[5])
-        $('#thuF').val(timetable.days[6])
-        $('#thuT').val(timetable.days[7])
-        $('#friF').val(timetable.days[8])
-        $('#friT').val(timetable.days[9])
-
-        calculateTotal()
+        $('#monFE').val(timetable.days[0])
+        $('#monTE').val(timetable.days[1])
+        $('#tueFE').val(timetable.days[2])
+        $('#tueTE').val(timetable.days[3])
+        $('#wedFE').val(timetable.days[4])
+        $('#wedTE').val(timetable.days[5])
+        $('#thuFE').val(timetable.days[6])
+        $('#thuTE').val(timetable.days[7])
+        $('#friFE').val(timetable.days[8])
+        $('#friTE').val(timetable.days[9])
+        $('#monFO').val(timetable.days[10])
+        $('#monTO').val(timetable.days[11])
+        $('#tueFO').val(timetable.days[12])
+        $('#tueTO').val(timetable.days[13])
+        $('#wedFO').val(timetable.days[14])
+        $('#wedTO').val(timetable.days[15])
+        $('#thuFO').val(timetable.days[16])
+        $('#thuTO').val(timetable.days[17])
+        $('#friFO').val(timetable.days[18])
+        $('#friTO').val(timetable.days[19])
+        if(timetable.days[0] != timetable.days[10] && timetable.days[10] != ''){
+            $('#odd_even').prop("checked", true);
+        }
+        display_odd();
+        calculateTotal();
     }
 
     function getMinutes(time) {
@@ -48,28 +70,46 @@
     }
 
     function calculateTotal() {
-        var total = 0
+        var total_e = 0
+        var total_o = 0
+        even_only = !$('#odd_even').prop("checked")
 
         for (var i = 0; i <= 4; i++) {
-            var from = $('input[data-type=F][data-day=' + i + ']').val()
-            var to = $('input[data-type=T][data-day=' + i + ']').val()
-            if(from === ''){
-                $('#day' + i + '-total').text('')
+            var from_e = $('input[data-type=FE][data-day=' + i + ']').val()
+            var to_e = $('input[data-type=TE][data-day=' + i + ']').val()
+            var from_o = $('input[data-type=FO][data-day=' + i + ']').val()
+            var to_o = $('input[data-type=TO][data-day=' + i + ']').val()
+            if (from_e === '') {
+                $('#dayE' + i + '-total').text('')
+                continue
+            }
+            if (from_o === '') {
+                $('#dayO' + i + '-total').text('')
                 continue
             }
 
-            var dayDuration = getMinutes(to) - getMinutes(from)
+            var dayDuration_e = getMinutes(to_e) - getMinutes(from_e)
+            var dayDuration_o = getMinutes(to_o) - getMinutes(from_o)
 
-            if (dayDuration >= 6 * 60) {
-                dayDuration -= 30
+            if (dayDuration_e >= 4 * 60) {
+                dayDuration_e -= 30
+            }
+            if (dayDuration_o >= 4 * 60) {
+                dayDuration_o -= 30
             }
 
-            total += dayDuration
+            total_e += dayDuration_e
+            total_o += dayDuration_o
 
-            $('#day' + i + '-total').text(formatDuration(dayDuration))
+            $('#dayE' + i + '-total').text(formatDuration(dayDuration_e))
+            $('#dayO' + i + '-total').text(formatDuration(dayDuration_o))
         }
-
-        $('#timetable-total strong').text(formatDuration(total))
+        if(even_only){
+            $('#timetable-total strong').text(formatDuration(total_e))
+        }
+        else{
+        $('#timetable-total strong').text('Sudý: ' + formatDuration(total_e) + ' Lichý: ' + formatDuration(total_o))
+        }
     }
 
     function refreshSelect() {
@@ -101,6 +141,7 @@
 
     $(document).ready(function () {
         $('.clockpicker').clockpicker()
+        $("#odd_even").click(display_odd);
         $('#date').datepicker({
             'startDate': new Date,
             'format': 'dd/mm/yyyy',
@@ -150,6 +191,14 @@
                                     <input type="text" id="date" name="date" class="form-control">
                                 </div>
                             </div>
+                            <label class="checkbox-inline">
+                                <input id="odd_even" type="checkbox">Rozdílný sudý a lichý týden
+                            </label>
+                        </div>
+                        <div class="row to-be-hidden">
+                            <div class="col-xs-12 col-md-4 form-control-static">
+                                <h2>Sudý týden</h2>
+                            </div>
                         </div>
                         <div class="row top-buffer">
                             <div class="col-xs-12 col-md-2"></div>
@@ -158,7 +207,6 @@
                             <div class="col-xs-12 col-md-4"><strong>Trvání</strong></div>
 
                         </div>
-
                         {% for day in ['mon', 'tue', 'wed', 'thu', 'fri'] %}
                         {% set day_index = loop.index - 1 -%}
                         <div class="row">
@@ -166,7 +214,7 @@
                                 <strong>{{ day_names[day_index] }}</strong>
                             </div>
 
-                            {% for dayPart in ['F', 'T'] %}
+                            {% for dayPart in ['FE', 'TE'] %}
                             <div class='form-group col-xs-12 col-md-2'>
                                 <div class='input-group clockpicker' id='{{day}}-{{dayPart}}-picker'
                                     data-placement='right' data-align='top' data-autoclose='true'>
@@ -179,7 +227,35 @@
                                 </div>
                             </div>
                             {% endfor %}
-                            <div class="form-group col-xs-12 col-md-4" id="day{{day_index}}-total"></div>
+                            <div class="form-group col-xs-12 col-md-4" id="dayE{{day_index}}-total"></div>
+                        </div>
+                        {% endfor %}
+                        <div class="row to-be-hidden">
+                            <div class="col-xs-12 col-md-4 form-control-static">
+                                <h2>Lichý týden</h2>
+                            </div>
+                        </div>
+                        {% for day in ['mon', 'tue', 'wed', 'thu', 'fri'] %}
+                        {% set day_index = loop.index - 1 -%}
+                        <div class="row to-be-hidden">
+                            <div class="col-xs-12 col-md-2 form-control-static">
+                                <strong>{{ day_names[day_index] }}</strong>
+                            </div>
+
+                            {% for dayPart in ['FO', 'TO'] %}
+                            <div class='form-group col-xs-12 col-md-2'>
+                                <div class='input-group clockpicker' id='{{day}}-{{dayPart}}-picker'
+                                    data-placement='right' data-align='top' data-autoclose='true'>
+                                    <input type="text" class="form-control" id='{{day}}{{dayPart}}'
+                                        onChange="calculateTotal()" name='{{day}}{{dayPart}}' data-day="{{day_index}}"
+                                        data-type="{{dayPart}}">
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-time"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="form-group col-xs-12 col-md-4" id="dayO{{day_index}}-total"></div>
                         </div>
                         {% endfor %}
                         <div class="row">

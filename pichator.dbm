@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.1" last-position="14,0" last-zoom="1"
+<dbmodel pgmodeler-ver="0.9.1" last-position="13,0" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <role name="pichator"
       inherit="true"
@@ -177,19 +177,19 @@ Jakub•Chalupa•952•jakubch•595067]]>
 	<schema name="public"/>
 	<role name="pichator"/>
 	<position x="220" y="240"/>
-	<column name="monday">
+	<column name="monday_e">
 		<type name="public.timerange" length="0"/>
 	</column>
-	<column name="tuesday">
+	<column name="tuesday_e">
 		<type name="public.timerange" length="0"/>
 	</column>
-	<column name="wednesday">
+	<column name="wednesday_e">
 		<type name="public.timerange" length="0"/>
 	</column>
-	<column name="thursday">
+	<column name="thursday_e">
 		<type name="public.timerange" length="0"/>
 	</column>
-	<column name="friday">
+	<column name="friday_e">
 		<type name="public.timerange" length="0"/>
 	</column>
 	<column name="timeid" not-null="true" sequence="public.timetable_timeid_seq">
@@ -197,6 +197,21 @@ Jakub•Chalupa•952•jakubch•595067]]>
 	</column>
 	<column name="validity" not-null="true">
 		<type name="daterange" length="0"/>
+	</column>
+	<column name="monday_o">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="tuesday_o">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="wednesday_o">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="thursday_o">
+		<type name="public.timerange" length="0"/>
+	</column>
+	<column name="friday_o">
+		<type name="public.timerange" length="0"/>
 	</column>
 	<constraint name="timetable_pk" type="pk-constr" table="public.timetable">
 		<columns names="timeid" ref-type="src-columns"/>
