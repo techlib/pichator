@@ -35,48 +35,55 @@
     </div>
 
     <div class="row buffer-top-md">
-        <div class="col-md-6">
+        <div class="col-xs-12 col-sm-8 col-sm-push-2 col-md-4 col-md-push-4">
             {% if data|length != 0 %}
-            <table class='table table-bordered table-responsive table-striped' id='present' name='present'>
-                <thead>
-                    <tr>
-                        <th>Oddělení</th>
-                        <th>Jméno</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dept in data %}
-                    {% if dept.emp|length != 0%}
-                    <tr>
-                        <td> <b>{{ dept.dept_no }}</b></td>
-                        <td> </td>
-                    </tr>
-                    {% for employee in dept.emp %}
-                    <tr>
-                        <td></td>
-                        <td> {{ employee }} </td>
-                    </tr>
-                    {% endfor %}
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="row">
-                <div class="col-md-8 col-md-push-2 buffer-top-md">
-                    <div class="blank-slate-pf">
-                        <h2>Prázdná odpověď</h2>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Přítomné osoby
+                </div>
+                <div class="panel-body">
+                    <table class='table table-bordered table-responsive table-striped' id='present' name='present'>
+                        <thead>
+                            <tr>
+                                <th>Oddělení</th>
+                                <th>Jméno</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dept in data %}
+                            {% if dept.emp|length != 0%}
+                            <tr>
+                                <td> <b>{{ dept.dept_no }}</b></td>
+                                <td> </td>
+                            </tr>
+                            {% for employee in dept.emp %}
+                            <tr>
+                                <td></td>
+                                <td> {{ employee }} </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="row">
+                    <div class="col-md-8 col-md-push-2 buffer-top-md">
+                        <div class="blank-slate-pf">
+                            <h2>Prázdná odpověď</h2>
 
-                        <p>Dotaz vrátil prázdný záznam.</p>
-                        <p>
-                            Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
-                            Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
-                        </p>
+                            <p>Dotaz vrátil prázdný záznam.</p>
+                            <p>
+                                Žádný zaměstnanec tohoto útvaru nemá platný PV, nebo vyplněnou pracovní dobu.
+                                Pokud si myslíte, že se jedná o chybu, kontaktujte prosím <a
+                                    href="mailto:helpdeskict@techlib.cz">helpdeskict@techlib.cz</a>.
+                            </p>
+                        </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
-</div>
-{% endblock %}
+    {% endblock %}
