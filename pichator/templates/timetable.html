@@ -24,6 +24,14 @@
     }
     function submit_timetable() {
         $('#f_pvs').val(timetable[selected].PV);
+        even_only = !$('#odd_even').prop("checked")
+        if(even_only){
+            $('#monFO').val('')
+            $('#tueFO').val('')
+            $('#wedFO').val('')
+            $('#thuFO').val('')
+            $('#friFO').val('')
+        }
         $('#timetable-form').submit();
     }
 
