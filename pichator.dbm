@@ -62,7 +62,7 @@ Jakub•Chalupa•952•jakubch•595067]]>
 <usertype name="presence_modes" configuration="enumeration">
 	<schema name="public"/>
 	<role name="pichator"/>
-	<enumeration values="Compensatory time off,Vacation,Sickday,Unpaid leave,Absence,Employer difficulties,Vacation 0.5,On call time,Sickness,Family member care,Study,Training,Injury and disease from profession,Presence,Business trip,Personal difficulties,Public interest"/>
+	<enumeration values="Compensatory time off,Vacation,Sickday,Unpaid leave,Absence,Employer difficulties,Vacation 0.5,On call time,Sickness,Family member care,Study,Training,Injury and disease from profession,Presence,Business trip,Personal trouble,Public benefit"/>
 </usertype>
 
 <sequence name="presence_presid_seq"
