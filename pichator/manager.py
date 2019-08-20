@@ -51,13 +51,13 @@ def eng_to_symbol(mode, stamp):
         'Sickness': 'N',
         'Compensatory time off': 'NV',
         'Family member care': 'O',
-        'Personal difficulties': 'P',
+        'Personal trouble': 'P',
         'Bussiness trip': 'Sc+' if stamp else 'Sc',
         'Study': 'St',
         'Training': 'Šk' if stamp else 'Šk-',
         'Injury and disease from profession': 'Ú',
         'Unpaid leave': 'V',
-        'Public interest': 'Z',
+        'Public benefit': 'Z',
         'Sickday': 'ZV',
     }
 

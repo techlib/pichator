@@ -79,13 +79,13 @@ def make_site(manager, access_model, debug=False):
         'Sickness': 'Nemoc',
         'Compensatory time off': 'Náhradní volno',
         'Family member care': 'Ošetřování člena rodiny',
-        'Personal difficulties': 'Osobní překážky',
+        'Personal trouble': 'Osobní překážky',
         'Bussiness trip': 'Služební cesta',
         'Study': 'Studium při zaměstnání',
         'Training': 'Školení',
         'Injury and disease from profession': 'Úraz/nemoc z povolání',
         'Unpaid leave': 'Neplacené volno',
-        'Public interest': 'Obecný zájem',
+        'Public benefit': 'Obecný zájem',
         'Sickday': 'Zdravotní volno'
         }
         return obj_mapping[t]
