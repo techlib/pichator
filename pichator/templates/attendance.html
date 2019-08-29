@@ -167,6 +167,7 @@
                         <th>Den v měsíci</th>
                         <th>Příchod</th>
                         <th>Odchod</th>
+                        <th>Přítmnost</th>
                         <th>Režim docházky</th>
                         <th>Pracovní doba</th>
                     </tr>
@@ -177,12 +178,17 @@
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
                         data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
                         data-date={{ day.date }} data-user="{{ uid }}" data-month={{ day.date.month }}
-                        data-weekdayno="{{ day.date.weekday() }}">
+                        data-weekdayno="{{ day.date.weekday() }}" 
+                        {% if day.departure %}
+                            data-time=" {{ (day.departure|today_time - day.arrival|today_time)|time }}"
+                        {% endif %}    
+                        >
                         <td>{{ day.day }}. {{ day.date.weekday()|day_name }}</td>
 
                         {% if day.timetable and day.mode %}
                         <td>{{ day.arrival|short_time }}</td>
                         <td>{{ day.departure|short_time }}</td>
+                        <td>{{ (day.departure - day.arrival)|short_time }}</td>
                         <td>{{ day.mode|mode_name }}</td>
                         <td>{{ day.timetable.lower|short_time }} - {{ day.timetable.upper|short_time }}</td>
                         {% else %}
@@ -190,9 +196,20 @@
                         <td>-</td>
                         <td>-</td>
                         <td>-</td>
+                        <td>-</td>
                         {% endif %}
                     </tr>
                     {% endfor %}
+                    <tr class="weekend">
+                        <td>Suma přítomností</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>
+                            {{ attendance.items()[1]|sum(attribute='arrival') - attendance.items()[1]|sum(attribute='departure') }}
+                        </td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
                 </tbody>
             </table>
         </div>

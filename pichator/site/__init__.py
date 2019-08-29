@@ -32,6 +32,7 @@ import flask
 import re
 import holidays
 
+
 def make_site(manager, access_model, debug=False):
     app = flask.Flask('.'.join(__name__.split('.')[:-1]))
     app.secret_key = urandom(16)
@@ -57,6 +58,23 @@ def make_site(manager, access_model, debug=False):
             return ''
 
         return t.strftime('%H:%M')
+
+    @app.template_filter('today_time')
+    def today_time(t):
+        if not t:
+            return ''
+
+        return datetime.combine(datetime.today(), t)
+        
+    @app.template_filter('time')
+    def time(t):
+        if not t:
+            return ''
+        sec = t.seconds
+        hrs = sec // 3600
+        rest = sec % 3600
+        mins = rest // 60
+        return '{}:{}'.format(hrs,mins)
 
     @app.template_filter('month_name')
     def month_name(t):
