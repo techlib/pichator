@@ -74,7 +74,7 @@ def make_site(manager, access_model, debug=False):
         hrs = sec // 3600
         rest = sec % 3600
         mins = rest // 60
-        return '{}:{}'.format(hrs,mins)
+        return '{}:{}'.format(str(hrs).zfill(2),str(mins).zfill(2))
 
     @app.template_filter('month_name')
     def month_name(t):

@@ -454,15 +454,23 @@ class Manager(object):
         all_timetables = timetables.all()
 
         # fill in actual presence
+        len_sum = timedelta(0)
         for p in presence.all():
+            dep_dt = datetime.combine(datetime.today(), p.departure)
+            arr_dt = datetime.combine(datetime.today(), p.arrival)
+            len_delta = dep_dt - arr_dt
+            len_sum += len_delta
+            len_time = (datetime.min + len_delta).time()
             result[p.date.day] = {**result[p.date.day], **{
                 'mode':  p.presence_mode,
                 'arrival': p.arrival,
-                'departure': p.departure
+                'departure': p.departure,
+                'length': len_time
             }}
 
         # add timetable info
         for _, day in result.items():
+            day['len_sum'] = len_sum
             for timetable in all_timetables:
                 weekday = day['date'].weekday()
                 even_week = day['date'].isocalendar()[1] % 2 == 0
@@ -495,7 +503,6 @@ class Manager(object):
                         day['mode'] = day['mode'] or (
                             'Absence' if day['timetable'] and day['date'] <= today else None)
                     break
-
         return result
 
     def set_acls(self, datadict):
