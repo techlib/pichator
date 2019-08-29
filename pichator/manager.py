@@ -459,9 +459,7 @@ class Manager(object):
             dep_dt = datetime.combine(datetime.today(), p.departure)
             arr_dt = datetime.combine(datetime.today(), p.arrival)
             len_delta = dep_dt - arr_dt
-            log.msg('sum is: ' + str(len_sum) + 'delta is: ' + str(len_delta))
             len_sum += len_delta
-            log.msg('New sum is: ' + str(len_sum))
             len_time = (datetime.min + len_delta).time()
             result[p.date.day] = {**result[p.date.day], **{
                 'mode':  p.presence_mode,

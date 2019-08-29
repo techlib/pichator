@@ -71,7 +71,7 @@ def make_site(manager, access_model, debug=False):
         if not t:
             return ''
         sec = t.seconds
-        hrs = sec // 3600
+        hrs = sec // 3600 + t.days * 24
         rest = sec % 3600
         mins = rest // 60
         return '{}:{}'.format(str(hrs).zfill(2),str(mins).zfill(2))
