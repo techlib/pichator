@@ -18,7 +18,7 @@ from calendar import monthrange, mdays, February, isleap
 from random import randint
 import holidays
 
-CZ_HOLIDAYS = holidays.CountryHoliday('CZ')
+CZ_HOLIDAYS = holidays.Czech()
 
 
 def monthlen(year, month):
@@ -772,7 +772,6 @@ class Manager(object):
                     lower=pv['validity'][0], upper=pv['validity'][1], bounds='[]')
 
                 query = and_(pv_t.pvid == pv['pvid'],
-                             pv_t.occupancy == pv['occupancy'],
                              pv_t.department == dept,
                              pv_t.validity.overlaps(valid),
                              pv_t.uid_employee == employee.uid)
@@ -784,7 +783,7 @@ class Manager(object):
 
                 if pv_t.filter(query).first():
                     pv_t.filter(query).update(
-                        {'validity': valid}, synchronize_session=False)
+                        {'validity': valid, 'occupancy': pv['occupancy']}, synchronize_session=False)
                 else:
                     pv_t.insert(**{
                         'pvid': pv['pvid'],

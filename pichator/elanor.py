@@ -31,15 +31,13 @@ class Elanor:
 
                 dat_nast = parse_date(pv.dat_nast)
                 dat_ukon = parse_date(pv.dat_ukon)
-                odd_od = parse_date(pv.odd_od)
-                odd_do = parse_date(pv.odd_do)
 
                 item = {
                     'pvid': pv.oscpv,
                     'occupancy': occupancy,
                     'department': pv.kod,
-                    'validity': (max(dat_nast, date_from, odd_od),
-                                 min(dat_ukon, date_to, odd_do)),
+                    'validity': (max(dat_nast, date_from),
+                                 min(dat_ukon, date_to)),
                     'emp_no': emp_no
                 }
 

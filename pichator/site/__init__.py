@@ -98,7 +98,7 @@ def make_site(manager, access_model, debug=False):
         'Compensatory time off': 'Náhradní volno',
         'Family member care': 'Ošetřování člena rodiny',
         'Personal trouble': 'Osobní překážky',
-        'Bussiness trip': 'Služební cesta',
+        'Business trip': 'Služební cesta',
         'Study': 'Studium při zaměstnání',
         'Training': 'Školení',
         'Injury and disease from profession': 'Úraz/nemoc z povolání',
