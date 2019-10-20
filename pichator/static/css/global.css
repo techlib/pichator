@@ -22,6 +22,9 @@
 .today{
     background-color:#73BCF7 !important
 }
+.warning{
+    background-color:rgb(247, 212, 115) !important
+}
 .weekend td:first-child{
     font-weight: bold !important
 }

@@ -174,7 +174,18 @@
                 </thead>
                 <tbody>
                     {% for index, day in attendance.items() %}
-                    <tr class="{{ attendance_class(day) }}" data-arrival="{{ day.arrival|short_time }}"
+                    <tr 
+                    {% 
+                        if day.timetable and day.arrival and day.departure and ((day.timetable.lower.hour < day.arrival.hour or 
+                        (day.timetable.lower.hour == day.arrival.hour and day.timetable.lower.minute < day.arrival.minute)) or
+                        (day.timetable.upper.hour > day.departure.hour or 
+                        (day.timetable.upper.hour == day.departure.hour and day.timetable.upper.minute > day.departure.minute)))
+                    %} 
+                    class = "warning {{ attendance_class(day) }}" 
+                    {% else %}
+                    class= "{{ attendance_class(day) }}" 
+                    {% endif %}
+                    data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
                         data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
                         data-date={{ day.date }} data-user="{{ uid }}" data-month={{ day.date.month }}
