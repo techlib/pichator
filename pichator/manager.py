@@ -206,7 +206,7 @@ class Manager(object):
                         tt.__getattribute__(day).upper.strftime('%H:%M') if tt.__getattribute__(day) else '')
 
             else:
-                pv_data['days'] = ['08:00', '16:30'] * 5
+                pv_data['days'] = ['08:00', '16:30'] * 10
 
             payload['data'].append(pv_data)
 
