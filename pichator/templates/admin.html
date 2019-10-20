@@ -44,7 +44,7 @@
                                     <select class="select-picker" id="{{ employee['uid'] }}"
                                         name="{{ employee['uid'] }}">
                                         {% for dept in depts %}
-                                        {% if dept|int in employee['depts'] %}
+                                        {% if dept in employee['depts'] %}
                                         <option value="{{ dept }}" {% if employee['acl'] == dept %} selected
                                             {% endif %}>
                                             {{ dept }}
