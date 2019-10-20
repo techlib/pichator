@@ -89,10 +89,10 @@
                         {% for pv in pvs %}
                         <li>
                             {% if pv.pvid == pvid %}
-                            {{ pv.department|unit_type }}
+                            {{ pv.department|unit_type }} - {{ pv.pvid }}
                             {% else %}
                             <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">
-                                {{ pv.department|unit_type }}
+                                {{ pv.department|unit_type }} - {{ pv.pvid }}
                             </a>
                             {% endif %}
                         </li>
