@@ -29,8 +29,8 @@ class Elanor:
                 date_to = parse_date(pv_item.attrib['datum_do'])
                 occupancy = round(float(pv_item.attrib['hodnota']) / 40, 2)
                 
-                dat_odd = pv.datum_od
-                dat_ddo = pv.datum_do
+                dat_odd = parse_date(pv.datum_od)
+                dat_ddo = parse_date(pv.datum_do)
 
                 dat_nast = parse_date(pv.dat_nast)
                 dat_ukon = parse_date(pv.dat_ukon)
