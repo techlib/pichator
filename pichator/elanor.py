@@ -28,6 +28,9 @@ class Elanor:
                 date_from = parse_date(pv_item.attrib['datum_od'])
                 date_to = parse_date(pv_item.attrib['datum_do'])
                 occupancy = round(float(pv_item.attrib['hodnota']) / 40, 2)
+                
+                dat_odd = pv.datum_od
+                dat_ddo = pv.datum_do
 
                 dat_nast = parse_date(pv.dat_nast)
                 dat_ukon = parse_date(pv.dat_ukon)
@@ -36,8 +39,8 @@ class Elanor:
                     'pvid': pv.oscpv,
                     'occupancy': occupancy,
                     'department': pv.kod,
-                    'validity': (max(dat_nast, date_from),
-                                 min(dat_ukon, date_to)),
+                    'validity': (max(dat_nast, date_from, dat_odd),
+                                 min(dat_ukon, date_to, dat_ddo)),
                     'emp_no': emp_no
                 }
 
