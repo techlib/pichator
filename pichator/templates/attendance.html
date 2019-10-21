@@ -176,7 +176,7 @@
                     {% for index, day in attendance.items() %}
                     <tr 
                     {% 
-                        if day.timetable and day.arrival and day.departure and ((day.timetable.lower.hour < day.arrival.hour or 
+                        if day.timetable and day.arrival and day.departure and day.mode == 'Presence' and ((day.timetable.lower.hour < day.arrival.hour or 
                         (day.timetable.lower.hour == day.arrival.hour and day.timetable.lower.minute < day.arrival.minute)) or
                         (day.timetable.upper.hour > day.departure.hour or 
                         (day.timetable.upper.hour == day.departure.hour and day.timetable.upper.minute > day.departure.minute)))
