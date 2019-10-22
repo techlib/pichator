@@ -19,6 +19,10 @@
     display: inline;
 }
 
+.clickable {
+    cursor: pointer !important
+}
+
 .today{
     background-color:#73BCF7 !important
 }

@@ -128,12 +128,18 @@ def make_site(manager, access_model, debug=False):
             return 'weekend'
 
         if date == today:
-            return 'info'
+            return 'info clickable'
 
         if day['mode'] == 'Absence':
-            return 'Absence'
+            return 'absence clickable'
+        
+        if day['timetable'] and day['arrival'] and day['departure'] and day['mode'] == 'Presence' and ((day['timetable'].lower.hour < day['arrival'].hour or 
+                        (day['timetable'].lower.hour == day['arrival'].hour and day['timetable'].lower.minute < day['arrival'].minute)) or
+                        (day['timetable'].upper.hour > day['departure'].hour or 
+                        (day['timetable'].upper.hour == day['departure'].hour and day['timetable'].upper.minute > day['departure'].minute))):
+            return 'warning clickable'
 
-        return ''
+        return 'clickable'
 
     def has_privilege(privilege):
         roles = flask.request.headers.get('X-Roles', '')

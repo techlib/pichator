@@ -81,7 +81,7 @@
                 <div class="col-sm-12">
                     <h5>Období</h5>
                     <p>
-                        <a id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
+                        <a class="clickable" id="period" data-value="{{ month }}-{{ year }}">{{month|month_name}} {{ year }}</a>
                     </p>
 
                     <h5>PV</h5>
@@ -91,7 +91,7 @@
                             {% if pv.pvid == pvid %}
                             {{ pv.department|unit_type }} - {{ pv.pvid }}
                             {% else %}
-                            <a href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">
+                            <a class="clickable" href="{{ url_for('index', year=year, month=month, pvid=pv.pvid) }}">
                                 {{ pv.department|unit_type }} - {{ pv.pvid }}
                             </a>
                             {% endif %}
@@ -174,17 +174,7 @@
                 </thead>
                 <tbody>
                     {% for index, day in attendance.items() %}
-                    <tr 
-                    {% 
-                        if day.timetable and day.arrival and day.departure and day.mode == 'Presence' and ((day.timetable.lower.hour < day.arrival.hour or 
-                        (day.timetable.lower.hour == day.arrival.hour and day.timetable.lower.minute < day.arrival.minute)) or
-                        (day.timetable.upper.hour > day.departure.hour or 
-                        (day.timetable.upper.hour == day.departure.hour and day.timetable.upper.minute > day.departure.minute)))
-                    %} 
-                    class = "warning {{ attendance_class(day) }}" 
-                    {% else %}
-                    class= "{{ attendance_class(day) }}" 
-                    {% endif %}
+                    <tr class = "{{ attendance_class(day) }}" 
                     data-arrival="{{ day.arrival|short_time }}"
                         data-departure="{{ day.departure|short_time }}" data-mode="{{ day.mode }}"
                         data-weekday="{{ day.date.weekday()|day_name }}" data-day="{{ day.day }}"
