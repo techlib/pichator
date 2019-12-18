@@ -32,7 +32,7 @@ class TimeRange(Range):
         dt_to = datetime.combine(date.today(), self.upper)
         length = dt_to - dt_from
         total = length.total_seconds() / 60
-        return total if total < 6 * 60 else total - 30
+        return total if total < 4 * 60 else total - 30
 
 
 class TIMERANGE(postgresql.ranges.RangeOperators, sqltypes.UserDefinedType):
