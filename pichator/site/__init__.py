@@ -8,7 +8,7 @@ from sqlalchemy.exc import *
 from werkzeug.exceptions import NotAcceptable, Forbidden, InternalServerError
 from pichator.site.util import *
 from functools import wraps
-
+from pichator.site.xlsx_export import xlsx_export
 
 from sqlalchemy import desc
 from sqlalchemy.exc import SQLAlchemyError
@@ -31,6 +31,7 @@ from os import urandom
 import flask
 import re
 import holidays
+
 
 
 def make_site(manager, access_model, debug=False):
@@ -254,6 +255,7 @@ def make_site(manager, access_model, debug=False):
         dept = dept or acl
         data = manager.get_department(dept, month, year)['data']
         pdf_view = flask.request.values.get('pdf') == 'true'
+        xlsx_view = flask.request.values.get('xlsx') == 'true'
 
         font_config = FontConfiguration()
         font_path = join(dirname(abspath(__file__)), '../templates/fonts')
@@ -267,10 +269,12 @@ def make_site(manager, access_model, debug=False):
             data = manager.get_department(dept, month, year)['data']
             if pdf_view:
                 pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
-
                 result = pdf_template.write_pdf( font_config=font_config)
-
                 return flask.Response(response=result, mimetype='application/pdf')
+            if xlsx_view:
+                result = xlsx_export(**locals())
+                return flask.send_file(result, attachment_filename="dochazka-{dept}-{year}-{month}.xlsx".format(dept=dept, year=year, month=month), as_attachment=True)
+
             return flask.render_template('attendance_department.html', **locals())
 
         if not acl.isdigit():
@@ -282,10 +286,12 @@ def make_site(manager, access_model, debug=False):
         mode = manager.get_dept_mode(acl)
         if pdf_view:
                 pdf_template = HTML(string=flask.render_template('dept_pdf.html', **locals()))
-                
                 result = pdf_template.write_pdf( font_config=font_config)
-                
                 return flask.Response(response=result, mimetype='application/pdf')
+        if xlsx_view:
+            result = xlsx_export(**locals())
+            return flask.send_file(result, attachment_filename="dochazka-{dept}-{year}-{month}.xlsx".format(dept=dept, year=year, month=month), as_attachment=True)
+
         return flask.render_template('attendance_department.html', **locals())
 
 

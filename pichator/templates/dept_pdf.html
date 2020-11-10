@@ -74,7 +74,6 @@
             {% endfor %}
         </thead>
         <tbody>
-            {% for x in [1,2,3,4,5] %}
             {% for emp in data %}
             <tr>
                 <td>{{ emp['name'] }}</td>
@@ -82,7 +81,6 @@
                 <td>{{ emp[day|string] }}</td>
                 {% endfor %}
             </tr>
-            {% endfor %}
             {% endfor %}
         </tbody>
     </table>
