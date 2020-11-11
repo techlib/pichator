@@ -5,7 +5,7 @@ from pprint import pprint as pp
 def xlsx_export(data, dept, month, year, **kwargs):
   output = BytesIO()
   workbook = xlsxwriter.Workbook(output)
-  worksheet = workbook.add_worksheet(dept) # nazev listu
+  worksheet = workbook.add_worksheet(dept)
 
   doc_name = 'Docházka za útvar {dept}'.format(dept=dept)
   period = 'Za období: {month} - {year}'.format(month=month, year=year)
@@ -19,23 +19,23 @@ def xlsx_export(data, dept, month, year, **kwargs):
     worksheet.write('A3', period)
 
 
-    # nazvy sloupecku
+    # Column name
     worksheet.write('A5', 'Číslo zaměstnance', bold)
     worksheet.write('B5', 'Jméno zaměstnance', bold)
 
-    # datum 
+    # Just the right amount of days in month
     for date in range(1, len(data[0])-1):
       worksheet.write(5, date+2, date, bold)
 
     row = 6
-    col = 3
+    col = 2
     for emp in data:
       worksheet.write(row, 0, emp['pvid']) #pracovni pomer
       worksheet.write(row, 1, emp['name']) #jmeno
       for day in range(1, len(data[0])-1):
         worksheet.write(row, col, emp.get(str(day), ''))
         col += 1
-      col = 3
+      col = 2
       row += 1
   else:
     # nejsou data
@@ -50,24 +50,3 @@ def xlsx_export(data, dept, month, year, **kwargs):
   workbook.close()
   output.seek(0)
   return output
-
-    # {% if data[0]|length %}
-    #   <table>
-    #       <thead>
-    #           <th></th>
-    #           {% for day in range(1, data[0]|length) %}
-    #           <th>{{ day }}</th>
-    #           {% endfor %}
-    #       </thead>
-    #       <tbody>
-    #           {% for emp in data %}
-    #           <tr>
-    #               <td>{{ emp['name'] }}</td>
-    #               {% for day in range(1, data[0]|length) %}
-    #               <td>{{ emp[day|string] }}</td>
-    #               {% endfor %}
-    #           </tr>
-    #           {% endfor %}
-    #       </tbody>
-    #   </table>
-    # {% else %}
