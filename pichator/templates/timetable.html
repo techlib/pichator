@@ -148,6 +148,10 @@
         fillTimetable(timetable[index])
     }
 
+    function refresh_with_parameter(){
+        window.location='/timetable/' + this.value
+    }
+
     $(document).ready(function () {
         $('.clockpicker').clockpicker()
         $("#odd_even").click(display_odd);
@@ -157,10 +161,11 @@
             'language': 'cs',
         });
         $('#date').datepicker('setDate', 'today');
+        $('#change_user').change(refresh_with_parameter);
         emp_no = '{{ emp_no }}'
 
         $.ajax({
-            url: '/timetable_data',
+            url: '/timetable_data/{{ username }}',
         }).done(function (data) {
             timetable = data.data
             select(0)
@@ -174,12 +179,15 @@
         <div class="col-sm-12">
             <div class="row toolbar-pf-results">
                 <div class="col-sm-12">
+                    <h5>Zaměstnanec:</h5>
+                    <span>{{ emp_info['first_name'] }} {{ emp_info['last_name'] }}</span>
                     <h5>PV</h5>
                     <ul id="pvs" class="list-inline"></ul>
                     <h5>Úvazek</h5>
                     <span id="occupancy"></span>
                     <h5>Útvar</h5>
                     <span id="dept"></span>
+                    
                 </div>
             </div>
         </div>
@@ -188,7 +196,18 @@
         <div class="col-xs-12 col-sm-8 col-sm-push-2 col-md-6 col-md-push-3">
             <div class="panel panel-default">
                 <div class="panel-heading">
+                    {% if admin %}
+                    Úprava pracovní doby uživatele:
+                    <span>
+                        <select id="change_user">
+                            {% for emp in employees %}
+                                <option value="{{ emp['username'] }}" {% if emp['username'] == username %} selected="selected" {% endif %}>{{ emp['last_name'] }} {{ emp['first_name'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </span>
+                    {% else %}
                     Úprava pracovní doby
+                    {% endif %}
                 </div>
                 <div class="panel-body">
                     <form class='form-inline' id='timetable-form' name='timetable-form' method='post'

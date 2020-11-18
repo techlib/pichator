@@ -94,6 +94,19 @@ class Manager(object):
                 'User not found when looking up acls. Supplied username: {}'.format(username))
             raise NotAcceptable
 
+    def get_emp_info(self,username):
+        emp_t = self.db.employee
+        emp = emp_t.filter(emp_t.username == username).one()
+        try:
+            return({
+                'first_name': emp.first_name,
+                'last_name': emp.last_name,
+                'username': emp.username
+            })
+        except Exception as e:
+            log.err(e)
+            return([])
+
     def get_depts(self, username):
         emp_t = self.db.employee
         pv_t = self.db.pv
@@ -114,13 +127,14 @@ class Manager(object):
 
     def get_all_employees(self):
         retval = []
-        for emp in self.db.employee.all():
+        for emp in self.db.employee.order_by(self.db.employee.last_name).all():
             retval.append({
                 'first_name': emp.first_name,
                 'last_name': emp.last_name,
                 'uid': emp.uid,
                 'acl': emp.acl,
-                'depts': self.get_depts(emp.username)
+                'depts': self.get_depts(emp.username),
+                'username': emp.username
             })
         return retval
 

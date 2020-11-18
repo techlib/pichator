@@ -315,13 +315,18 @@ def make_site(manager, access_model, debug=False):
             period = (today.month, today.year)
         return flask.jsonify(manager.get_department(dept, int(period[0]), int(period[1])))
 
-    @app.route('/timetable', methods=['GET', 'POST'])
+    @app.route('/timetable', methods=['GET', 'POST'], defaults={'forced': None})
+    @app.route('/timetable/<forced>', methods=['GET', 'POST'])
     @authorized_only('user')
     @pass_user_info
-    def show_timetable(uid, username):
+    def show_timetable(uid, username, forced):
         admin = has_privilege('admin')
+        if admin and forced is not None:
+            username = forced
         acl = manager.get_acl(username)
         emp_no = manager.get_emp_no(username)
+        employees = manager.get_all_employees()
+        emp_info = manager.get_emp_info(username)
         if flask.request.method == 'GET':
             return flask.render_template('timetable.html', **locals())
         else:
@@ -330,6 +335,7 @@ def make_site(manager, access_model, debug=False):
                 flask.flash(
                     'Počet hodin v rozvrhu neodpovídá úvazku.', 'error')
             return flask.render_template('timetable.html', **locals())
+
 
     @app.route('/admin', methods=['GET', 'POST'])
     @authorized_only('admin')
@@ -346,10 +352,15 @@ def make_site(manager, access_model, debug=False):
         
         return flask.render_template('admin.html', **locals())
 
-    @app.route('/timetable_data')
+    @app.route('/timetable_data', defaults={'forced': None})
+    @app.route('/timetable_data/<forced>')
     @authorized_only('user')
     @pass_user_info
-    def get_timetables_data(uid, username):
+    def get_timetables_data(uid, username, forced):
+        admin = has_privilege('admin')
+        if admin and forced is not None:
+            username = forced
+            uid = manager.db.employee.filter_by(username=forced).first().uid
         acl = manager.get_acl(username)
         emp_no = manager.get_emp_no(username)
         if not emp_no:
