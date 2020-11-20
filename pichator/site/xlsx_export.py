@@ -23,7 +23,7 @@ def xlsx_export(data, dept, month, year, **kwargs):
 
     # Just the right amount of days in month
     for date in range(1, len(data[0])-1):
-      worksheet.write(5, date+2, date, bold)
+      worksheet.write(5, date+1, date, bold)
 
     row = 6
     col = 2
@@ -35,6 +35,7 @@ def xlsx_export(data, dept, month, year, **kwargs):
         col += 1
       col = 2
       row += 1
+
   else:
     worksheet.write('A5', 'Prázdná odpověď', bold)
     worksheet.write('A6', 'Dotaz vrátil prázdný záznam.')
