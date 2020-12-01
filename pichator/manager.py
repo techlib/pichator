@@ -18,6 +18,7 @@ from calendar import monthrange, mdays, February, isleap
 from random import randint
 import holidays
 
+
 CZ_HOLIDAYS = holidays.Czech()
 
 
@@ -683,15 +684,15 @@ class Manager(object):
                         symbol = '/'
                 retval_dict[str(day+1)] = symbol
             found = False
-            # If there exist record for this employee in this month with different timetable - merge them
+            # If there exist record for this pv in this month with different timetable - merge them
             for record in retval['data']:
-                if record['name'] == '{} {}'.format(employee.first_name, employee.last_name):
+                if record['pvid'] == '{}'.format(pv.pvid):
                     found = True
                     for key in record.keys():
                         if record[key] == '-' and retval_dict[key]:
                             record[key] = retval_dict[key]
             if not found:
-                retval['data'].append(retval_dict)
+               retval['data'].append(retval_dict)
 
         return retval
 
