@@ -158,7 +158,7 @@ class Manager(object):
             .filter(pv_t.validity.overlaps(self.month_range(year, month))) \
             .filter(cast(pv_t.department, sqltypes.String).startswith(dept))
 
-        for employee, pv in employees_with_pvs.all():
+        for employee, pv in employees_with_pvs.order_by(employees_with_pvs.last_name).all():
             retval.append({
                 'first_name': employee.first_name,
                 'last_name': employee.last_name,
@@ -613,7 +613,7 @@ class Manager(object):
         pv_with_emp = query \
             .filter(pv_t.validity.overlaps(month_period))\
             .filter(timetable_t.validity.overlaps(month_period))\
-            .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).all()
+            .filter(cast(pv_t.department, sqltypes.String).startswith(dept)).order_by(emp_t.last_name).all()
 
         if not pv_with_emp:
             log.msg(
@@ -765,7 +765,7 @@ class Manager(object):
             self.threaded_update_presence, source=source, source_name=source_name)
 
         self.elanor_loop = LoopingCall(
-            self.threaded_update_pvs, elanor=elanor)
+            self.update_pvs, elanor=elanor)
 
         self.source_loop.start(3600)
         self.elanor_loop.start(3600)
