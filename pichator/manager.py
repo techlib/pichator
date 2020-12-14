@@ -155,11 +155,12 @@ class Manager(object):
 
         employees_with_pvs = self.db.session \
             .query(emp_t, pv_t) \
+            .order_by(emp_t.last_name) \
             .join(pv_t) \
             .filter(pv_t.validity.overlaps(self.month_range(year, month))) \
             .filter(cast(pv_t.department, sqltypes.String).startswith(dept))
 
-        for employee, pv in employees_with_pvs.order_by(employees_with_pvs.last_name).all():
+        for employee, pv in employees_with_pvs.all():
             retval.append({
                 'first_name': employee.first_name,
                 'last_name': employee.last_name,
