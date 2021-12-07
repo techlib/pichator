@@ -81,7 +81,7 @@ class Manager(object):
     def get_emp_no(self, username):
         emp_t = self.db.employee
         try:
-            return emp_t.filter(emp_t.username == username).one().emp_no
+            return emp_t.filter(emp_t.username == username).first().emp_no
         except NoResultFound:
             log.err('User not found. Supplied username: {}'.format(username))
             raise NotAcceptable
